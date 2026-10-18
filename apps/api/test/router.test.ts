@@ -99,4 +99,35 @@ test('HTTP Router End-to-End Suite', async (t) => {
     const patchedData = await patchRes.json() as { order: { status: string } };
     assert.equal(patchedData.order.status, 'IN_PRODUCTION');
   });
+
+  await t.test('GET /api/v1/packaging/labels returns meal box labels', async () => {
+    const today = new Date().toISOString().split('T')[0];
+    const res = await fetch(`${baseUrl}/api/v1/packaging/labels?date=${today}`);
+    assert.equal(res.status, 200);
+    const data = await res.json() as { labels: { labelId: string; recipeName: string }[] };
+    assert.ok(data.labels.length > 0);
+    assert.ok(data.labels[0].labelId.startsWith('LBL-'));
+  });
+
+  await t.test('GET /api/v1/analytics/financials returns margin and revenue metrics', async () => {
+    const today = new Date().toISOString().split('T')[0];
+    const res = await fetch(`${baseUrl}/api/v1/analytics/financials?date=${today}`);
+    assert.equal(res.status, 200);
+    const data = await res.json() as { analytics: { totalRevenue: number; grossMargin: number } };
+    assert.ok(data.analytics.totalRevenue > 0);
+    assert.ok(data.analytics.grossMargin > 0);
+  });
+
+  await t.test('GET /api/v1/export/production and /delivery return CSV downloads', async () => {
+    const today = new Date().toISOString().split('T')[0];
+    const prodRes = await fetch(`${baseUrl}/api/v1/export/production?date=${today}`);
+    assert.equal(prodRes.status, 200);
+    assert.equal(prodRes.headers.get('content-type')?.includes('text/csv'), true);
+    const prodText = await prodRes.text();
+    assert.equal(prodText.includes('SECTION: RECETTES À PRODUIRE'), true);
+
+    const delivRes = await fetch(`${baseUrl}/api/v1/export/delivery?date=${today}`);
+    assert.equal(delivRes.status, 200);
+    assert.equal(delivRes.headers.get('content-type')?.includes('text/csv'), true);
+  });
 });

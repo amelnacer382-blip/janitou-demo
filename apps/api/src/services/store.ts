@@ -57,6 +57,35 @@ export interface ProductionPlanSummary {
   hasDeficit: boolean;
 }
 
+export interface MealBoxLabel {
+  labelId: string;
+  orderNumber: string;
+  customerName: string;
+  companyName?: string;
+  deliveryAddress: string;
+  recipeName: string;
+  category: ComponentCategory;
+  serviceTime: MealServiceTime;
+  deliveryDate: string;
+  portionIndex: string;
+  allergens: string[];
+  heatingInstructions: string;
+  storageInstructions: string;
+  barcode: string;
+}
+
+export interface FinancialAnalytics {
+  date?: string;
+  totalRevenue: number;
+  totalFoodCost: number;
+  grossMargin: number;
+  foodCostPercentage: number;
+  grossMarginPercentage: number;
+  totalPortions: number;
+  averageMealPrice: number;
+  topRecipes: { name: string; portions: number; foodCost: number; revenue: number }[];
+}
+
 export class JanitouStore {
   public suppliers: DbSupplier[] = [];
   public ingredients: DbIngredient[] = [];
@@ -253,13 +282,17 @@ export class JanitouStore {
   // ==========================================
   // CORE ENGINE: Production & Ingredient Explosion
   // ==========================================
-  public calculateProductionNeeds(date: string, serviceTime?: MealServiceTime): ProductionPlanSummary {
-    const relevantOrders = this.orders.filter(
+  public calculateProductionNeeds(date?: string, serviceTime?: MealServiceTime): ProductionPlanSummary {
+    const targetDate = date || new Date().toLocaleDateString('en-CA');
+    let relevantOrders = this.orders.filter(
       (o) =>
-        o.deliveryDate === date &&
+        o.deliveryDate === targetDate &&
         (serviceTime ? o.serviceTime === serviceTime : true) &&
         o.status !== OrderStatus.CANCELLED
     );
+    if (relevantOrders.length === 0 && !date) {
+      relevantOrders = this.orders.filter((o) => o.status !== OrderStatus.CANCELLED);
+    }
 
     const recipeMap = new Map<string, { portions: number; ordersCount: number }>();
 
@@ -471,6 +504,163 @@ export class JanitouStore {
     }
 
     return run;
+  }
+
+  // ==========================================
+  // Packaging & Meal Box Label Generator
+  // ==========================================
+  public generatePackagingLabels(target?: string, isOrderId = false): MealBoxLabel[] {
+    const effectiveTarget = target || new Date().toLocaleDateString('en-CA');
+    let ordersToProcess = isOrderId
+      ? this.orders.filter((o) => o.id === effectiveTarget)
+      : this.orders.filter((o) => o.deliveryDate === effectiveTarget && o.status !== OrderStatus.CANCELLED);
+
+    if (ordersToProcess.length === 0 && !isOrderId) {
+      ordersToProcess = this.orders.filter((o) => o.status !== OrderStatus.CANCELLED);
+    }
+    const labels: MealBoxLabel[] = [];
+
+    for (const order of ordersToProcess) {
+      const customer = this.getCustomerById(order.customerId);
+      const customerName = customer ? customer.contactName : 'Client';
+      const companyName = customer?.companyName;
+      const address = order.deliveryAddress;
+
+      let totalBoxCount = 0;
+      for (const item of order.items) {
+        totalBoxCount += item.portions;
+      }
+
+      let currentBox = 1;
+      for (const item of order.items) {
+        const recipe = this.getRecipeById(item.recipeId);
+        if (!recipe) continue;
+
+        const heatingInstructions =
+          recipe.category === ComponentCategory.MAIN_COURSE
+            ? 'Réchauffer 2 min 30 au micro-ondes à 750W (retirer le couvercle transparent).'
+            : recipe.category === ComponentCategory.STARTER
+            ? 'Prêt à consommer frais. Conserver entre 2°C et 4°C.'
+            : 'Dessert artisanal prêt à déguster.';
+
+        for (let p = 1; p <= item.portions; p++) {
+          labels.push({
+            labelId: `LBL-${order.orderNumber.replace(/[^0-9]/g, '')}-${currentBox}`,
+            orderNumber: order.orderNumber,
+            customerName,
+            companyName,
+            deliveryAddress: address,
+            recipeName: recipe.name,
+            category: recipe.category,
+            serviceTime: order.serviceTime,
+            deliveryDate: order.deliveryDate,
+            portionIndex: `Colis ${currentBox} / ${totalBoxCount}`,
+            allergens: recipe.allergens.length > 0 ? recipe.allergens : ['Aucun allergène majeur'],
+            heatingInstructions,
+            storageInstructions: 'Conserver entre 0°C et +3°C. À consommer dans les 24h.',
+            barcode: `*${order.orderNumber}-${currentBox}*`,
+          });
+          currentBox++;
+        }
+      }
+    }
+
+    return labels;
+  }
+
+  // ==========================================
+  // Financial & Food Cost Analytics
+  // ==========================================
+  public getFinancialAnalytics(date?: string): FinancialAnalytics {
+    const ordersToAnalyze = date
+      ? this.orders.filter((o) => o.deliveryDate === date && o.status !== OrderStatus.CANCELLED)
+      : this.orders.filter((o) => o.status !== OrderStatus.CANCELLED);
+
+    let totalRevenue = 0;
+    let totalFoodCost = 0;
+    let totalPortions = 0;
+    const recipeStats = new Map<string, { portions: number; foodCost: number; revenue: number }>();
+
+    for (const order of ordersToAnalyze) {
+      const unitPrice = order.serviceTime === MealServiceTime.LUNCH ? 650 : 850;
+      for (const item of order.items) {
+        const recipe = this.getRecipeById(item.recipeId);
+        if (!recipe) continue;
+
+        const costInfo = this.calculateRecipeCost(recipe.id);
+        const itemFoodCost = Math.round(costInfo.costPerPortion * item.portions);
+        const itemRevenue = item.portions * unitPrice;
+
+        totalFoodCost += itemFoodCost;
+        totalRevenue += itemRevenue;
+        totalPortions += item.portions;
+
+        const current = recipeStats.get(recipe.name) || { portions: 0, foodCost: 0, revenue: 0 };
+        current.portions += item.portions;
+        current.foodCost += itemFoodCost;
+        current.revenue += itemRevenue;
+        recipeStats.set(recipe.name, current);
+      }
+    }
+
+    const grossMargin = totalRevenue - totalFoodCost;
+    const foodCostPercentage = totalRevenue > 0 ? Math.round((totalFoodCost / totalRevenue) * 1000) / 10 : 0;
+    const grossMarginPercentage = totalRevenue > 0 ? Math.round((grossMargin / totalRevenue) * 1000) / 10 : 0;
+    const averageMealPrice = totalPortions > 0 ? Math.round(totalRevenue / totalPortions) : 0;
+
+    const topRecipes = Array.from(recipeStats.entries())
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.portions - a.portions);
+
+    return {
+      date,
+      totalRevenue,
+      totalFoodCost,
+      grossMargin,
+      foodCostPercentage,
+      grossMarginPercentage,
+      totalPortions,
+      averageMealPrice,
+      topRecipes,
+    };
+  }
+
+  // ==========================================
+  // CSV Data Exports (Kitchen & Delivery)
+  // ==========================================
+  public exportProductionSheetCsv(date: string, serviceTime?: MealServiceTime): string {
+    const plan = this.calculateProductionNeeds(date, serviceTime);
+    const lines: string[] = [];
+    lines.push('SECTION: RECETTES À PRODUIRE');
+    lines.push('Recette,Categorie,Portions,Nombre de Commandes');
+    for (const r of plan.recipes) {
+      lines.push(`"${r.recipeName}","${r.category}",${r.totalPortions},${r.ordersCount}`);
+    }
+    lines.push('');
+    lines.push('SECTION: INGRÉDIENTS NÉCESSAIRES');
+    lines.push('Ingrédient,Unité,Quantité Requise,Stock Actuel,Stock Après Prod,Déficit,Fournisseur');
+    for (const ing of plan.ingredientRequirements) {
+      lines.push(`"${ing.ingredientName}","${ing.unit}",${ing.quantityRequired},${ing.currentStock},${ing.stockAfterProduction},${ing.deficit},"${ing.supplierName}"`);
+    }
+    return lines.join('\n');
+  }
+
+  public exportDeliveryManifestCsv(date: string, serviceTime?: MealServiceTime): string {
+    const runs = this.getDeliveryRuns(date);
+    const lines: string[] = [];
+    lines.push('Date,Service,Livreur,Téléphone Livreur,Arrêt,N° Commande,Client,Adresse,Statut Livraison');
+
+    for (const run of runs) {
+      if (serviceTime && run.serviceTime !== serviceTime) continue;
+      for (const stop of run.stops) {
+        const order = this.getOrderById(stop.orderId);
+        const customer = order ? this.getCustomerById(order.customerId) : undefined;
+        const clientName = customer ? (customer.companyName || customer.contactName) : 'Inconnu';
+        const address = order ? order.deliveryAddress : '';
+        lines.push(`"${run.runDate}","${run.serviceTime}","${run.driverName}","${run.driverPhone}",${stop.sequence},"${order?.orderNumber || stop.orderId}","${clientName}","${address}","${stop.deliveryStatus}"`);
+      }
+    }
+    return lines.join('\n');
   }
 }
 
