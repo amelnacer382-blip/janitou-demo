@@ -130,4 +130,47 @@ test('HTTP Router End-to-End Suite', async (t) => {
     assert.equal(delivRes.status, 200);
     assert.equal(delivRes.headers.get('content-type')?.includes('text/csv'), true);
   });
+
+  await t.test('POST /api/v1/recipes and pricing simulation endpoint', async () => {
+    const createRes = await fetch(`${baseUrl}/api/v1/recipes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Soupe Chorba Traditionnelle',
+        category: 'STARTER',
+        ingredients: [{ ingredientId: 'ing-1', quantityPerPortion: 0.1, unit: 'KG' }],
+      }),
+    });
+    assert.equal(createRes.status, 201);
+    const { recipe } = await createRes.json() as { recipe: { id: string } };
+
+    const simRes = await fetch(`${baseUrl}/api/v1/recipes/${recipe.id}/pricing-simulation?targetFoodCost=25`);
+    assert.equal(simRes.status, 200);
+    const { simulation } = await simRes.json() as { simulation: { recommendedSellingPrice: number } };
+    assert.ok(simulation.recommendedSellingPrice > 0);
+  });
+
+  await t.test('GET /api/v1/meal-plans/weekly, /subscriptions and /kds/batches', async () => {
+    const weeklyRes = await fetch(`${baseUrl}/api/v1/meal-plans/weekly`);
+    assert.equal(weeklyRes.status, 200);
+    const { weekly } = await weeklyRes.json() as { weekly: unknown[] };
+    assert.equal(weekly.length, 7);
+
+    const subRes = await fetch(`${baseUrl}/api/v1/subscriptions`);
+    assert.equal(subRes.status, 200);
+    const { subscriptions } = await subRes.json() as { subscriptions: unknown[] };
+    assert.ok(subscriptions.length >= 1);
+
+    const kdsRes = await fetch(`${baseUrl}/api/v1/kds/batches`);
+    assert.equal(kdsRes.status, 200);
+    const { batches } = await kdsRes.json() as { batches: { id: string; stage: string }[] };
+    assert.ok(batches.length > 0);
+
+    const patchKdsRes = await fetch(`${baseUrl}/api/v1/kds/batches/${batches[0].id}/stage`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stage: 'COOKING' }),
+    });
+    assert.equal(patchKdsRes.status, 200);
+  });
 });

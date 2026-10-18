@@ -86,6 +86,52 @@ export interface FinancialAnalytics {
   topRecipes: { name: string; portions: number; foodCost: number; revenue: number }[];
 }
 
+export interface PricingSimulation {
+  recipeId: string;
+  recipeName: string;
+  foodCostPerPortion: number;
+  targetFoodCostPercentage: number;
+  recommendedSellingPrice: number;
+  projectedGrossMargin: number;
+  projectedMarginPercentage: number;
+}
+
+export interface WeeklyDayPlan {
+  date: string;
+  dayName: string;
+  lunch?: DbMealPlan;
+  dinner?: DbMealPlan;
+  starterName?: string;
+  mainName?: string;
+  dessertName?: string;
+  dinnerMainName?: string;
+}
+
+export interface CustomerSubscription {
+  id: string;
+  customerId: string;
+  planName: string;
+  serviceTimes: MealServiceTime[];
+  dailyPortions: number;
+  activeDays: string[]; // e.g. ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi']
+  dietaryTags: string[];
+  status: 'ACTIVE' | 'PAUSED' | 'CANCELLED';
+  preferredRecipeId?: string;
+}
+
+export interface KdsBatch {
+  id: string;
+  recipeId: string;
+  recipeName: string;
+  category: ComponentCategory;
+  portions: number;
+  serviceTime: MealServiceTime;
+  date: string;
+  station: 'CHAUD' | 'FROID' | 'PATISSERIE' | 'CONDITIONNEMENT';
+  stage: 'TO_PREPARE' | 'COOKING' | 'PACKAGING' | 'READY';
+  updatedAt: string;
+}
+
 export class JanitouStore {
   public suppliers: DbSupplier[] = [];
   public ingredients: DbIngredient[] = [];
@@ -96,6 +142,8 @@ export class JanitouStore {
   public productionBatches: DbProductionBatch[] = [];
   public purchaseOrders: DbPurchaseOrder[] = [];
   public deliveryRuns: DbDeliveryRun[] = [];
+  public subscriptions: CustomerSubscription[] = [];
+  public kdsBatches: KdsBatch[] = [];
 
   constructor() {
     this.resetToDefaults();
@@ -111,6 +159,29 @@ export class JanitouStore {
     this.productionBatches = [];
     this.purchaseOrders = [];
     this.deliveryRuns = [];
+    this.subscriptions = [
+      {
+        id: 'sub-1',
+        customerId: 'cust-1',
+        planName: 'Formule Déjeuner Santé Entreprise (5J/Semaine)',
+        serviceTimes: [MealServiceTime.LUNCH],
+        dailyPortions: 6,
+        activeDays: ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'],
+        dietaryTags: ['Équilibré', 'Sans Porc'],
+        status: 'ACTIVE',
+      },
+      {
+        id: 'sub-2',
+        customerId: 'cust-2',
+        planName: 'Pack Repas Équipe Tech (Midi)',
+        serviceTimes: [MealServiceTime.LUNCH],
+        dailyPortions: 14,
+        activeDays: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi'],
+        dietaryTags: ['Standard'],
+        status: 'ACTIVE',
+      },
+    ];
+    this.kdsBatches = [];
   }
 
   // ==========================================
@@ -189,6 +260,36 @@ export class JanitouStore {
     };
   }
 
+  public createRecipe(data: Omit<DbRecipe, 'id'>): DbRecipe {
+    const recipe: DbRecipe = {
+      ...data,
+      id: `rec-${Date.now()}`,
+    };
+    this.recipes.push(recipe);
+    return recipe;
+  }
+
+  public simulateRecipePricing(recipeId: string, targetFoodCostPercentage: number): PricingSimulation | undefined {
+    const recipe = this.getRecipeById(recipeId);
+    if (!recipe) return undefined;
+
+    const costInfo = this.calculateRecipeCost(recipeId);
+    const foodCost = costInfo.costPerPortion;
+    const validTargetPct = Math.max(10, Math.min(90, targetFoodCostPercentage || 30));
+    const recommendedPrice = Math.round(foodCost / (validTargetPct / 100));
+    const grossMargin = recommendedPrice - foodCost;
+
+    return {
+      recipeId: recipe.id,
+      recipeName: recipe.name,
+      foodCostPerPortion: foodCost,
+      targetFoodCostPercentage: validTargetPct,
+      recommendedSellingPrice: recommendedPrice,
+      projectedGrossMargin: grossMargin,
+      projectedMarginPercentage: Math.round((grossMargin / recommendedPrice) * 1000) / 10,
+    };
+  }
+
   // ==========================================
   // Meal Plans
   // ==========================================
@@ -213,6 +314,40 @@ export class JanitouStore {
       this.mealPlans.push(newPlan);
     }
     return newPlan;
+  }
+
+  public getWeeklyMenuPlan(startDateStr?: string): WeeklyDayPlan[] {
+    const baseDate = startDateStr ? new Date(startDateStr) : new Date();
+    const days: WeeklyDayPlan[] = [];
+    const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(baseDate);
+      d.setDate(baseDate.getDate() + i);
+      const dateStr = d.toLocaleDateString('en-CA');
+      const dayName = dayNames[d.getDay()];
+
+      const lunch = this.mealPlans.find((m) => m.date === dateStr && m.serviceTime === MealServiceTime.LUNCH);
+      const dinner = this.mealPlans.find((m) => m.date === dateStr && m.serviceTime === MealServiceTime.DINNER);
+
+      const starter = lunch?.starterRecipeId ? this.getRecipeById(lunch.starterRecipeId) : undefined;
+      const main = lunch?.mainCourseRecipeId ? this.getRecipeById(lunch.mainCourseRecipeId) : undefined;
+      const dessert = lunch?.dessertRecipeId ? this.getRecipeById(lunch.dessertRecipeId) : undefined;
+      const dinnerMain = dinner?.mainCourseRecipeId ? this.getRecipeById(dinner.mainCourseRecipeId) : undefined;
+
+      days.push({
+        date: dateStr,
+        dayName,
+        lunch,
+        dinner,
+        starterName: starter?.name,
+        mainName: main?.name,
+        dessertName: dessert?.name,
+        dinnerMainName: dinnerMain?.name,
+      });
+    }
+
+    return days;
   }
 
   // ==========================================
@@ -661,6 +796,114 @@ export class JanitouStore {
       }
     }
     return lines.join('\n');
+  }
+
+  // ==========================================
+  // Customer Subscriptions Engine
+  // ==========================================
+  public getSubscriptions(): CustomerSubscription[] {
+    return this.subscriptions;
+  }
+
+  public createSubscription(data: Omit<CustomerSubscription, 'id'>): CustomerSubscription {
+    const sub: CustomerSubscription = {
+      ...data,
+      id: `sub-${Date.now()}`,
+    };
+    this.subscriptions.push(sub);
+    return sub;
+  }
+
+  public generateOrdersFromSubscriptions(date: string): DbOrder[] {
+    const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+    const targetDay = dayNames[new Date(date).getDay()];
+    const generatedOrders: DbOrder[] = [];
+
+    const activeSubs = this.subscriptions.filter(
+      (s) => s.status === 'ACTIVE' && s.activeDays.includes(targetDay)
+    );
+
+    for (const sub of activeSubs) {
+      const customer = this.getCustomerById(sub.customerId);
+      if (!customer) continue;
+
+      for (const service of sub.serviceTimes) {
+        const mealPlan = this.mealPlans.find((m) => m.date === date && m.serviceTime === service);
+        const mainRecipeId = sub.preferredRecipeId || mealPlan?.mainCourseRecipeId || this.recipes[0].id;
+
+        const items: { recipeId: string; portions: number }[] = [
+          { recipeId: mainRecipeId, portions: sub.dailyPortions },
+        ];
+        if (mealPlan?.starterRecipeId) {
+          items.push({ recipeId: mealPlan.starterRecipeId, portions: sub.dailyPortions });
+        }
+        if (mealPlan?.dessertRecipeId) {
+          items.push({ recipeId: mealPlan.dessertRecipeId, portions: sub.dailyPortions });
+        }
+
+        const order = this.createOrder({
+          customerId: sub.customerId,
+          deliveryDate: date,
+          serviceTime: service,
+          items,
+          notes: `Généré depuis abonnement: ${sub.planName}`,
+        });
+
+        generatedOrders.push(order);
+      }
+    }
+
+    return generatedOrders;
+  }
+
+  // ==========================================
+  // Kitchen Display System (KDS) Active Batches
+  // ==========================================
+  public getKdsBatches(date?: string): KdsBatch[] {
+    const targetDate = date || new Date().toLocaleDateString('en-CA');
+    const existing = this.kdsBatches.filter((b) => b.date === targetDate);
+
+    if (existing.length > 0) {
+      return existing;
+    }
+
+    // Auto-generate KDS batches from production needs if empty
+    const plan = this.calculateProductionNeeds(targetDate);
+    for (const rec of plan.recipes) {
+      const r = this.getRecipeById(rec.recipeId);
+      const station =
+        rec.category === ComponentCategory.MAIN_COURSE
+          ? 'CHAUD'
+          : rec.category === ComponentCategory.STARTER
+          ? 'FROID'
+          : rec.category === ComponentCategory.DESSERT
+          ? 'PATISSERIE'
+          : 'CONDITIONNEMENT';
+
+      this.kdsBatches.push({
+        id: `kds-${targetDate}-${rec.recipeId}`,
+        recipeId: rec.recipeId,
+        recipeName: rec.recipeName,
+        category: rec.category,
+        portions: rec.totalPortions,
+        serviceTime: plan.serviceTime || MealServiceTime.LUNCH,
+        date: targetDate,
+        station,
+        stage: 'TO_PREPARE',
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
+    return this.kdsBatches.filter((b) => b.date === targetDate);
+  }
+
+  public updateKdsBatchStage(batchId: string, stage: KdsBatch['stage']): KdsBatch | undefined {
+    const batch = this.kdsBatches.find((b) => b.id === batchId);
+    if (batch) {
+      batch.stage = stage;
+      batch.updatedAt = new Date().toISOString();
+    }
+    return batch;
   }
 }
 

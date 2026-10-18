@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { MealServiceTime, OrderStatus } from '@janitou/common';
+import { MealServiceTime, OrderStatus, ComponentCategory, UnitOfMeasure } from '@janitou/common';
 import { janitouStore } from './services/store.js';
 function readJsonBody<T>(req: IncomingMessage): Promise<T> {
   const { promise, resolve, reject } = Promise.withResolvers<T>();
@@ -189,6 +189,35 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
         sendJson(res, 200, { recipes: recipesWithCosts });
         return;
       }
+      if (method === 'POST') {
+        const body = await readJsonBody<{
+          name: string;
+          category: ComponentCategory;
+          description?: string;
+          yieldPortions?: number;
+          preparationTimeMinutes?: number;
+          allergens?: string[];
+          ingredients: { ingredientId: string; quantityPerPortion: number; unit: UnitOfMeasure }[];
+        }>(req);
+
+        if (!body.name || !body.category || !Array.isArray(body.ingredients)) {
+          sendJson(res, 400, { error: 'Validation Error', message: 'name, category, and ingredients array are required.' });
+          return;
+        }
+
+        const newRecipe = janitouStore.createRecipe({
+          name: body.name,
+          category: body.category,
+          description: body.description || '',
+          yieldPortions: body.yieldPortions || 1,
+          preparationTimeMinutes: body.preparationTimeMinutes || 30,
+          allergens: body.allergens || [],
+          ingredients: body.ingredients,
+        });
+
+        sendJson(res, 201, { recipe: newRecipe });
+        return;
+      }
     }
 
     const recipeDetailMatch = pathname.match(/^\/api\/v1\/recipes\/([^/]+)$/);
@@ -207,6 +236,26 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
           ingredientsCostBreakdown: costInfo.breakdown,
         },
       });
+      return;
+    }
+
+    const recipeSimMatch = pathname.match(/^\/api\/v1\/recipes\/([^/]+)\/pricing-simulation$/);
+    if (recipeSimMatch && method === 'GET') {
+      const recipeId = recipeSimMatch[1];
+      const targetPct = searchParams.get('targetFoodCost') ? parseFloat(searchParams.get('targetFoodCost')!) : 30;
+      const sim = janitouStore.simulateRecipePricing(recipeId, targetPct);
+      if (!sim) {
+        sendJson(res, 404, { error: 'Not Found', message: `Recipe ${recipeId} not found.` });
+        return;
+      }
+      sendJson(res, 200, { simulation: sim });
+      return;
+    }
+
+    if (pathname === '/api/v1/meal-plans/weekly' && method === 'GET') {
+      const startDate = searchParams.get('startDate') || undefined;
+      const weekly = janitouStore.getWeeklyMenuPlan(startDate);
+      sendJson(res, 200, { weekly });
       return;
     }
 
@@ -443,6 +492,80 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
         'Content-Disposition': `attachment; filename="delivery-manifest-${date}.csv"`,
       });
       res.end(csvContent);
+      return;
+    }
+
+    // ----------------------------------------------------
+    // Customer Subscriptions API
+    // ----------------------------------------------------
+    if (pathname === '/api/v1/subscriptions') {
+      if (method === 'GET') {
+        sendJson(res, 200, { subscriptions: janitouStore.getSubscriptions() });
+        return;
+      }
+      if (method === 'POST') {
+        const body = await readJsonBody<{
+          customerId: string;
+          planName: string;
+          serviceTimes: MealServiceTime[];
+          dailyPortions: number;
+          activeDays: string[];
+          dietaryTags?: string[];
+          preferredRecipeId?: string;
+        }>(req);
+
+        if (!body.customerId || !body.planName || !body.dailyPortions) {
+          sendJson(res, 400, { error: 'Validation Error', message: 'customerId, planName, and dailyPortions are required.' });
+          return;
+        }
+
+        const sub = janitouStore.createSubscription({
+          customerId: body.customerId,
+          planName: body.planName,
+          serviceTimes: body.serviceTimes || [MealServiceTime.LUNCH],
+          dailyPortions: body.dailyPortions,
+          activeDays: body.activeDays || ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi'],
+          dietaryTags: body.dietaryTags || ['Standard'],
+          status: 'ACTIVE',
+          preferredRecipeId: body.preferredRecipeId,
+        });
+
+        sendJson(res, 201, { subscription: sub });
+        return;
+      }
+    }
+
+    if (pathname === '/api/v1/subscriptions/generate-orders' && method === 'POST') {
+      const body = await readJsonBody<{ date?: string }>(req);
+      const targetDate = body.date || new Date().toLocaleDateString('en-CA');
+      const generatedOrders = janitouStore.generateOrdersFromSubscriptions(targetDate);
+      sendJson(res, 201, {
+        message: `${generatedOrders.length} orders generated from active subscriptions for ${targetDate}.`,
+        orders: generatedOrders,
+      });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // Kitchen Display System (KDS) Batches API
+    // ----------------------------------------------------
+    if (pathname === '/api/v1/kds/batches' && method === 'GET') {
+      const date = searchParams.get('date') || undefined;
+      const batches = janitouStore.getKdsBatches(date);
+      sendJson(res, 200, { batches });
+      return;
+    }
+
+    const kdsStageMatch = pathname.match(/^\/api\/v1\/kds\/batches\/([^/]+)\/stage$/);
+    if (kdsStageMatch && method === 'PATCH') {
+      const batchId = kdsStageMatch[1];
+      const body = await readJsonBody<{ stage: 'TO_PREPARE' | 'COOKING' | 'PACKAGING' | 'READY' }>(req);
+      const updated = janitouStore.updateKdsBatchStage(batchId, body.stage);
+      if (!updated) {
+        sendJson(res, 404, { error: 'Not Found', message: `Batch ${batchId} not found.` });
+        return;
+      }
+      sendJson(res, 200, { batch: updated });
       return;
     }
 

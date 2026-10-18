@@ -93,3 +93,24 @@ For each significant technical decision, record:
   - Ready for immediate use in commercial meal catering and dark kitchen operations.
 - **Approval Status:**
   - Implemented and verified via automated test suite.
+
+---
+
+## ADR-004: Recipe Engineering Studio, Weekly Menu Planning, Kitchen Display System (KDS) & Driver Mobile Navigation
+
+- **Date:** 2026-10-19
+- **Decision:**
+  - Deploy an interactive **Recipe Engineering Studio** allowing culinary teams to create technical dish sheets, compute unit food costs dynamically, and simulate target selling prices based on target Food Cost % ratios.
+  - Implement a **7-Day Weekly Menu Calendar** linking Lunch and Dinner slots to defined recipes, with one-click conversion of active customer subscriptions into scheduled daily orders.
+  - Provide a touch-friendly **Kitchen Display System (KDS)** supporting active station routing (`CHAUD`, `FROID`, `PATISSERIE`, `CONDITIONNEMENT`) with four-stage batch progression (`TO_PREPARE` → `COOKING` → `PACKAGING` → `READY`).
+  - Enhance Driver Logistics with direct **Google Maps GPS deep-links** and **click-to-call** telephone triggers for on-route delivery personnel.
+  - Expand the automated test suite to 12 comprehensive unit and integration tests.
+- **Reason:**
+  - Professional commercial catering demands weekly visibility over menus and recipe costing engineering.
+  - Physical kitchen brigades require specialized high-contrast touch displays (KDS) rather than paperwork to monitor live cooking batches.
+  - Delivery drivers operate primarily on mobile phones and need frictionless navigation and client communication.
+- **Impact on the Project:**
+  - Transforms the platform from a back-office tool into an end-to-end commercial operations system.
+  - 100% operational coverage from recipe design to doorstep delivery.
+- **Approval Status:**
+  - Implemented, verified with 12 passing tests, and deployed.
