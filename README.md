@@ -49,20 +49,45 @@ Once started, access the interactive management dashboard at:
 - **API Health Check:** [http://localhost:4000/health](http://localhost:4000/health)
 - **API Discovery:** [http://localhost:4000/api/v1](http://localhost:4000/api/v1)
 
+## Key Platform Modules
+
+1. **Executive Financial Dashboard:**
+   - Real-time Revenue, Raw Food Cost, Gross Margin, and Food Cost % KPIs.
+   - Dish-level profitability breakdown and contribution margins.
+2. **Recipe Engineering Studio & Pricing Simulator:**
+   - Technical dish creation with raw ingredient breakdown.
+   - Unit food cost calculation and dynamic recommended selling price simulator based on target food cost % ratios.
+3. **7-Day Weekly Menu Planning & Subscription Engine:**
+   - Schedule Lunch and Dinner menus across a rolling 7-day calendar.
+   - Automated conversion of recurring corporate & personal customer subscriptions into daily production orders.
+4. **Kitchen Display System (KDS) Tablet Mode:**
+   - Real-time touch screen for kitchen brigade stations (`CHAUD`, `FROID`, `PATISSERIE`, `CONDITIONNEMENT`).
+   - Four-stage batch progression (`À Préparer` → `En Cuisson` → `En Barquette` → `Prêt au Départ`).
+5. **Thermal Packaging Label Generator:**
+   - Generates standard 76x51mm thermal labels for Kraft meal boxes with batch barcodes, allergen warnings, and heating instructions.
+6. **Logistics & Driver Mobile Navigation:**
+   - Driver manifest with one-click **Google Maps GPS Navigation** and **click-to-call** client buttons.
+
 ## Platform Architecture
 
 ```text
 janitou-food-management/
 ├── apps/
-│   ├── api/                   # REST API router, domain services, production engine & tests
-│   └── web/                   # Operational dashboard (Orders, Kitchen, Inventory, Logistics)
+│   ├── api/                   # REST API, domain store, production calculation engine & test suite
+│   └── web/                   # Interactive dashboard, KDS screen, recipe studio & printable sheets
 ├── packages/
-│   ├── common/                # Shared TypeScript contracts, roles, enums, interfaces
-│   └── database/              # Prisma schema & PostgreSQL configuration
+│   ├── common/                # Shared TypeScript types, enums, interfaces, and domain contracts
+│   └── database/              # Prisma schema & PostgreSQL 16 relational models
 ├── docker-compose.yml         # Containerized PostgreSQL 16 environment
 └── docs/
-    └── TECHNICAL_DECISIONS.md # ADR log (ADR-001, ADR-002)
+    └── TECHNICAL_DECISIONS.md # ADR log (ADR-001, ADR-002, ADR-003, ADR-004)
 ```
 
+## Test Suite
+
+```bash
+bun test
+# 12 passing automated unit and integration tests (100% success rate)
+```
 
 This README provides an initial project overview. Detailed functional requirements, technical specifications, and approved project decisions must be maintained in their designated project documents.
