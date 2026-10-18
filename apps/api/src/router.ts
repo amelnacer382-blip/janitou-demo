@@ -396,6 +396,56 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
       return;
     }
 
+    // ----------------------------------------------------
+    // Packaging & Meal Box Labels API
+    // ----------------------------------------------------
+    if (pathname === '/api/v1/packaging/labels' && method === 'GET') {
+      const date = searchParams.get('date');
+      const orderId = searchParams.get('orderId');
+      const labels = orderId
+        ? janitouStore.generatePackagingLabels(orderId, true)
+        : janitouStore.generatePackagingLabels(date || undefined, false);
+      sendJson(res, 200, { labels, count: labels.length });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // Financial & Operational Analytics API
+    // ----------------------------------------------------
+    if (pathname === '/api/v1/analytics/financials' && method === 'GET') {
+      const date = searchParams.get('date') || undefined;
+      const analytics = janitouStore.getFinancialAnalytics(date);
+      sendJson(res, 200, { analytics });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // Data Exports (CSV) API
+    // ----------------------------------------------------
+    if (pathname === '/api/v1/export/production' && method === 'GET') {
+      const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
+      const serviceTime = (searchParams.get('serviceTime') as MealServiceTime) || undefined;
+      const csvContent = janitouStore.exportProductionSheetCsv(date, serviceTime);
+      res.writeHead(200, {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="production-sheet-${date}.csv"`,
+      });
+      res.end(csvContent);
+      return;
+    }
+
+    if (pathname === '/api/v1/export/delivery' && method === 'GET') {
+      const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
+      const serviceTime = (searchParams.get('serviceTime') as MealServiceTime) || undefined;
+      const csvContent = janitouStore.exportDeliveryManifestCsv(date, serviceTime);
+      res.writeHead(200, {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="delivery-manifest-${date}.csv"`,
+      });
+      res.end(csvContent);
+      return;
+    }
+
     // Default 404
     sendJson(res, 404, {
       error: 'Not Found',

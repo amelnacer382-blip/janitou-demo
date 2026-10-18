@@ -125,3 +125,32 @@ test('5. Customer & Order Management — creates valid order with generated code
   assert.equal(order.status, OrderStatus.CONFIRMED);
   assert.equal(order.items.length, 2);
 });
+
+test('6. Packaging Label Generator — generates individual meal box labels with thermal format', () => {
+  const store = new JanitouStore();
+  const today = new Date().toISOString().split('T')[0];
+
+  const labels = store.generatePackagingLabels(today, false);
+  assert.ok(labels.length > 0);
+
+  const firstLabel = labels[0];
+  assert.ok(firstLabel.labelId.startsWith('LBL-'));
+  assert.ok(firstLabel.barcode.startsWith('*JNT-'));
+  assert.ok(firstLabel.heatingInstructions.length > 10);
+  assert.ok(firstLabel.storageInstructions.length > 10);
+  assert.ok(Array.isArray(firstLabel.allergens));
+});
+
+test('7. Financial Analytics & Margins — calculates revenue, food cost and gross margin', () => {
+  const store = new JanitouStore();
+  const today = new Date().toISOString().split('T')[0];
+
+  const analytics = store.getFinancialAnalytics(today);
+  assert.ok(analytics.totalRevenue > 0);
+  assert.ok(analytics.totalFoodCost > 0);
+  assert.ok(analytics.grossMargin > 0);
+  assert.equal(analytics.grossMargin, analytics.totalRevenue - analytics.totalFoodCost);
+  assert.ok(analytics.foodCostPercentage > 0 && analytics.foodCostPercentage < 100);
+  assert.ok(analytics.grossMarginPercentage > 0 && analytics.grossMarginPercentage < 100);
+  assert.ok(analytics.topRecipes.length > 0);
+});

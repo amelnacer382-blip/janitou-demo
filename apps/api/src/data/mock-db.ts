@@ -291,7 +291,8 @@ export const initialCustomers: DbCustomer[] = [
   },
 ];
 
-const todayDate = new Date().toISOString().split('T')[0];
+export const getTodayDate = (): string => new Date().toLocaleDateString('en-CA');
+const todayDate = getTodayDate();
 
 export const initialMealPlans: DbMealPlan[] = [
   {

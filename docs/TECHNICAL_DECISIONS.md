@@ -70,3 +70,26 @@ For each significant technical decision, record:
   - Instant testability and zero-dependency startup.
 - **Approval Status:**
   - Implemented and verified via automated test suite.
+
+---
+
+## ADR-003: Professional Packaging Label Generation, Financial Analytics & Modern UX Upgrade
+
+- **Date:** 2026-10-19
+- **Decision:**
+  - Implement an individual packaging & thermal meal box label generator conforming to standard catering formats (76mm x 51mm Kraft containers) with barcode simulation, dish category, portion numbering (`Colis X / Y`), allergen disclosure, heating instructions, and cold chain storage guidelines.
+  - Introduce real-time financial analytics: Revenue estimation, Raw Food Cost calculation, Gross Margin (DZD), Food Cost Percentage, and recipe-level profitability rankings.
+  - Implement role-based navigation and view switcher (`ADMIN`, `CHEF_KITCHEN`, `PURCHASING`, `DELIVERY`).
+  - Add CSV export endpoints for kitchen production sheets and delivery manifests.
+  - Upgrade the user interface to a modern Tailwind-inspired slate and emerald design system with Plus Jakarta Sans typography and glassmorphism.
+- **Reason:**
+  - Food safety and delivery compliance require clear traceability labels on each physical box dispatched to clients.
+  - Kitchen managers and restaurant operators need immediate visibility into Food Cost % to protect operating margins.
+  - Role-specific ergonomics improve usability for kitchen brigades and delivery drivers.
+- **Alternatives Considered:**
+  - *External labeling SaaS integration:* Rejected to keep the platform autonomous and free of external recurring API costs.
+- **Impact on the Project:**
+  - Bridges the digital management platform with physical kitchen and packaging operations.
+  - Ready for immediate use in commercial meal catering and dark kitchen operations.
+- **Approval Status:**
+  - Implemented and verified via automated test suite.
