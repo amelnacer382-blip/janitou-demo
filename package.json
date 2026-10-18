@@ -1,0 +1,30 @@
+{
+  "name": "janitou-food-management",
+  "version": "0.1.0",
+  "private": true,
+  "description": "JANITOU FOOD — Meal Management, Production and Distribution Platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run --workspaces --if-present build",
+    "test": "npm run --workspaces --if-present test",
+    "lint": "npm run --workspaces --if-present lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "meal-management",
+    "production-planning",
+    "catering",
+    "distribution"
+  ],
+  "author": "JANITOU FOOD",
+  "license": "UNLICENSED"
+}

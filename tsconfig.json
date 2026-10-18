@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@janitou/common": ["./packages/common/src/index.ts"]
+    },
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}
