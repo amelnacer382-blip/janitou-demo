@@ -8,7 +8,12 @@ export const server = http.createServer((req, res) => {
 });
 
 if (process.env.NODE_ENV !== 'test') {
-  server.listen(PORT, () => {
-    console.log(`[JANITOU FOOD API] Server running on port ${PORT}`);
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`\n======================================================`);
+    console.log(`[JANITOU FOOD API] Serveur actif sur le port ${PORT}`);
+    console.log(`→ Dashboard Web : http://localhost:${PORT}/dashboard`);
+    console.log(`→ Alternative   : http://127.0.0.1:${PORT}/dashboard`);
+    console.log(`→ API Health    : http://localhost:${PORT}/health`);
+    console.log(`======================================================\n`);
   });
 }
