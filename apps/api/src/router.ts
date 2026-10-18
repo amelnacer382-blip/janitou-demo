@@ -1,0 +1,412 @@
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { MealServiceTime, OrderStatus } from '@janitou/common';
+import { janitouStore } from './services/store.js';
+function readJsonBody<T>(req: IncomingMessage): Promise<T> {
+  const { promise, resolve, reject } = Promise.withResolvers<T>();
+  let body = '';
+  req.on('data', (chunk) => {
+    body += chunk;
+    if (body.length > 2 * 1024 * 1024) {
+      reject(new Error('Payload too large'));
+    }
+  });
+  req.on('end', () => {
+    try {
+      resolve(body.length > 0 ? (JSON.parse(body) as T) : ({} as T));
+    } catch {
+      reject(new Error('Invalid JSON payload'));
+    }
+  });
+  req.on('error', (err) => reject(err));
+  return promise;
+}
+
+function sendJson(res: ServerResponse, statusCode: number, data: unknown): void {
+  res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(data));
+}
+
+export async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+  const { pathname, searchParams } = url;
+  const method = req.method?.toUpperCase() || 'GET';
+
+  // Global CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  try {
+    // ----------------------------------------------------
+    // Web Application Dashboard UI
+    // ----------------------------------------------------
+    if (pathname === '/' || pathname === '/dashboard') {
+      try {
+        const htmlPath = resolve(process.cwd(), 'apps/web/src/dashboard.html');
+        const htmlContent = await readFile(htmlPath, 'utf-8');
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(htmlContent);
+        return;
+      } catch (err) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(`<h1>JANITOU FOOD API is active</h1><p>Dashboard file loading error.</p>`);
+        return;
+      }
+    }
+
+    // ----------------------------------------------------
+    // System & Health Endpoints
+    // ----------------------------------------------------
+    if (pathname === '/health' || pathname === '/api/health') {
+      sendJson(res, 200, {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        service: 'JANITOU FOOD API',
+        version: '0.1.0',
+      });
+      return;
+    }
+
+    if (pathname === '/api' || pathname === '/api/v1') {
+      sendJson(res, 200, {
+        name: 'JANITOU FOOD Management API',
+        version: 'v1',
+        description: 'Meal Management, Production and Distribution Platform',
+        endpoints: {
+          customers: '/api/v1/customers',
+          ingredients: '/api/v1/ingredients',
+          recipes: '/api/v1/recipes',
+          mealPlans: '/api/v1/meal-plans',
+          orders: '/api/v1/orders',
+          productionPlan: '/api/v1/production/plan?date=YYYY-MM-DD',
+          productionAutoPurchase: '/api/v1/production/auto-purchase-orders',
+          purchasingOrders: '/api/v1/purchasing/orders',
+          deliveryRuns: '/api/v1/delivery/runs',
+        },
+      });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // Customers API
+    // ----------------------------------------------------
+    if (pathname === '/api/v1/customers') {
+      if (method === 'GET') {
+        sendJson(res, 200, { customers: janitouStore.getCustomers() });
+        return;
+      }
+      if (method === 'POST') {
+        const body = await readJsonBody<{
+          companyName?: string;
+          contactName: string;
+          phone: string;
+          email?: string;
+          deliveryAddress: string;
+          wilaya?: string;
+          commune?: string;
+          deliveryNotes?: string;
+          dietaryPreferences?: string[];
+        }>(req);
+
+        if (!body.contactName || !body.phone || !body.deliveryAddress) {
+          sendJson(res, 400, {
+            error: 'Validation Error',
+            message: 'contactName, phone, and deliveryAddress are required.',
+          });
+          return;
+        }
+
+        const customer = janitouStore.createCustomer({
+          companyName: body.companyName,
+          contactName: body.contactName,
+          phone: body.phone,
+          email: body.email || '',
+          deliveryAddress: body.deliveryAddress,
+          wilaya: body.wilaya || 'Alger',
+          commune: body.commune || 'Centre',
+          deliveryNotes: body.deliveryNotes,
+          dietaryPreferences: body.dietaryPreferences || ['Standard'],
+        });
+
+        sendJson(res, 201, { customer });
+        return;
+      }
+    }
+
+    // ----------------------------------------------------
+    // Ingredients & Inventory API
+    // ----------------------------------------------------
+    if (pathname === '/api/v1/ingredients') {
+      if (method === 'GET') {
+        const ingredientsWithStatus = janitouStore.getIngredients().map((ing) => ({
+          ...ing,
+          isLowStock: ing.currentStock <= ing.minimumThreshold,
+          stockDeficit: ing.currentStock <= ing.minimumThreshold ? ing.minimumThreshold - ing.currentStock : 0,
+        }));
+        sendJson(res, 200, { ingredients: ingredientsWithStatus });
+        return;
+      }
+    }
+
+    const ingredientStockMatch = pathname.match(/^\/api\/v1\/ingredients\/([^/]+)\/stock$/);
+    if (ingredientStockMatch && method === 'PATCH') {
+      const ingredientId = ingredientStockMatch[1];
+      const body = await readJsonBody<{ currentStock: number }>(req);
+      if (typeof body.currentStock !== 'number' || body.currentStock < 0) {
+        sendJson(res, 400, { error: 'Validation Error', message: 'currentStock must be a positive number.' });
+        return;
+      }
+      const updated = janitouStore.updateIngredientStock(ingredientId, body.currentStock);
+      if (!updated) {
+        sendJson(res, 404, { error: 'Not Found', message: `Ingredient ${ingredientId} not found.` });
+        return;
+      }
+      sendJson(res, 200, { ingredient: updated });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // Recipes API
+    // ----------------------------------------------------
+    if (pathname === '/api/v1/recipes') {
+      if (method === 'GET') {
+        const recipesWithCosts = janitouStore.getRecipes().map((rec) => {
+          const costInfo = janitouStore.calculateRecipeCost(rec.id);
+          return {
+            ...rec,
+            costPerPortion: costInfo.costPerPortion,
+            ingredientsCostBreakdown: costInfo.breakdown,
+          };
+        });
+        sendJson(res, 200, { recipes: recipesWithCosts });
+        return;
+      }
+    }
+
+    const recipeDetailMatch = pathname.match(/^\/api\/v1\/recipes\/([^/]+)$/);
+    if (recipeDetailMatch && method === 'GET') {
+      const recipeId = recipeDetailMatch[1];
+      const recipe = janitouStore.getRecipeById(recipeId);
+      if (!recipe) {
+        sendJson(res, 404, { error: 'Not Found', message: `Recipe ${recipeId} not found.` });
+        return;
+      }
+      const costInfo = janitouStore.calculateRecipeCost(recipeId);
+      sendJson(res, 200, {
+        recipe: {
+          ...recipe,
+          costPerPortion: costInfo.costPerPortion,
+          ingredientsCostBreakdown: costInfo.breakdown,
+        },
+      });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // Meal Plans API
+    // ----------------------------------------------------
+    if (pathname === '/api/v1/meal-plans') {
+      if (method === 'GET') {
+        const date = searchParams.get('date') || undefined;
+        sendJson(res, 200, { mealPlans: janitouStore.getMealPlans(date) });
+        return;
+      }
+      if (method === 'POST') {
+        const body = await readJsonBody<{
+          date: string;
+          serviceTime: MealServiceTime;
+          starterRecipeId?: string;
+          mainCourseRecipeId: string;
+          sideDishRecipeId?: string;
+          dessertRecipeId?: string;
+          notes?: string;
+        }>(req);
+
+        if (!body.date || !body.serviceTime || !body.mainCourseRecipeId) {
+          sendJson(res, 400, {
+            error: 'Validation Error',
+            message: 'date, serviceTime, and mainCourseRecipeId are required.',
+          });
+          return;
+        }
+
+        const mealPlan = janitouStore.createMealPlan(body);
+        sendJson(res, 201, { mealPlan });
+        return;
+      }
+    }
+
+    // ----------------------------------------------------
+    // Orders API
+    // ----------------------------------------------------
+    if (pathname === '/api/v1/orders') {
+      if (method === 'GET') {
+        const date = searchParams.get('date') || undefined;
+        const serviceTime = (searchParams.get('serviceTime') as MealServiceTime) || undefined;
+        const status = (searchParams.get('status') as OrderStatus) || undefined;
+
+        const orders = janitouStore.getOrders({ date, serviceTime, status });
+        sendJson(res, 200, { orders, total: orders.length });
+        return;
+      }
+      if (method === 'POST') {
+        const body = await readJsonBody<{
+          customerId: string;
+          deliveryDate: string;
+          serviceTime: MealServiceTime;
+          items: { recipeId: string; portions: number; specialNotes?: string }[];
+          deliveryAddress?: string;
+          notes?: string;
+        }>(req);
+
+        if (!body.customerId || !body.deliveryDate || !body.serviceTime || !Array.isArray(body.items) || body.items.length === 0) {
+          sendJson(res, 400, {
+            error: 'Validation Error',
+            message: 'customerId, deliveryDate, serviceTime, and at least one item are required.',
+          });
+          return;
+        }
+
+        const newOrder = janitouStore.createOrder(body);
+        sendJson(res, 201, { order: newOrder });
+        return;
+      }
+    }
+
+    const orderStatusMatch = pathname.match(/^\/api\/v1\/orders\/([^/]+)\/status$/);
+    if (orderStatusMatch && method === 'PATCH') {
+      const orderId = orderStatusMatch[1];
+      const body = await readJsonBody<{ status: OrderStatus }>(req);
+      if (!body.status || !Object.values(OrderStatus).includes(body.status)) {
+        sendJson(res, 400, { error: 'Validation Error', message: `Invalid status: ${body.status}` });
+        return;
+      }
+      const updatedOrder = janitouStore.updateOrderStatus(orderId, body.status);
+      if (!updatedOrder) {
+        sendJson(res, 404, { error: 'Not Found', message: `Order ${orderId} not found.` });
+        return;
+      }
+      sendJson(res, 200, { order: updatedOrder });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // CORE ENGINE: Production Planning & Ingredient Calculation
+    // ----------------------------------------------------
+    if (pathname === '/api/v1/production/plan') {
+      if (method === 'GET') {
+        const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
+        const serviceTimeParam = searchParams.get('serviceTime');
+        const serviceTime = serviceTimeParam ? (serviceTimeParam as MealServiceTime) : undefined;
+
+        const plan = janitouStore.calculateProductionNeeds(date, serviceTime);
+        sendJson(res, 200, { plan });
+        return;
+      }
+    }
+
+    if (pathname === '/api/v1/production/auto-purchase-orders' && method === 'POST') {
+      const body = await readJsonBody<{ date: string; serviceTime?: MealServiceTime }>(req);
+      if (!body.date) {
+        sendJson(res, 400, { error: 'Validation Error', message: 'date is required.' });
+        return;
+      }
+      const createdPOs = janitouStore.generatePurchaseOrdersFromDeficits(body.date, body.serviceTime);
+      sendJson(res, 201, {
+        message: `${createdPOs.length} purchase orders generated from calculated ingredient deficits.`,
+        purchaseOrders: createdPOs,
+      });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // Purchasing Orders API
+    // ----------------------------------------------------
+    if (pathname === '/api/v1/purchasing/orders') {
+      if (method === 'GET') {
+        sendJson(res, 200, { purchaseOrders: janitouStore.getPurchaseOrders() });
+        return;
+      }
+    }
+
+    const receivePOMatch = pathname.match(/^\/api\/v1\/purchasing\/orders\/([^/]+)\/receive$/);
+    if (receivePOMatch && method === 'POST') {
+      const poId = receivePOMatch[1];
+      const received = janitouStore.receivePurchaseOrder(poId);
+      if (!received) {
+        sendJson(res, 404, { error: 'Not Found', message: `Purchase order ${poId} not found.` });
+        return;
+      }
+      sendJson(res, 200, {
+        message: `Purchase order ${received.poNumber} received. Stock has been incremented.`,
+        purchaseOrder: received,
+      });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // Logistics & Delivery Runs API
+    // ----------------------------------------------------
+    if (pathname === '/api/v1/delivery/runs') {
+      if (method === 'GET') {
+        const date = searchParams.get('date') || undefined;
+        sendJson(res, 200, { deliveryRuns: janitouStore.getDeliveryRuns(date) });
+        return;
+      }
+      if (method === 'POST') {
+        const body = await readJsonBody<{
+          runDate: string;
+          serviceTime: MealServiceTime;
+          driverName: string;
+          driverPhone: string;
+        }>(req);
+
+        if (!body.runDate || !body.serviceTime || !body.driverName || !body.driverPhone) {
+          sendJson(res, 400, {
+            error: 'Validation Error',
+            message: 'runDate, serviceTime, driverName, and driverPhone are required.',
+          });
+          return;
+        }
+
+        const run = janitouStore.createDeliveryRun(body);
+        sendJson(res, 201, { deliveryRun: run });
+        return;
+      }
+    }
+
+    const deliveryStopMatch = pathname.match(/^\/api\/v1\/delivery\/runs\/([^/]+)\/stops\/([^/]+)$/);
+    if (deliveryStopMatch && method === 'PATCH') {
+      const [, runId, stopId] = deliveryStopMatch;
+      const body = await readJsonBody<{ comment?: string }>(req);
+      const updatedRun = janitouStore.markDeliveryStopCompleted(runId, stopId, body.comment);
+      if (!updatedRun) {
+        sendJson(res, 404, { error: 'Not Found', message: `Delivery run or stop not found.` });
+        return;
+      }
+      sendJson(res, 200, { deliveryRun: updatedRun });
+      return;
+    }
+
+    // Default 404
+    sendJson(res, 404, {
+      error: 'Not Found',
+      message: `Cannot ${method} ${pathname}`,
+    });
+  } catch (error: unknown) {
+    console.error('[API Router Error]', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred.';
+    sendJson(res, 500, {
+      error: 'Internal Server Error',
+      message: errorMessage,
+    });
+  }
+}
