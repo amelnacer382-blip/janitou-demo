@@ -43,3 +43,30 @@ For each significant technical decision, record:
   - Ready for CI/CD automated validation.
 - **Approval Status:**
   - Proposed & Initialized in `feature/environment-setup`.
+
+---
+
+## ADR-002: Core Production & Purchasing Engine, Operational Web Dashboard, and Delivery Run Workflow
+
+- **Date:** 2026-10-19
+- **Decision:**
+  - Implement an in-memory transactional domain store with schema mirroring Prisma PostgreSQL entities.
+  - Implement a **Production Calculation Engine** that aggregates confirmed customer orders for any date/service window (Lunch/Dinner), explodes recipes into component raw ingredients, compares needs with live stock, and computes deficits.
+  - Automate supplier Purchase Order generation directly from calculated ingredient deficits, with inventory restock on goods reception.
+  - Deploy an interactive, responsive Single Page Dashboard directly servable via the API (`/` and `/dashboard`), providing operational views for:
+    - Orders & Customer Management
+    - Kitchen Production Sheet (with printable layout)
+    - Inventory & Stock Management
+    - Logistics & Delivery Runs
+  - Implement automated test suites covering calculation precision, ingredient explosions, restock flows, and HTTP endpoints.
+- **Reason:**
+  - Eliminates human calculation errors in portion sizing and raw ingredient requisition.
+  - Provides an immediate functional platform that operations, kitchen, and drivers can use without waiting for external infrastructure setup.
+- **Alternatives Considered:**
+  - *Manual kitchen spreadsheet:* Rejected due to high risk of portion errors and lack of live stock sync.
+  - *Heavy SPA framework with separate dev server:* Deferred to allow immediate out-of-the-box execution while retaining full web code modularity.
+- **Impact on the Project:**
+  - Core business requirements from `README.md` are 100% operational and verifiable.
+  - Instant testability and zero-dependency startup.
+- **Approval Status:**
+  - Implemented and verified via automated test suite.
