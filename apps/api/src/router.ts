@@ -569,6 +569,165 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
       return;
     }
 
+    // ----------------------------------------------------
+    // Phase 1: Menu Calendar Rules Validation API
+    // ----------------------------------------------------
+    if (pathname === '/api/v1/meal-plans/validate-rules' && method === 'GET') {
+      const validation = janitouStore.validateMenuCalendarRules();
+      sendJson(res, 200, validation);
+      return;
+    }
+
+    // ----------------------------------------------------
+    // Phase 1: Accounting & Pre-paid Invoicing API
+    // ----------------------------------------------------
+    if (pathname === '/api/v1/accounting/invoices' && method === 'GET') {
+      const customerId = searchParams.get('customerId') || undefined;
+      sendJson(res, 200, { invoices: janitouStore.getInvoices(customerId) });
+      return;
+    }
+
+    if (pathname === '/api/v1/accounting/payments') {
+      if (method === 'GET') {
+        const customerId = searchParams.get('customerId') || undefined;
+        sendJson(res, 200, { payments: janitouStore.getPayments(customerId) });
+        return;
+      }
+      if (method === 'POST') {
+        const body = await readJsonBody<{
+          customerId: string;
+          amount: number;
+          paymentMethod: 'CASH' | 'CHECK' | 'BANK_TRANSFER' | 'PREPAID_CREDIT';
+          invoiceId?: string;
+          notes?: string;
+        }>(req);
+
+        if (!body.customerId || typeof body.amount !== 'number' || body.amount <= 0 || !body.paymentMethod) {
+          sendJson(res, 400, { error: 'Validation Error', message: 'customerId, positive amount, and paymentMethod are required.' });
+          return;
+        }
+
+        const payment = janitouStore.recordPayment(body);
+        sendJson(res, 201, { payment });
+        return;
+      }
+    }
+
+    const statementMatch = pathname.match(/^\/api\/v1\/accounting\/statements\/([^/]+)$/);
+    if (statementMatch && method === 'GET') {
+      const customerId = statementMatch[1];
+      const statement = janitouStore.getCustomerStatement(customerId);
+      if (!statement.customer) {
+        sendJson(res, 404, { error: 'Not Found', message: `Customer ${customerId} not found.` });
+        return;
+      }
+      sendJson(res, 200, { statement });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // Phase 1: Driver Remuneration & Transfer API
+    // ----------------------------------------------------
+    const driverCompensationMatch = pathname.match(/^\/api\/v1\/delivery\/runs\/([^/]+)\/compensation$/);
+    if (driverCompensationMatch && method === 'GET') {
+      const runId = driverCompensationMatch[1];
+      const comp = janitouStore.calculateDriverCompensation(runId);
+      sendJson(res, 200, { compensation: comp });
+      return;
+    }
+
+    const transferRunMatch = pathname.match(/^\/api\/v1\/delivery\/runs\/([^/]+)\/transfer$/);
+    if (transferRunMatch && method === 'POST') {
+      const runId = transferRunMatch[1];
+      const body = await readJsonBody<{ newDriverName: string; newDriverPhone: string; reason: string }>(req);
+      if (!body.newDriverName || !body.newDriverPhone) {
+        sendJson(res, 400, { error: 'Validation Error', message: 'newDriverName and newDriverPhone are required.' });
+        return;
+      }
+      const transferred = janitouStore.transferDeliveryRun(runId, body.newDriverName, body.newDriverPhone, body.reason || 'Indisponibilité chauffeur');
+      if (!transferred) {
+        sendJson(res, 404, { error: 'Not Found', message: `Run ${runId} not found.` });
+        return;
+      }
+      sendJson(res, 200, { run: transferred, message: `Tournée transférée avec succès à ${body.newDriverName}.` });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // Phase 1: Audit Log API
+    // ----------------------------------------------------
+    if (pathname === '/api/v1/audit/logs' && method === 'GET') {
+      const entityType = searchParams.get('entityType') || undefined;
+      const action = searchParams.get('action') || undefined;
+      const logs = janitouStore.getAuditLogs({ entityType, action });
+      sendJson(res, 200, { logs, count: logs.length });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // Phase 1: Emergency Workshop Package & Backup/Restore
+    // ----------------------------------------------------
+    if (pathname === '/api/v1/emergency/workshop-package' && method === 'GET') {
+      const date = searchParams.get('date') || undefined;
+      const emergencyPkg = janitouStore.generateEmergencyWorkshopPackage(date);
+      sendJson(res, 200, { emergencyPackage: emergencyPkg });
+      return;
+    }
+
+    if (pathname === '/api/v1/system/backup' && method === 'GET') {
+      const backup = janitouStore.createDatabaseBackup();
+      res.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Content-Disposition': `attachment; filename="janitou-backup-${new Date().toLocaleDateString('en-CA')}.json"`,
+      });
+      res.end(JSON.stringify(backup, null, 2));
+      return;
+    }
+
+    if (pathname === '/api/v1/system/restore' && method === 'POST') {
+      const body = await readJsonBody<{ data: Record<string, unknown> }>(req);
+      const ok = janitouStore.restoreDatabaseFromBackup(body);
+      if (!ok) {
+        sendJson(res, 400, { error: 'Restore Error', message: 'Format de sauvegarde invalide.' });
+        return;
+      }
+      sendJson(res, 200, { message: 'Restauration complète de la base effectuée avec succès.' });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // Phase 1: Les 14 Rapports Officiels Hub API
+    // ----------------------------------------------------
+    if (pathname === '/api/v1/reports' && method === 'GET') {
+      const reportsCatalog = [
+        { id: 1, title: 'Commandes' },
+        { id: 2, title: 'Production (prévu/réel, surplus/pénuries)' },
+        { id: 3, title: 'Achats & réceptions' },
+        { id: 4, title: 'Suppléments' },
+        { id: 5, title: 'Emballage (individuel & collectif)' },
+        { id: 6, title: 'Distribution & tournées' },
+        { id: 7, title: 'Comptes clients & soldes' },
+        { id: 8, title: 'Clients & Hiérarchie sociétés/filiales' },
+        { id: 9, title: 'Statistiques consommation' },
+        { id: 10, title: 'Performance globale' },
+        { id: 11, title: 'Journal d’audit' },
+        { id: 12, title: 'Paiements & Reçus' },
+        { id: 13, title: 'Alternatives & Régimes spéciaux' },
+        { id: 14, title: 'Synthèse hebdomadaire 360°' },
+      ];
+      sendJson(res, 200, { reports: reportsCatalog });
+      return;
+    }
+
+    const reportDetailMatch = pathname.match(/^\/api\/v1\/reports\/([0-9]+)$/);
+    if (reportDetailMatch && method === 'GET') {
+      const reportId = parseInt(reportDetailMatch[1], 10);
+      const date = searchParams.get('date') || undefined;
+      const result = janitouStore.generateReport(reportId, date);
+      sendJson(res, 200, { report: result });
+      return;
+    }
+
     // Default 404
     sendJson(res, 404, {
       error: 'Not Found',

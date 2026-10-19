@@ -223,3 +223,82 @@ test('11. Kitchen Display System (KDS) — tracks batch stations and updates wor
   assert.ok(updated);
   assert.equal(updated.stage, 'COOKING');
 });
+
+test('12. Menu Calendar Rules Engine — detects same-day fries and minced meat conflicts', () => {
+  const store = new JanitouStore();
+  // Create a recipe with fries
+  const friesRecipe = store.createRecipe({
+    name: 'Steak Grillé & Frites Maison',
+    category: ComponentCategory.MAIN_COURSE,
+    yieldPortions: 1,
+    preparationTimeMinutes: 25,
+    allergens: [],
+    ingredients: [{ ingredientId: 'ing-6', quantityPerPortion: 0.3, unit: UnitOfMeasure.KILOGRAM }],
+  });
+
+  // Intentionally violate rule: fries at lunch and dinner on the same day
+  const testDate = '2026-10-25';
+  const conflictingPlans = [
+    { id: 'mp-test-1', date: testDate, serviceTime: MealServiceTime.LUNCH, mainCourseRecipeId: friesRecipe.id },
+    { id: 'mp-test-2', date: testDate, serviceTime: MealServiceTime.DINNER, mainCourseRecipeId: friesRecipe.id },
+  ];
+
+  const validation = store.validateMenuCalendarRules(conflictingPlans);
+  assert.equal(validation.isValid, false);
+  const friesViolation = validation.violations.find((v) => v.ruleName === 'INTERDICTION_FRITES_MIDI_SOIR');
+  assert.ok(friesViolation);
+  assert.equal(friesViolation.severity, 'ERROR');
+});
+
+test('13. Customer Hierarchy & Prepaid Accounting — tracks subsidiaries, payments, and balances', () => {
+  const store = new JanitouStore();
+  const subsidiary = store.getCustomerById('cust-4');
+  assert.ok(subsidiary);
+  assert.equal(subsidiary.isSubsidiary, true);
+  assert.equal(subsidiary.parentCompanyId, 'cust-2');
+
+  // Record payment and verify balance update
+  const oldBalance = subsidiary.accountBalance;
+  const payment = store.recordPayment({
+    customerId: 'cust-4',
+    amount: 5000,
+    paymentMethod: 'BANK_TRANSFER',
+    notes: 'Virement mensuel filiale',
+  });
+
+  assert.ok(payment.receiptNumber.startsWith('REC-'));
+  assert.equal(subsidiary.accountBalance, oldBalance + 5000);
+
+  // Audit trail verification
+  const auditLogs = store.getAuditLogs({ action: 'PAYMENT_RECORDED' });
+  assert.ok(auditLogs.length > 0);
+  assert.equal(auditLogs[0].entityId, payment.id);
+});
+
+test('14. Emergency Workshop Package & Backup/Restore — generates printable package and round-trip backup', () => {
+  const store = new JanitouStore();
+  const pkg = store.generateEmergencyWorkshopPackage();
+  assert.ok(pkg.totalMealPortions > 0);
+  assert.ok(pkg.packagingRequirements.length > 0);
+  assert.ok(Array.isArray(pkg.alternatives));
+
+  // Backup test
+  const backup = store.createDatabaseBackup();
+  assert.equal(backup.version, '1.0.0-phase1');
+  assert.ok(backup.data.customers !== undefined);
+
+  // Restore test
+  const restored = store.restoreDatabaseFromBackup(backup);
+  assert.equal(restored, true);
+});
+
+test('15. The 14 Official Reports — generates all 14 Phase 1 reports successfully', () => {
+  const store = new JanitouStore();
+  for (let r = 1; r <= 14; r++) {
+    const report = store.generateReport(r);
+    assert.equal(report.reportNumber, r);
+    assert.ok(report.title.length > 3);
+    assert.ok(report.summaryText.length > 5);
+    assert.ok(report.data !== undefined);
+  }
+});

@@ -15,12 +15,16 @@ import {
   DbProductionBatch,
   DbPurchaseOrder,
   DbDeliveryRun,
+  DbInvoice,
+  DbPayment,
   initialSuppliers,
   initialIngredients,
   initialRecipes,
   initialCustomers,
   initialMealPlans,
   initialOrders,
+  initialInvoices,
+  initialPayments,
 } from '../data/mock-db.js';
 
 export interface ProductionRequirement {
@@ -132,6 +136,43 @@ export interface KdsBatch {
   updatedAt: string;
 }
 
+export interface MenuRuleViolation {
+  date: string;
+  ruleName: string;
+  severity: 'ERROR' | 'WARNING';
+  message: string;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  userId: string;
+  userName: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  beforeSnapshot?: unknown;
+  afterSnapshot?: unknown;
+}
+
+export interface EmergencyWorkshopPackage {
+  date: string;
+  generatedAt: string;
+  totalMealPortions: number;
+  recipes: { recipeName: string; category: string; portions: number }[];
+  packagingRequirements: { type: string; quantity: number }[];
+  alternatives: { customerName: string; address: string; requestedAlternative: string }[];
+  allergensSummary: { allergen: string; portionCount: number }[];
+}
+
+export interface OfficialReportResult {
+  reportNumber: number;
+  title: string;
+  generatedAt: string;
+  summaryText: string;
+  data: unknown;
+}
+
 export class JanitouStore {
   public suppliers: DbSupplier[] = [];
   public ingredients: DbIngredient[] = [];
@@ -144,6 +185,9 @@ export class JanitouStore {
   public deliveryRuns: DbDeliveryRun[] = [];
   public subscriptions: CustomerSubscription[] = [];
   public kdsBatches: KdsBatch[] = [];
+  public invoices: DbInvoice[] = [];
+  public payments: DbPayment[] = [];
+  public auditLogs: AuditLogEntry[] = [];
 
   constructor() {
     this.resetToDefaults();
@@ -182,6 +226,9 @@ export class JanitouStore {
       },
     ];
     this.kdsBatches = [];
+    this.invoices = JSON.parse(JSON.stringify(initialInvoices));
+    this.payments = JSON.parse(JSON.stringify(initialPayments));
+    this.auditLogs = [];
   }
 
   // ==========================================
@@ -904,6 +951,487 @@ export class JanitouStore {
       batch.updatedAt = new Date().toISOString();
     }
     return batch;
+  }
+
+  // ==========================================
+  // Phase 1: Audit Trail Logging
+  // ==========================================
+  public logAuditEvent(entry: Omit<AuditLogEntry, 'id' | 'timestamp'>): AuditLogEntry {
+    const log: AuditLogEntry = {
+      ...entry,
+      id: `audit-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      timestamp: new Date().toISOString(),
+    };
+    this.auditLogs.unshift(log);
+    return log;
+  }
+
+  public getAuditLogs(filters?: { entityType?: string; action?: string; limit?: number }): AuditLogEntry[] {
+    let res = [...this.auditLogs];
+    if (filters?.entityType) res = res.filter((l) => l.entityType === filters.entityType);
+    if (filters?.action) res = res.filter((l) => l.action === filters.action);
+    return res.slice(0, filters?.limit || 50);
+  }
+
+  // ==========================================
+  // Phase 1: Menu Calendar Operational Rules Engine
+  // ==========================================
+  public validateMenuCalendarRules(plansToValidate?: DbMealPlan[]): { isValid: boolean; violations: MenuRuleViolation[] } {
+    const plans = plansToValidate || this.mealPlans;
+    const violations: MenuRuleViolation[] = [];
+
+    // Group plans by date
+    const byDate = new Map<string, { lunch?: DbMealPlan; dinner?: DbMealPlan }>();
+    for (const p of plans) {
+      const current = byDate.get(p.date) || {};
+      if (p.serviceTime === MealServiceTime.LUNCH) current.lunch = p;
+      if (p.serviceTime === MealServiceTime.DINNER) current.dinner = p;
+      byDate.set(p.date, current);
+    }
+
+    let lunchPastaCount = 0;
+
+    for (const [date, slots] of byDate.entries()) {
+      const lunchMain = slots.lunch?.mainCourseRecipeId ? this.getRecipeById(slots.lunch.mainCourseRecipeId) : undefined;
+      const dinnerMain = slots.dinner?.mainCourseRecipeId ? this.getRecipeById(slots.dinner.mainCourseRecipeId) : undefined;
+
+      const lunchName = (lunchMain?.name || '').toLowerCase();
+      const dinnerName = (dinnerMain?.name || '').toLowerCase();
+
+      // Rule 4: Interdiction frites midi + soir le même jour
+      const lunchHasFries = lunchName.includes('frite') || lunchName.includes('pommes de terre');
+      const dinnerHasFries = dinnerName.includes('frite') || dinnerName.includes('pommes de terre');
+      if (lunchHasFries && dinnerHasFries) {
+        violations.push({
+          date,
+          ruleName: 'INTERDICTION_FRITES_MIDI_SOIR',
+          severity: 'ERROR',
+          message: `Règle enfreinte le ${date} : Interdiction de servir des frites/pommes de terre à la fois au déjeuner (${lunchMain?.name}) et au dîner (${dinnerMain?.name}).`,
+        });
+      }
+
+      // Rule 6: Interdiction viande hachée midi + soir le même jour
+      const lunchHasMinced = lunchName.includes('haché') || lunchName.includes('boulette');
+      const dinnerHasMinced = dinnerName.includes('haché') || dinnerName.includes('boulette');
+      if (lunchHasMinced && dinnerHasMinced) {
+        violations.push({
+          date,
+          ruleName: 'INTERDICTION_VIANDE_HACHEE_MIDI_SOIR',
+          severity: 'ERROR',
+          message: `Règle enfreinte le ${date} : Interdiction de servir de la viande hachée au déjeuner et au dîner le même jour.`,
+        });
+      }
+
+      // Rule 2: Pâtes/Spaghetti 1x/semaine max au déjeuner
+      if (lunchName.includes('pâte') || lunchName.includes('spaghetti') || lunchName.includes('macaroni')) {
+        lunchPastaCount++;
+        if (lunchPastaCount > 1) {
+          violations.push({
+            date,
+            ruleName: 'MAX_PATES_DEJEUNER_HEBDO',
+            severity: 'WARNING',
+            message: `Alerte le ${date} : Les pâtes/spaghetti sont programmées plus d'une fois au déjeuner cette semaine (${lunchMain?.name}).`,
+          });
+        }
+      }
+
+      // Rule 3: Repas du samedi faciles d'atelier
+      const dayOfWeek = new Date(date).getDay();
+      if (dayOfWeek === 6) { // Samedi
+        if (lunchMain && lunchMain.preparationTimeMinutes > 45) {
+          violations.push({
+            date,
+            ruleName: 'SAMEDI_REPAS_FACILE',
+            severity: 'WARNING',
+            message: `Alerte le ${date} (Samedi) : Le plat prévu (${lunchMain.name}) dépasse 45 min de préparation. Privilégier une recette facile pour la brigade allégée du samedi.`,
+          });
+        }
+      }
+    }
+
+    const hasErrors = violations.some((v) => v.severity === 'ERROR');
+    return { isValid: !hasErrors, violations };
+  }
+
+  // ==========================================
+  // Phase 1: Accounting & Pre-paid Invoicing
+  // ==========================================
+  public getInvoices(customerId?: string): DbInvoice[] {
+    if (customerId) return this.invoices.filter((i) => i.customerId === customerId);
+    return this.invoices;
+  }
+
+  public getPayments(customerId?: string): DbPayment[] {
+    if (customerId) return this.payments.filter((p) => p.customerId === customerId);
+    return this.payments;
+  }
+
+  public recordPayment(data: {
+    customerId: string;
+    amount: number;
+    paymentMethod: DbPayment['paymentMethod'];
+    invoiceId?: string;
+    notes?: string;
+  }): DbPayment {
+    const receiptNumber = `REC-${new Date().toLocaleDateString('en-CA').replace(/-/g, '')}-${String(this.payments.length + 1).padStart(3, '0')}`;
+    const payment: DbPayment = {
+      id: `pay-${Date.now()}`,
+      receiptNumber,
+      customerId: data.customerId,
+      invoiceId: data.invoiceId,
+      paymentDate: new Date().toLocaleDateString('en-CA'),
+      amount: data.amount,
+      paymentMethod: data.paymentMethod,
+      notes: data.notes,
+    };
+
+    this.payments.unshift(payment);
+
+    // Update customer balance
+    const customer = this.getCustomerById(data.customerId);
+    if (customer) {
+      customer.accountBalance += data.amount;
+    }
+
+    // If tied to an invoice, mark invoice paid or partially paid
+    if (data.invoiceId) {
+      const inv = this.invoices.find((i) => i.id === data.invoiceId);
+      if (inv) {
+        inv.paidAmount += data.amount;
+        inv.status = inv.paidAmount >= inv.totalAmount ? 'PAID' : 'PARTIALLY_PAID';
+      }
+    }
+
+    this.logAuditEvent({
+      userId: 'usr-admin',
+      userName: 'Directeur Financier',
+      action: 'PAYMENT_RECORDED',
+      entityType: 'PAYMENT',
+      entityId: payment.id,
+      afterSnapshot: payment,
+    });
+
+    return payment;
+  }
+
+  public getCustomerStatement(customerId: string): {
+    customer: DbCustomer | undefined;
+    balance: number;
+    orders: DbOrder[];
+    invoices: DbInvoice[];
+    payments: DbPayment[];
+  } {
+    const customer = this.getCustomerById(customerId);
+    const orders = this.orders.filter((o) => o.customerId === customerId);
+    const invoices = this.getInvoices(customerId);
+    const payments = this.getPayments(customerId);
+
+    return {
+      customer,
+      balance: customer?.accountBalance || 0,
+      orders,
+      invoices,
+      payments,
+    };
+  }
+
+  // ==========================================
+  // Phase 1: Driver Compensation & Run Transfer
+  // ==========================================
+  public calculateDriverCompensation(runId: string): {
+    driverName: string;
+    stopCount: number;
+    compensation: number;
+    breakdown: { baseFare: number; perStopRate: number; total: number };
+  } {
+    const run = this.deliveryRuns.find((r) => r.id === runId);
+    if (!run) return { driverName: 'Inconnu', stopCount: 0, compensation: 0, breakdown: { baseFare: 0, perStopRate: 0, total: 0 } };
+
+    const baseFare = 800; // 800 DZD forfait fixe tournée
+    const perStopRate = 150; // 150 DZD par point de livraison
+    const stopCount = run.stops.length;
+    const total = baseFare + (stopCount * perStopRate);
+
+    return {
+      driverName: run.driverName,
+      stopCount,
+      compensation: total,
+      breakdown: { baseFare, perStopRate: stopCount * perStopRate, total },
+    };
+  }
+
+  public transferDeliveryRun(runId: string, newDriverName: string, newDriverPhone: string, reason: string): DbDeliveryRun | undefined {
+    const run = this.deliveryRuns.find((r) => r.id === runId);
+    if (!run) return undefined;
+
+    const before = { ...run };
+    run.driverName = newDriverName;
+    run.driverPhone = newDriverPhone;
+
+    this.logAuditEvent({
+      userId: 'usr-logistics',
+      userName: 'Responsable Logistique',
+      action: 'DELIVERY_RUN_TRANSFERRED',
+      entityType: 'DELIVERY_RUN',
+      entityId: runId,
+      beforeSnapshot: before,
+      afterSnapshot: { newDriverName, newDriverPhone, reason },
+    });
+
+    return run;
+  }
+
+  // ==========================================
+  // Phase 1: Emergency Workshop Package & Backup/Restore
+  // ==========================================
+  public generateEmergencyWorkshopPackage(date?: string): EmergencyWorkshopPackage {
+    const targetDate = date || new Date().toLocaleDateString('en-CA');
+    const plan = this.calculateProductionNeeds(targetDate);
+
+    const packagingMap = new Map<string, number>();
+    for (const r of plan.recipes) {
+      const current = packagingMap.get('Barquettes Kraft 750ml Individuelles') || 0;
+      packagingMap.set('Barquettes Kraft 750ml Individuelles', current + r.totalPortions);
+    }
+    packagingMap.set('Couvercles Transparents Écologiques', plan.totalMealPortions);
+    packagingMap.set('Sacs Kraft Transport & Livraison', plan.totalOrders);
+
+    const packagingRequirements = Array.from(packagingMap.entries()).map(([type, quantity]) => ({ type, quantity }));
+
+    const relevantOrders = this.orders.filter((o) => o.deliveryDate === targetDate && o.status !== OrderStatus.CANCELLED);
+    const alternatives: { customerName: string; address: string; requestedAlternative: string }[] = [];
+    for (const ord of relevantOrders) {
+      const cust = this.getCustomerById(ord.customerId);
+      if (cust && cust.dietaryPreferences.length > 0 && !cust.dietaryPreferences.includes('Standard')) {
+        alternatives.push({
+          customerName: cust.companyName ? `${cust.companyName} (${cust.contactName})` : cust.contactName,
+          address: ord.deliveryAddress,
+          requestedAlternative: cust.dietaryPreferences.join(', '),
+        });
+      }
+    }
+
+    const allergensMap = new Map<string, number>();
+    for (const rec of plan.recipes) {
+      const r = this.getRecipeById(rec.recipeId);
+      if (r && r.allergens.length > 0) {
+        for (const al of r.allergens) {
+          const current = allergensMap.get(al) || 0;
+          allergensMap.set(al, current + rec.totalPortions);
+        }
+      }
+    }
+    const allergensSummary = Array.from(allergensMap.entries()).map(([allergen, portionCount]) => ({ allergen, portionCount }));
+
+    return {
+      date: targetDate,
+      generatedAt: new Date().toISOString(),
+      totalMealPortions: plan.totalMealPortions,
+      recipes: plan.recipes.map((r) => ({ recipeName: r.recipeName, category: r.category, portions: r.totalPortions })),
+      packagingRequirements,
+      alternatives,
+      allergensSummary,
+    };
+  }
+
+  public createDatabaseBackup(): { timestamp: string; version: string; data: Record<string, unknown> } {
+    return {
+      timestamp: new Date().toISOString(),
+      version: '1.0.0-phase1',
+      data: {
+        suppliers: this.suppliers,
+        ingredients: this.ingredients,
+        recipes: this.recipes,
+        customers: this.customers,
+        mealPlans: this.mealPlans,
+        orders: this.orders,
+        productionBatches: this.productionBatches,
+        purchaseOrders: this.purchaseOrders,
+        deliveryRuns: this.deliveryRuns,
+        subscriptions: this.subscriptions,
+        invoices: this.invoices,
+        payments: this.payments,
+        auditLogs: this.auditLogs,
+      },
+    };
+  }
+
+  public restoreDatabaseFromBackup(backup: { data: Record<string, unknown> }): boolean {
+    if (!backup || typeof backup.data !== 'object') return false;
+    const d = backup.data;
+    if (Array.isArray(d.customers)) this.customers = d.customers as DbCustomer[];
+    if (Array.isArray(d.orders)) this.orders = d.orders as DbOrder[];
+    if (Array.isArray(d.recipes)) this.recipes = d.recipes as DbRecipe[];
+    if (Array.isArray(d.ingredients)) this.ingredients = d.ingredients as DbIngredient[];
+    if (Array.isArray(d.invoices)) this.invoices = d.invoices as DbInvoice[];
+    if (Array.isArray(d.payments)) this.payments = d.payments as DbPayment[];
+    return true;
+  }
+
+  // ==========================================
+  // Phase 1: Les 14 Rapports Essentiels Officiels
+  // ==========================================
+  public generateReport(reportNumber: number, date?: string): OfficialReportResult {
+    const targetDate = date || new Date().toLocaleDateString('en-CA');
+    const timestamp = new Date().toISOString();
+
+    switch (reportNumber) {
+      case 1: {
+        const orders = this.orders.filter((o) => !date || o.deliveryDate === targetDate);
+        return {
+          reportNumber: 1,
+          title: 'Rapport Nominatif des Commandes',
+          generatedAt: timestamp,
+          summaryText: `${orders.length} commande(s) répertoriée(s) pour un total de ${orders.reduce((s, o) => s + o.totalPortions, 0)} portions.`,
+          data: orders,
+        };
+      }
+      case 2: {
+        const plan = this.calculateProductionNeeds(targetDate);
+        return {
+          reportNumber: 2,
+          title: 'Rapport Production : Prévu vs Réel, Surplus & Pénuries',
+          generatedAt: timestamp,
+          summaryText: `${plan.recipes.length} plat(s) en production. Déficit matière estimé : ${plan.deficitCost} DZD.`,
+          data: plan,
+        };
+      }
+      case 3: {
+        const pos = this.purchaseOrders;
+        return {
+          reportNumber: 3,
+          title: 'Rapport des Achats & Réceptions Fournisseurs',
+          generatedAt: timestamp,
+          summaryText: `${pos.length} bon(s) d'achat émis pour une valorisation de ${pos.reduce((s, p) => s + p.totalCost, 0)} DZD.`,
+          data: pos,
+        };
+      }
+      case 4: {
+        const supplements = this.orders.map((o) => ({ orderNumber: o.orderNumber, supplementsCost: o.supplementsCost }));
+        return {
+          reportNumber: 4,
+          title: 'Rapport des Suppléments Facturés',
+          generatedAt: timestamp,
+          summaryText: `Total suppléments : ${supplements.reduce((s, i) => s + i.supplementsCost, 0)} DZD.`,
+          data: supplements,
+        };
+      }
+      case 5: {
+        const pack = this.generateEmergencyWorkshopPackage(targetDate);
+        return {
+          reportNumber: 5,
+          title: 'Rapport des Emballages (Individuel & Collectif)',
+          generatedAt: timestamp,
+          summaryText: `Quantités nécessaires calculées pour ${pack.totalMealPortions} repas.`,
+          data: pack.packagingRequirements,
+        };
+      }
+      case 6: {
+        const runs = this.getDeliveryRuns(targetDate);
+        return {
+          reportNumber: 6,
+          title: 'Rapport de Distribution & Tournées',
+          generatedAt: timestamp,
+          summaryText: `${runs.length} tournée(s) programmée(s) pour le service.`,
+          data: runs,
+        };
+      }
+      case 7: {
+        const accounts = this.customers.map((c) => ({
+          clientId: c.id,
+          nom: c.companyName || c.contactName,
+          soldePrepayeDZD: c.accountBalance,
+          statut: c.status,
+        }));
+        return {
+          reportNumber: 7,
+          title: 'Rapport des Comptes Clients & Soldes Prépayés',
+          generatedAt: timestamp,
+          summaryText: `Encours total des soldes prépayés : ${accounts.reduce((s, a) => s + a.soldePrepayeDZD, 0)} DZD.`,
+          data: accounts,
+        };
+      }
+      case 8: {
+        const clients = this.customers.map((c) => ({
+          id: c.id,
+          nom: c.companyName || c.contactName,
+          type: c.subscriptionType,
+          isSubsidiary: !!c.isSubsidiary,
+          parentCompanyId: c.parentCompanyId || 'N/A',
+          phone: c.phone,
+          status: c.status,
+        }));
+        return {
+          reportNumber: 8,
+          title: 'Rapport Annuaire des Clients & Hiérarchie Sociétés/Filiales',
+          generatedAt: timestamp,
+          summaryText: `${clients.length} comptes clients répertoriés (dont ${clients.filter((c) => c.isSubsidiary).length} filiales).`,
+          data: clients,
+        };
+      }
+      case 9: {
+        const fin = this.getFinancialAnalytics(targetDate);
+        return {
+          reportNumber: 9,
+          title: 'Rapport Statistique de Consommation & Plats',
+          generatedAt: timestamp,
+          summaryText: `Plat le plus commandé : ${fin.topRecipes[0]?.name || 'N/A'}.`,
+          data: fin.topRecipes,
+        };
+      }
+      case 10: {
+        const fin = this.getFinancialAnalytics(targetDate);
+        return {
+          reportNumber: 10,
+          title: 'Rapport de Performance Globale & Rentabilité',
+          generatedAt: timestamp,
+          summaryText: `Taux de Food Cost : ${fin.foodCostPercentage}% • Marge brute : ${fin.grossMarginPercentage}%.`,
+          data: fin,
+        };
+      }
+      case 11: {
+        const logs = this.getAuditLogs({ limit: 50 });
+        return {
+          reportNumber: 11,
+          title: 'Rapport du Journal d’Audit & Sécurité',
+          generatedAt: timestamp,
+          summaryText: `${logs.length} opération(s) critique(s) tracée(s) dans le journal d'audit.`,
+          data: logs,
+        };
+      }
+      case 12: {
+        const pays = this.payments;
+        return {
+          reportNumber: 12,
+          title: 'Rapport des Paiements & Règlements Encaissés',
+          generatedAt: timestamp,
+          summaryText: `${pays.length} encaissement(s) pour un total de ${pays.reduce((s, p) => s + p.amount, 0)} DZD.`,
+          data: pays,
+        };
+      }
+      case 13: {
+        const pack = this.generateEmergencyWorkshopPackage(targetDate);
+        return {
+          reportNumber: 13,
+          title: 'Rapport des Alternatives & Régimes Spéciaux',
+          generatedAt: timestamp,
+          summaryText: `${pack.alternatives.length} demande(s) de repas alternatifs / sans allergènes.`,
+          data: pack.alternatives,
+        };
+      }
+      case 14:
+      default: {
+        const weekly = this.getWeeklyMenuPlan(targetDate);
+        const fin = this.getFinancialAnalytics();
+        return {
+          reportNumber: 14,
+          title: 'Rapport de Synthèse Hebdomadaire 360°',
+          generatedAt: timestamp,
+          summaryText: `Synthèse d'activité 360° sur 7 jours. CA cumulé estimé : ${fin.totalRevenue} DZD.`,
+          data: { weekly, financialOverview: fin },
+        };
+      }
+    }
   }
 }
 

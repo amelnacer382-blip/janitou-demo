@@ -173,4 +173,51 @@ test('HTTP Router End-to-End Suite', async (t) => {
     });
     assert.equal(patchKdsRes.status, 200);
   });
+
+  await t.test('GET /api/v1/meal-plans/validate-rules returns rules status', async () => {
+    const res = await fetch(`${baseUrl}/api/v1/meal-plans/validate-rules`);
+    assert.equal(res.status, 200);
+    const data = await res.json() as { isValid: boolean; violations: unknown[] };
+    assert.ok(typeof data.isValid === 'boolean');
+    assert.ok(Array.isArray(data.violations));
+  });
+
+  await t.test('Accounting endpoints & Payment recording flow', async () => {
+    const invRes = await fetch(`${baseUrl}/api/v1/accounting/invoices`);
+    assert.equal(invRes.status, 200);
+    const { invoices } = await invRes.json() as { invoices: unknown[] };
+    assert.ok(invoices.length >= 1);
+
+    // Record payment via HTTP
+    const payRes = await fetch(`${baseUrl}/api/v1/accounting/payments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customerId: 'cust-1',
+        amount: 2500,
+        paymentMethod: 'CASH',
+        notes: 'Versement espèces comptoir',
+      }),
+    });
+    assert.equal(payRes.status, 201);
+    const { payment } = await payRes.json() as { payment: { id: string; amount: number } };
+    assert.equal(payment.amount, 2500);
+  });
+
+  await t.test('Reports hub and Emergency Workshop Package endpoints', async () => {
+    const reportsRes = await fetch(`${baseUrl}/api/v1/reports`);
+    assert.equal(reportsRes.status, 200);
+    const { reports } = await reportsRes.json() as { reports: unknown[] };
+    assert.equal(reports.length, 14);
+
+    const singleReportRes = await fetch(`${baseUrl}/api/v1/reports/1`);
+    assert.equal(singleReportRes.status, 200);
+    const { report } = await singleReportRes.json() as { report: { reportNumber: number; title: string } };
+    assert.equal(report.reportNumber, 1);
+
+    const emerRes = await fetch(`${baseUrl}/api/v1/emergency/workshop-package`);
+    assert.equal(emerRes.status, 200);
+    const { emergencyPackage } = await emerRes.json() as { emergencyPackage: { totalMealPortions: number } };
+    assert.ok(emergencyPackage.totalMealPortions > 0);
+  });
 });
