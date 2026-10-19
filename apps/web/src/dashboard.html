@@ -323,14 +323,16 @@
     <ul class="nav-menu">
       <li class="nav-item active" onclick="switchNavTab('overview')"><span>📊</span> Vue Globale & Finance</li>
       <li class="nav-item" onclick="switchNavTab('orders')"><span>📦</span> Commandes & Abonnements</li>
+      <li class="nav-item" onclick="switchNavTab('billing')"><span>💳</span> Facturation & Soldes</li>
       <li class="nav-item" onclick="switchNavTab('recipes')"><span>🍳</span> Fiches Recettes & Simulateur</li>
       <li class="nav-item" onclick="switchNavTab('weekly')"><span>📅</span> Menu de la Semaine</li>
       <li class="nav-item" onclick="switchNavTab('kds')"><span>📺</span> Écran Cuisine (KDS)</li>
       <li class="nav-item" onclick="switchNavTab('kitchen')"><span>👨‍🍳</span> Fiche de Production</li>
       <li class="nav-item" onclick="switchNavTab('inventory')"><span>🥦</span> Stocks & Achats</li>
       <li class="nav-item" onclick="switchNavTab('logistics')"><span>🚚</span> Tournées & Manifeste</li>
+      <li class="nav-item" onclick="switchNavTab('reports')"><span>📑</span> 14 Rapports Officiels</li>
+      <li class="nav-item" onclick="switchNavTab('audit')"><span>🛡️</span> Sécurité & Audit</li>
     </ul>
-
     <div style="padding: 16px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.75rem; color: var(--color-slate-500);">
       JANITOU FOOD Platform • v0.3.0
     </div>
@@ -344,10 +346,11 @@
       </div>
       <div class="topbar-right">
         <span class="date-pill" id="todayDatePill">📅 Aujourd'hui</span>
+        <button class="btn-action no-print" onclick="openEmergencyPackageModal()" style="border:1px solid #fca5a5; color:#991b1b; background:#fef2f2;">🚨 Urgence Atelier</button>
+        <button class="btn-action btn-action-secondary no-print" onclick="downloadBackup()">💾 Backup JSON</button>
         <button class="btn-action btn-action-secondary no-print" onclick="openLabelModal()">🏷️ Étiquettes</button>
         <button class="btn-action btn-action-primary no-print" onclick="openNewOrderModal()">+ Nouvelle Commande</button>
       </div>
-    </header>
 
     <div class="content-body">
 
@@ -448,6 +451,85 @@
       </section>
 
       <!-- ============================================== -->
+      <!-- TAB: FACTURATION, SOLDES & COMPTABILITÉ (PHASE 1) -->
+      <!-- ============================================== -->
+      <section id="tab-billing" class="tab-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <div>
+            <h2 style="font-size:1.25rem; font-weight:800;">Comptabilité, Soldes Prépayés & Facturation</h2>
+            <p style="color:var(--color-slate-500); font-size:0.85rem;">Suivi des comptes clients, encaissements, soldes et facturation automatique</p>
+          </div>
+          <button class="btn-action btn-action-primary" onclick="openPaymentModal()">+ Encaisser un Règlement</button>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card" style="--card-accent:#10b981;">
+            <div class="kpi-header"><span class="kpi-title">Soldes Prépayés Disponibles</span><div class="kpi-icon">💳</div></div>
+            <div class="kpi-value" id="kpiPrepaidBalances">-</div>
+            <div class="kpi-footer" style="color:#059669;">Crédits clients en compte</div>
+          </div>
+          <div class="kpi-card" style="--card-accent:#3b82f6;">
+            <div class="kpi-header"><span class="kpi-title">Total Facturé</span><div class="kpi-icon">📄</div></div>
+            <div class="kpi-value" id="kpiTotalInvoiced">-</div>
+            <div class="kpi-footer" style="color:#2563eb;">Factures émises</div>
+          </div>
+          <div class="kpi-card" style="--card-accent:#f59e0b;">
+            <div class="kpi-header"><span class="kpi-title">Total Encaissé</span><div class="kpi-icon">💵</div></div>
+            <div class="kpi-value" id="kpiTotalPaid">-</div>
+            <div class="kpi-footer" style="color:#d97706;">Règlements reçus</div>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-header-bar">
+            <div class="card-heading">Comptes Clients, Soldes & Hiérarchie Filiales</div>
+          </div>
+          <div class="table-container">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th>Client / Société</th>
+                  <th>Hiérarchie</th>
+                  <th>Abonnement</th>
+                  <th>Contact & WhatsApp</th>
+                  <th>Solde Prépayé (DZD)</th>
+                  <th>Statut</th>
+                  <th class="no-print">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="billingCustomersTableBody">
+                <tr><td colspan="7" style="text-align:center;">Chargement...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-header-bar">
+            <div class="card-heading">Registre des Factures Émises</div>
+          </div>
+          <div class="table-container">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th>N° Facture</th>
+                  <th>Client</th>
+                  <th>Date d'Émission</th>
+                  <th>Échéance</th>
+                  <th>Montant Total (DZD)</th>
+                  <th>Encaissé (DZD)</th>
+                  <th>Statut</th>
+                </tr>
+              </thead>
+              <tbody id="billingInvoicesTableBody">
+                <tr><td colspan="7" style="text-align:center;">Chargement...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
       <!-- TAB 3: FICHES RECETTES & SIMULATEUR -->
       <!-- ============================================== -->
       <section id="tab-recipes" class="tab-section">
@@ -509,6 +591,7 @@
           </div>
           <button class="btn-action btn-action-secondary" onclick="loadWeeklyCalendar()">🔄 Actualiser Calendrier</button>
         </div>
+        <div id="menuRulesBanner" style="margin-bottom:16px;"></div>
 
         <div id="weeklyCalendarGrid" class="weekly-grid">
           <!-- Populated dynamically with 7 day cards -->
@@ -616,6 +699,71 @@
         </div>
       </section>
 
+
+      <!-- ============================================== -->
+      <!-- TAB: LES 14 RAPPORTS OFFICIELS (PHASE 1) -->
+      <!-- ============================================== -->
+      <section id="tab-reports" class="tab-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <div>
+            <h2 style="font-size:1.25rem; font-weight:800;">Les 14 Rapports Essentiels Officiels (Phase 1)</h2>
+            <p style="color:var(--color-slate-500); font-size:0.85rem;">Indicateurs nominatifs, états financiers, production, distribution et audit</p>
+          </div>
+        </div>
+
+        <!-- 14 Reports Selector Grid -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:24px;" id="reportsButtonsGrid">
+          <!-- Generated dynamically from catalog -->
+        </div>
+
+        <div class="glass-card" id="reportDisplayCard" style="display:none;">
+          <div class="card-header-bar">
+            <div>
+              <div class="card-heading" id="reportTitleHeading">Titre du Rapport</div>
+              <div class="card-subheading" id="reportSummaryText">Résumé</div>
+            </div>
+            <button class="btn-action btn-action-primary no-print" onclick="window.print()">🖨️ Imprimer ce Rapport</button>
+          </div>
+          <div style="padding:20px; overflow-x:auto;" id="reportDataContainer">
+            <!-- Report content -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- TAB: SÉCURITÉ & JOURNAL D'AUDIT (PHASE 1) -->
+      <!-- ============================================== -->
+      <section id="tab-audit" class="tab-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <div>
+            <h2 style="font-size:1.25rem; font-weight:800;">Journal de Sécurité & Audit Trail</h2>
+            <p style="color:var(--color-slate-500); font-size:0.85rem;">Traçabilité complète des opérations critiques, utilisateurs et modifications</p>
+          </div>
+          <button class="btn-action btn-action-secondary" onclick="loadAuditLogs()">🔄 Actualiser le Journal</button>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-header-bar">
+            <div class="card-heading">Dernières Opérations Enregistrées</div>
+          </div>
+          <div class="table-container">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th>Date & Heure</th>
+                  <th>Utilisateur</th>
+                  <th>Action Réalisée</th>
+                  <th>Entité Cible</th>
+                  <th>Détails de l'Opération</th>
+                </tr>
+              </thead>
+              <tbody id="auditLogsTableBody">
+                <tr><td colspan="5" style="text-align:center;">Chargement du journal d'audit...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -717,6 +865,78 @@
     </div>
   </div>
 
+  <!-- Modal Emergency Workshop Package (Panne Réseau Cuisine) -->
+  <div class="modal-backdrop" id="emergencyPackageModal">
+    <div class="modal-sheet" style="max-width:850px;">
+      <div class="modal-sheet-header">
+        <div>
+          <h3 style="font-size:1.2rem; font-weight:800; color:#991b1b;">🚨 Emergency Workshop Package (Continuité Activité Cuisine)</h3>
+          <p style="font-size:0.8rem; color:#64748b;">Fiche de secours imprimable en cas de coupure internet ou panne de serveur</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn-action btn-action-primary" onclick="window.print()">🖨️ Imprimer la Fiche de Secours</button>
+          <button onclick="closeEmergencyPackageModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+        </div>
+      </div>
+      <div class="modal-sheet-body" id="emergencyPackageContent">
+        <!-- Emergency Package content -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Encaisser un Règlement -->
+  <div class="modal-backdrop" id="paymentModal">
+    <div class="modal-sheet" style="max-width:500px;">
+      <div class="modal-sheet-header">
+        <h3 style="font-size:1.15rem; font-weight:800;">Encaisser un Paiement / Créditer Solde</h3>
+        <button onclick="closePaymentModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+      </div>
+      <form id="paymentForm" onsubmit="submitPayment(event)" style="padding:20px;">
+        <div style="margin-bottom:12px;">
+          <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:4px;">Compte Client</label>
+          <select id="payCustomerSelect" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px;" required></select>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:4px;">Montant du Règlement (DZD)</label>
+          <input type="number" id="payAmountInput" min="100" step="50" value="5000" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px;" required>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:4px;">Mode de Paiement</label>
+          <select id="payMethodSelect" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px;" required>
+            <option value="CASH">Espèces (Cash comptoir)</option>
+            <option value="BANK_TRANSFER">Virement bancaire professionnel</option>
+            <option value="CHECK">Chèque certifié</option>
+            <option value="PREPAID_CREDIT">Crédit prépayé</option>
+          </select>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:4px;">Référence / Note</label>
+          <input type="text" id="payNotesInput" placeholder="Ex: Virement BNA ref #789012" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px;">
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="btn-action btn-action-secondary" onclick="closePaymentModal()">Annuler</button>
+          <button type="submit" class="btn-action btn-action-primary">Valider l'Encaissement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Relevé de Compte Client -->
+  <div class="modal-backdrop" id="statementModal">
+    <div class="modal-sheet" style="max-width:700px;">
+      <div class="modal-sheet-header">
+        <div>
+          <h3 style="font-size:1.15rem; font-weight:800;" id="statementClientName">Relevé de Compte Client</h3>
+          <p style="font-size:0.8rem; color:#64748b;" id="statementClientBalance">Solde actuel : -</p>
+        </div>
+        <button onclick="closeStatementModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+      </div>
+      <div class="modal-sheet-body" id="statementContent">
+        <!-- Statement content -->
+      </div>
+    </div>
+  </div>
+
   <script>
     const API = '/api/v1';
     let customersList = [];
@@ -736,23 +956,29 @@
       const titles = {
         overview: "Tableau de Bord Exécutif & Performances",
         orders: "Commandes & Abonnements Clients",
+        billing: "Facturation, Soldes Prépayés & Comptabilité",
         recipes: "Studio Fiches Recettes & Simulateur de Marges",
         weekly: "Calendrier Hebdomadaire des Menus",
         kds: "Kitchen Display System (KDS) — Écran Cuisine",
         kitchen: "Production & Fiche Cuisine Dédiée",
         inventory: "Gestion des Stocks & Approvisionnements",
-        logistics: "Tournées de Distribution & Manifeste"
+        logistics: "Tournées de Distribution & Manifeste",
+        reports: "Les 14 Rapports Essentiels Officiels (Phase 1)",
+        audit: "Journal de Sécurité & Audit Trail"
       };
       document.getElementById('pageTitleHeading').innerText = titles[tabId] || "JANITOU FOOD";
 
       if (tabId === 'overview') loadFinancials();
       if (tabId === 'orders') loadOrdersList();
+      if (tabId === 'billing') loadBilling();
       if (tabId === 'recipes') loadRecipeStudio();
-      if (tabId === 'weekly') loadWeeklyCalendar();
+      if (tabId === 'weekly') { loadWeeklyCalendar(); checkMenuRules(); }
       if (tabId === 'kds') loadKdsBatches();
       if (tabId === 'kitchen') loadKitchenSheet();
       if (tabId === 'inventory') { loadInventoryData(); loadPOs(); }
       if (tabId === 'logistics') loadLogisticsRuns();
+      if (tabId === 'reports') loadReports();
+      if (tabId === 'audit') loadAuditLogs();
     }
 
     function changeActiveRole(newRole) {
@@ -1309,6 +1535,280 @@
     function exportDeliveryCsv() {
       const today = getTodayIso();
       window.location.href = `${API}/export/delivery?date=${today}`;
+    }
+
+    // ==========================================
+    // Phase 1: Facturation & Soldes Prépayés
+    // ==========================================
+    async function loadBilling() {
+      const [cRes, invRes, payRes] = await Promise.all([
+        fetch(API + '/customers').then(r => r.json()),
+        fetch(API + '/accounting/invoices').then(r => r.json()),
+        fetch(API + '/accounting/payments').then(r => r.json())
+      ]);
+
+      const custs = cRes.customers || [];
+      const invs = invRes.invoices || [];
+      const pays = payRes.payments || [];
+
+      const totalPrepaid = custs.reduce((s, c) => s + (c.accountBalance || 0), 0);
+      const totalInvoiced = invs.reduce((s, i) => s + (i.totalAmount || 0), 0);
+      const totalPaid = pays.reduce((s, p) => s + (p.amount || 0), 0);
+
+      document.getElementById('kpiPrepaidBalances').innerText = totalPrepaid.toLocaleString('fr-DZ') + ' DZD';
+      document.getElementById('kpiTotalInvoiced').innerText = totalInvoiced.toLocaleString('fr-DZ') + ' DZD';
+      document.getElementById('kpiTotalPaid').innerText = totalPaid.toLocaleString('fr-DZ') + ' DZD';
+
+      const custTbody = document.getElementById('billingCustomersTableBody');
+      custTbody.innerHTML = custs.map(c => {
+        const hierarchyBadge = c.isSubsidiary 
+          ? '<span class="chip" style="background:#fef3c7; color:#92400e;">Filiale</span>' 
+          : (c.companyName ? '<span class="chip" style="background:#e0f2fe; color:#0369a1;">Société Mère</span>' : '<span class="chip" style="background:#f1f5f9;">Particulier</span>');
+
+        return `
+          <tr>
+            <td><strong>${c.companyName || c.contactName}</strong></td>
+            <td>${hierarchyBadge}</td>
+            <td><span class="chip" style="background:#ede9fe; color:#6d28d9;">${c.subscriptionType}</span></td>
+            <td>
+              ${c.phone} <br>
+              <a href="${c.whatsAppLink}" target="_blank" style="color:#059669; font-weight:700; font-size:0.75rem; text-decoration:none;">📱 WhatsApp Direct ↗</a>
+            </td>
+            <td><strong style="color:${c.accountBalance >= 0 ? '#059669' : '#dc2626'}; font-size:1.05rem;">${(c.accountBalance || 0).toLocaleString('fr-DZ')} DZD</strong></td>
+            <td><span class="chip chip-${c.status === 'ACTIVE' ? 'success' : 'danger'}">${c.status}</span></td>
+            <td class="no-print" style="white-space:nowrap;">
+              <button class="btn-action btn-action-primary" style="padding:4px 8px; font-size:0.75rem;" onclick="openPaymentModal('${c.id}')">+ Encaisser</button>
+              <button class="btn-action btn-action-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="openStatementModal('${c.id}')">Relevé</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      const invTbody = document.getElementById('billingInvoicesTableBody');
+      invTbody.innerHTML = invs.map(i => {
+        const c = custs.find(x => x.id === i.customerId);
+        return `
+          <tr>
+            <td><strong>${i.invoiceNumber}</strong></td>
+            <td>${c ? (c.companyName || c.contactName) : i.customerId}</td>
+            <td>${i.issueDate}</td>
+            <td>${i.dueDate}</td>
+            <td><strong>${i.totalAmount.toLocaleString('fr-DZ')} DZD</strong></td>
+            <td>${i.paidAmount.toLocaleString('fr-DZ')} DZD</td>
+            <td><span class="chip chip-${i.status === 'PAID' ? 'success' : (i.status === 'PARTIALLY_PAID' ? 'production' : 'danger')}">${i.status}</span></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openPaymentModal(customerId) {
+      const sel = document.getElementById('payCustomerSelect');
+      sel.innerHTML = customersList.map(c => `<option value="${c.id}" ${customerId === c.id ? 'selected' : ''}>${c.companyName || c.contactName}</option>`).join('');
+      document.getElementById('paymentModal').classList.add('active');
+    }
+    function closePaymentModal() { document.getElementById('paymentModal').classList.remove('active'); }
+
+    async function submitPayment(e) {
+      e.preventDefault();
+      const payload = {
+        customerId: document.getElementById('payCustomerSelect').value,
+        amount: parseFloat(document.getElementById('payAmountInput').value),
+        paymentMethod: document.getElementById('payMethodSelect').value,
+        notes: document.getElementById('payNotesInput').value
+      };
+
+      await fetch(API + '/accounting/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      closePaymentModal();
+      alert('Règlement enregistré avec succès ! Le solde du client a été crédité.');
+      loadBilling();
+    }
+
+    async function openStatementModal(customerId) {
+      const res = await fetch(`${API}/accounting/statements/${customerId}`).then(r => r.json());
+      const s = res.statement;
+      if (!s) return;
+
+      document.getElementById('statementClientName').innerText = `Relevé : ${s.customer.companyName || s.customer.contactName}`;
+      document.getElementById('statementClientBalance').innerText = `Solde disponible : ${(s.balance || 0).toLocaleString('fr-DZ')} DZD (${s.customer.subscriptionType})`;
+
+      const cont = document.getElementById('statementContent');
+      cont.innerHTML = `
+        <div style="margin-bottom:16px;">
+          <h4 style="font-size:0.95rem; font-weight:800; margin-bottom:8px;">1. Dernières Factures</h4>
+          <table class="modern-table">
+            <thead><tr><th>N° Facture</th><th>Date</th><th>Montant</th><th>Statut</th></tr></thead>
+            <tbody>
+              ${(s.invoices || []).map(i => `<tr><td>${i.invoiceNumber}</td><td>${i.issueDate}</td><td>${i.totalAmount} DZD</td><td>${i.status}</td></tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h4 style="font-size:0.95rem; font-weight:800; margin-bottom:8px;">2. Règlements Encaissés</h4>
+          <table class="modern-table">
+            <thead><tr><th>N° Reçu</th><th>Date</th><th>Mode</th><th>Montant</th></tr></thead>
+            <tbody>
+              ${(s.payments || []).map(p => `<tr><td>${p.receiptNumber}</td><td>${p.paymentDate}</td><td>${p.paymentMethod}</td><td><strong>${p.amount} DZD</strong></td></tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      document.getElementById('statementModal').classList.add('active');
+    }
+    function closeStatementModal() { document.getElementById('statementModal').classList.remove('active'); }
+
+    // ==========================================
+    // Phase 1: Moteur de Validation des Règles Menu
+    // ==========================================
+    async function checkMenuRules() {
+      const res = await fetch(API + '/meal-plans/validate-rules').then(r => r.json());
+      const banner = document.getElementById('menuRulesBanner');
+      if (!banner) return;
+
+      if (res.isValid && (!res.violations || res.violations.length === 0)) {
+        banner.innerHTML = `
+          <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:10px; padding:12px 16px; color:#065f46; display:flex; align-items:center; gap:10px;">
+            <span style="font-size:1.2rem;">✓</span>
+            <div>
+              <strong>Toutes les règles opérationnelles de menu sont conformes !</strong>
+              <p style="font-size:0.8rem; margin-top:2px;">Interdiction frites midi+soir, interdiction viande hachée midi+soir, max 1x pâtes/semaine et repas samedi faciles respectés.</p>
+            </div>
+          </div>
+        `;
+      } else {
+        banner.innerHTML = `
+          <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:12px 16px; color:#92400e;">
+            <div style="display:flex; align-items:center; gap:8px; font-weight:800;">
+              <span>⚠️</span> Alertes du Moteur de Règles Opérationnelles (${res.violations.length})
+            </div>
+            <ul style="margin-top:6px; padding-left:20px; font-size:0.85rem;">
+              ${res.violations.map(v => `<li><strong>${v.ruleName} :</strong> ${v.message}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+      }
+    }
+
+    // ==========================================
+    // Phase 1: Les 14 Rapports Officiels
+    // ==========================================
+    async function loadReports() {
+      const res = await fetch(API + '/reports').then(r => r.json());
+      const list = res.reports || [];
+      const grid = document.getElementById('reportsButtonsGrid');
+
+      grid.innerHTML = list.map(r => `
+        <div class="glass-card" style="padding:14px; margin:0; cursor:pointer; transition:transform 0.15s;" onclick="openReportDetail(${r.id})">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+            <span class="chip" style="background:#0f172a; color:#fff;">Rapport #${r.id}</span>
+          </div>
+          <div style="font-size:0.9rem; font-weight:800; color:#0f172a;">${r.title}</div>
+          <small style="color:#059669; font-weight:700; margin-top:6px; display:inline-block;">Générer & Voir ↗</small>
+        </div>
+      `).join('');
+
+      // Load report 1 by default
+      openReportDetail(1);
+    }
+
+    async function openReportDetail(reportId) {
+      const today = getTodayIso();
+      const res = await fetch(`${API}/reports/${reportId}?date=${today}`).then(r => r.json());
+      const r = res.report;
+      if (!r) return;
+
+      const card = document.getElementById('reportDisplayCard');
+      card.style.display = 'block';
+      document.getElementById('reportTitleHeading').innerText = `#${r.reportNumber} — ${r.title}`;
+      document.getElementById('reportSummaryText').innerText = `${r.summaryText} (Généré le ${new Date(r.generatedAt).toLocaleString('fr-DZ')})`;
+
+      const container = document.getElementById('reportDataContainer');
+      container.innerHTML = `<pre style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; font-size:0.8rem; overflow-x:auto;">${JSON.stringify(r.data, null, 2)}</pre>`;
+    }
+
+    // ==========================================
+    // Phase 1: Journal d'Audit Trail
+    // ==========================================
+    async function loadAuditLogs() {
+      const res = await fetch(API + '/audit/logs').then(r => r.json());
+      const logs = res.logs || [];
+      const tbody = document.getElementById('auditLogsTableBody');
+      if (logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#64748b;">Aucune opération enregistrée.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = logs.map(l => `
+        <tr>
+          <td><small>${new Date(l.timestamp).toLocaleString('fr-DZ')}</small></td>
+          <td><strong>${l.userName}</strong></td>
+          <td><span class="chip" style="background:#0f172a; color:#fff;">${l.action}</span></td>
+          <td><span class="chip" style="background:#e0f2fe; color:#0369a1;">${l.entityType}</span></td>
+          <td><small>${l.afterSnapshot ? JSON.stringify(l.afterSnapshot) : '-'}</small></td>
+        </tr>
+      `).join('');
+    }
+
+    // ==========================================
+    // Phase 1: Emergency Workshop Package & Backup
+    // ==========================================
+    async function openEmergencyPackageModal() {
+      const today = getTodayIso();
+      const res = await fetch(`${API}/emergency/workshop-package?date=${today}`).then(r => r.json());
+      const pkg = res.emergencyPackage;
+      if (!pkg) return;
+
+      const container = document.getElementById('emergencyPackageContent');
+      container.innerHTML = `
+        <div style="border:2px solid #ef4444; border-radius:12px; padding:20px; background:#fff;">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #0f172a; padding-bottom:12px; margin-bottom:16px;">
+            <div>
+              <h2 style="font-size:1.4rem; font-weight:800; color:#0f172a;">FICHE D'URGENCE ATELIER CUISINE (EMERGENCY PACKAGE)</h2>
+              <p style="font-size:0.85rem; color:#64748b;">Date du service : <strong>${pkg.date}</strong> • Émis le : ${new Date(pkg.generatedAt).toLocaleTimeString('fr-DZ')}</p>
+            </div>
+            <div style="font-size:1.8rem; font-weight:800; color:#059669;">${pkg.totalMealPortions} REPAS</div>
+          </div>
+
+          <h3 style="font-size:1.05rem; font-weight:800; margin-bottom:8px;">1. Plats & Quantités Totales de Production</h3>
+          <table class="modern-table" style="margin-bottom:20px;">
+            <thead><tr><th>Recette</th><th>Poste</th><th>Quantité Totale</th></tr></thead>
+            <tbody>
+              ${pkg.recipes.map(r => `<tr><td><strong>${r.recipeName}</strong></td><td>${r.category}</td><td><strong style="font-size:1.1rem; color:#059669;">${r.portions} portions</strong></td></tr>`).join('')}
+            </tbody>
+          </table>
+
+          <h3 style="font-size:1.05rem; font-weight:800; margin-bottom:8px;">2. Emballages & Conditionnement Requis</h3>
+          <table class="modern-table" style="margin-bottom:20px;">
+            <thead><tr><th>Type d'Emballage</th><th>Quantité à Sortir</th></tr></thead>
+            <tbody>
+              ${pkg.packagingRequirements.map(p => `<tr><td><strong>${p.type}</strong></td><td><strong style="font-size:1.05rem;">${p.quantity} unités</strong></td></tr>`).join('')}
+            </tbody>
+          </table>
+
+          <h3 style="font-size:1.05rem; font-weight:800; margin-bottom:8px;">3. Régimes Spéciaux & Alternatives Clients</h3>
+          <table class="modern-table" style="margin-bottom:20px;">
+            <thead><tr><th>Client</th><th>Adresse</th><th>Exigence Alimentaire</th></tr></thead>
+            <tbody>
+              ${pkg.alternatives.length > 0 ? pkg.alternatives.map(a => `<tr><td><strong>${a.customerName}</strong></td><td><small>${a.address}</small></td><td><span class="chip chip-danger">${a.requestedAlternative}</span></td></tr>`).join('') : '<tr><td colspan="3" style="text-align:center;">Aucun régime d\'exclusion aujourd\'hui.</td></tr>'}
+            </tbody>
+          </table>
+
+          <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:12px; font-size:0.85rem; color:#991b1b;">
+            <strong>Avis Brigade :</strong> Conserver cette fiche affichée à l'atelier de conditionnement. En cas de coupure réseau, la livraison doit s'effectuer selon les adresses indiquées ci-dessus.
+          </div>
+        </div>
+      `;
+
+      document.getElementById('emergencyPackageModal').classList.add('active');
+    }
+    function closeEmergencyPackageModal() { document.getElementById('emergencyPackageModal').classList.remove('active'); }
+
+    function downloadBackup() {
+      window.location.href = API + '/system/backup';
     }
 
     window.onload = initPlatform;

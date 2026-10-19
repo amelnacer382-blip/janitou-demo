@@ -54,6 +54,13 @@ export interface DbCustomer {
   commune: string;
   deliveryNotes?: string;
   dietaryPreferences: string[];
+  parentCompanyId?: string;
+  isSubsidiary?: boolean;
+  status: 'ACTIVE' | 'SUSPENDED' | 'CANCELLED';
+  accountBalance: number; // in DZD (solde prépayé/crédit)
+  whatsAppLink: string;
+  subscriptionType: 'INDIVIDUAL' | 'CORPORATE' | 'SUBSIDIARY';
+  preferredDistributionType: 'STANDARD_DELIVERY' | 'EXPRESS' | 'PICKUP';
 }
 
 export interface DbMealPlan {
@@ -86,6 +93,36 @@ export interface DbOrder {
   notes?: string;
   items: DbOrderItem[];
   createdAt: string;
+  orderType: 'AUTOMATIC' | 'WEEKLY' | 'EXCEPTIONAL' | 'SUBSIDIARY';
+  supplementsCost: number; // in DZD
+  totalPrice: number; // in DZD
+  isPaid: boolean;
+  invoiceId?: string;
+  cancelledAt?: string;
+  cancellationReason?: string;
+}
+
+export interface DbInvoice {
+  id: string;
+  invoiceNumber: string;
+  customerId: string;
+  orderIds: string[];
+  issueDate: string;
+  dueDate: string;
+  totalAmount: number;
+  paidAmount: number;
+  status: 'DRAFT' | 'ISSUED' | 'PAID' | 'PARTIALLY_PAID' | 'OVERDUE';
+}
+
+export interface DbPayment {
+  id: string;
+  receiptNumber: string;
+  customerId: string;
+  invoiceId?: string;
+  paymentDate: string;
+  amount: number;
+  paymentMethod: 'CASH' | 'CHECK' | 'BANK_TRANSFER' | 'PREPAID_CREDIT';
+  notes?: string;
 }
 
 export interface DbProductionBatch {
@@ -265,10 +302,15 @@ export const initialCustomers: DbCustomer[] = [
     commune: 'Alger Centre',
     deliveryNotes: '3ème étage avec ascenseur. Déposer à l’accueil.',
     dietaryPreferences: ['Standard'],
+    status: 'ACTIVE',
+    accountBalance: 15000,
+    whatsAppLink: 'https://wa.me/213555443322',
+    subscriptionType: 'CORPORATE',
+    preferredDistributionType: 'STANDARD_DELIVERY',
   },
   {
     id: 'cust-2',
-    companyName: 'TechSolutions Maghreb',
+    companyName: 'TechSolutions Maghreb (Siège)',
     contactName: 'Amine Slimani',
     phone: '0561 77 88 99',
     email: 'contact@techsolutions.dz',
@@ -277,6 +319,11 @@ export const initialCustomers: DbCustomer[] = [
     commune: 'Chéraga',
     deliveryNotes: 'Livraison groupée pour l’équipe de développement.',
     dietaryPreferences: ['Standard', 'Sans Porc'],
+    status: 'ACTIVE',
+    accountBalance: 42000,
+    whatsAppLink: 'https://wa.me/213561778899',
+    subscriptionType: 'CORPORATE',
+    preferredDistributionType: 'STANDARD_DELIVERY',
   },
   {
     id: 'cust-3',
@@ -288,6 +335,78 @@ export const initialCustomers: DbCustomer[] = [
     commune: 'Hydra',
     deliveryNotes: 'Appeler avant de monter, interphone B3.',
     dietaryPreferences: ['Sans Gluten'],
+    status: 'ACTIVE',
+    accountBalance: 3500,
+    whatsAppLink: 'https://wa.me/213772112233',
+    subscriptionType: 'INDIVIDUAL',
+    preferredDistributionType: 'STANDARD_DELIVERY',
+  },
+  {
+    id: 'cust-4',
+    companyName: 'TechSolutions Annexe Bab Ezzouar (Filiale)',
+    contactName: 'Karim Hadj',
+    phone: '0550 88 99 00',
+    email: 'karim.hadj@techsolutions.dz',
+    deliveryAddress: 'Cyberparc de Sidi Abdellah, Alger',
+    wilaya: 'Alger',
+    commune: 'Rahmania',
+    deliveryNotes: 'Filiale rattachée au compte société mère TechSolutions Maghreb.',
+    dietaryPreferences: ['Standard'],
+    parentCompanyId: 'cust-2',
+    isSubsidiary: true,
+    status: 'ACTIVE',
+    accountBalance: 12000,
+    whatsAppLink: 'https://wa.me/213550889900',
+    subscriptionType: 'SUBSIDIARY',
+    preferredDistributionType: 'STANDARD_DELIVERY',
+  },
+];
+
+export const initialInvoices: DbInvoice[] = [
+  {
+    id: 'inv-1',
+    invoiceNumber: 'FAC-202610-001',
+    customerId: 'cust-1',
+    orderIds: ['ord-101'],
+    issueDate: '2026-10-18',
+    dueDate: '2026-11-18',
+    totalAmount: 3900,
+    paidAmount: 3900,
+    status: 'PAID',
+  },
+  {
+    id: 'inv-2',
+    invoiceNumber: 'FAC-202610-002',
+    customerId: 'cust-2',
+    orderIds: ['ord-102'],
+    issueDate: '2026-10-19',
+    dueDate: '2026-11-19',
+    totalAmount: 9100,
+    paidAmount: 9100,
+    status: 'PAID',
+  },
+];
+
+export const initialPayments: DbPayment[] = [
+  {
+    id: 'pay-1',
+    receiptNumber: 'REC-202610-001',
+    customerId: 'cust-1',
+    invoiceId: 'inv-1',
+    paymentDate: '2026-10-18',
+    amount: 3900,
+    paymentMethod: 'PREPAID_CREDIT',
+    notes: 'Règlement automatique sur compte prépayé',
+  },
+  {
+    id: 'pay-2',
+    receiptNumber: 'REC-202610-002',
+    customerId: 'cust-2',
+    invoiceId: 'inv-2',
+    paymentDate: '2026-10-19',
+    amount: 9100,
+    paymentMethod: 'BANK_TRANSFER',
+    notes: 'Virement bancaire professionnel BNA',
   },
 ];
 
@@ -332,6 +451,11 @@ export const initialOrders: DbOrder[] = [
       { id: 'item-3', recipeId: 'rec-4', portions: 6 },
     ],
     createdAt: new Date().toISOString(),
+    orderType: 'CORPORATE',
+    supplementsCost: 0,
+    totalPrice: 3900,
+    isPaid: true,
+    invoiceId: 'inv-1',
   },
   {
     id: 'ord-102',
@@ -348,6 +472,11 @@ export const initialOrders: DbOrder[] = [
       { id: 'item-5', recipeId: 'rec-4', portions: 14 },
     ],
     createdAt: new Date().toISOString(),
+    orderType: 'CORPORATE',
+    supplementsCost: 0,
+    totalPrice: 9100,
+    isPaid: true,
+    invoiceId: 'inv-2',
   },
   {
     id: 'ord-103',
@@ -364,5 +493,9 @@ export const initialOrders: DbOrder[] = [
       { id: 'item-7', recipeId: 'rec-3', portions: 2 },
     ],
     createdAt: new Date().toISOString(),
+    orderType: 'INDIVIDUAL',
+    supplementsCost: 0,
+    totalPrice: 1700,
+    isPaid: false,
   },
 ];

@@ -114,3 +114,28 @@ For each significant technical decision, record:
   - 100% operational coverage from recipe design to doorstep delivery.
 - **Approval Status:**
   - Implemented, verified with 12 passing tests, and deployed.
+
+---
+
+## ADR-005: Full Phase 1 Delivery (Devis D2026-0005-R1 Conformity)
+
+- **Date:** 2026-10-20
+- **Decision:**
+  - Achieve 100% functional completeness of **PHASE 1 — SOCLE FONCTIONNEL OPÉRATIONNEL** as contractualized in quote `Devis D2026-0005-R1`.
+  - **Customer Hierarchy & Prepaid Accounts (02):** Support parent company vs subsidiary accounts (`isSubsidiary`, `parentCompanyId`), prepaid balances in DZD, account statements, and direct WhatsApp contact links.
+  - **Menu Rules Operational Engine (05):** Programmatic verification and real-time alert banners for:
+    1. Max 1× pasta/spaghetti per week at lunch.
+    2. Prohibition of fries (pommes de terre/frites) at both lunch and dinner on the same day.
+    3. Prohibition of minced meat at both lunch and dinner on the same day.
+    4. Easy workshop meals on Saturdays (< 45 min prep time).
+  - **Accounting & Billing (08):** Automatic invoicing, prepaid account payments, receipts generation, and paid/unpaid status reconciliation.
+  - **Security & Audit Trail (09):** Granular audit logging with user identity, timestamp, operation type, and before/after state snapshots.
+  - **The 14 Essential Reports (11):** Centralized reporting hub providing all 14 official reports nominatively (Orders, Production surplus/shortages, Purchasing, Supplements, Packaging, Distribution, Client Accounts, Clients hierarchy, Consumption stats, Overall performance, Audit log, Payments, Alternatives, and 360° Weekly Synthesis).
+  - **Emergency Workshop Package & Backup/Restore (13):** One-click printable contingency sheet for kitchen brigade during network/server outages and full system backup JSON export/restore.
+  - **Test Suite (12):** Expanded test suite to 16 passing unit and integration tests (100% pass rate).
+- **Reason:**
+  - Fulfills the exact acceptance criteria and contractual requirements agreed with JANITOU FOOD.
+- **Impact on the Project:**
+  - Phase 1 scope is complete, testable, verifiable, and ready for commercial daily operations.
+- **Approval Status:**
+  - Fully implemented, verified by 16 passing automated tests, and delivered to GitHub repository.
