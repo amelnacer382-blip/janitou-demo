@@ -139,3 +139,24 @@ For each significant technical decision, record:
   - Phase 1 scope is complete, testable, verifiable, and ready for commercial daily operations.
 - **Approval Status:**
   - Fully implemented, verified by 16 passing automated tests, and delivered to GitHub repository.
+
+---
+
+## ADR-006: World-Class Enterprise UI/UX Redesign & Visual System Modernization
+
+- **Date:** 2026-10-20
+- **Decision:**
+  - Modernize the entire visual interface to a world-class enterprise SaaS standard:
+    - **Obsidian / Emerald Theme:** Deep obsidian sidebar (`#070a12`), emerald accents (`#10b981`), refined typography (`Plus Jakarta Sans` & `JetBrains Mono`), and glassmorphism.
+    - **Micro-Interactions & Pulsing Badges:** Real-time pulsating status dots (`.pulse-dot`) indicating live states (`ACTIVE`, `IN_PRODUCTION`, `DELIVERED`).
+    - **Animated Floating Toast Notifications:** Custom floating toast notification system replacing disruptive browser alert dialogs.
+    - **Visual Progress Gauges:** CSS gradient progress bars showing real-time Food Cost % against target threshold and gross margin contribution.
+    - **KDS High-Contrast Dark Station Mode:** High-contrast tactical station display for kitchen tablets with color-coded station headers (`CHAUD`, `FROID`, `PATISSERIE`, `CONDITIONNEMENT`).
+    - **Vector SVG Barcodes:** Thermal packaging stickers enhanced with vector-rendered SVG barcodes for high-fidelity scanning.
+  - Retain 100% of Phase 1 functional business logic, calculations, and rules engine.
+- **Reason:**
+  - Elevates user experience, readability in high-stress kitchen and logistics environments, and provides an executive-ready software presentation.
+- **Impact on the Project:**
+  - Immediate professional appeal for stakeholders, clients, and operational brigades.
+- **Approval Status:**
+  - Implemented, verified with 16 automated tests, and delivered to GitHub repository.

@@ -6,14 +6,18 @@
   <title>JANITOU FOOD — Plateforme Intégrée de Gestion Alimentaire & Production</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
       --color-primary: #059669;
       --color-primary-light: #10b981;
       --color-primary-dark: #047857;
-      --color-slate-900: #0f172a;
+      --color-primary-glow: rgba(16, 185, 129, 0.25);
+      --color-slate-950: #070a12;
+      --color-slate-900: #0b0f19;
+      --color-slate-850: #111827;
       --color-slate-800: #1e293b;
       --color-slate-700: #334155;
       --color-slate-600: #475569;
@@ -21,137 +25,161 @@
       --color-slate-200: #e2e8f0;
       --color-slate-100: #f1f5f9;
       --color-slate-50: #f8fafc;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 16px -2px rgba(0,0,0,0.06), 0 2px 6px -1px rgba(0,0,0,0.04);
+      --shadow-lg: 0 10px 30px -4px rgba(0,0,0,0.08), 0 4px 12px -2px rgba(0,0,0,0.04);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-sans); }
-    body { background-color: #f1f5f9; color: var(--color-slate-800); min-height: 100vh; display: flex; }
+    body { background-color: #f8fafc; color: var(--color-slate-800); min-height: 100vh; display: flex; text-rendering: optimizeLegibility; }
 
-    /* Sidebar */
+    /* Modern Glassmorphic Obsidian Sidebar */
     .sidebar {
-      width: 280px;
-      background: linear-gradient(180deg, #090d16 0%, #0f172a 100%);
+      width: 290px;
+      background: linear-gradient(180deg, var(--color-slate-950) 0%, var(--color-slate-900) 100%);
       color: #fff;
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
-      border-right: 1px solid rgba(255,255,255,0.06);
-      box-shadow: 4px 0 24px rgba(0,0,0,0.12);
-      z-index: 20;
+      border-right: 1px solid rgba(255,255,255,0.07);
+      box-shadow: 4px 0 24px rgba(0,0,0,0.2);
+      z-index: 30;
     }
 
     .brand-container {
-      padding: 24px 20px 20px 20px;
+      padding: 24px 22px 20px 22px;
       display: flex;
       align-items: center;
       gap: 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
     .brand-icon {
-      width: 40px; height: 40px;
+      width: 42px; height: 42px;
       background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary-dark));
-      border-radius: 10px;
+      border-radius: var(--radius-md);
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.25rem;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+      font-size: 1.3rem;
+      box-shadow: 0 4px 14px var(--color-primary-glow);
     }
-    .brand-title { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em; color: #fff; }
-    .brand-subtitle { font-size: 0.72rem; color: var(--color-slate-500); text-transform: uppercase; font-weight: 700; letter-spacing: 0.08em; }
+    .brand-title { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.03em; color: #fff; }
+    .brand-subtitle { font-size: 0.7rem; color: var(--color-slate-500); text-transform: uppercase; font-weight: 700; letter-spacing: 0.08em; }
 
     .role-badge-container {
-      margin: 16px 16px 10px 16px;
-      padding: 10px 12px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 10px;
+      margin: 16px 16px 8px 16px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: var(--radius-md);
     }
-    .role-label { font-size: 0.7rem; color: var(--color-slate-400); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+    .role-label { font-size: 0.68rem; color: var(--color-slate-400); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
     .role-select {
       width: 100%;
       background: transparent;
       border: none;
       color: var(--color-primary-light);
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       font-weight: 700;
       cursor: pointer;
       outline: none;
     }
     .role-select option { background: var(--color-slate-900); color: #fff; }
 
-    .nav-menu { list-style: none; padding: 14px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1; overflow-y: auto; }
+    .nav-menu { list-style: none; padding: 12px 14px; display: flex; flex-direction: column; gap: 3px; flex: 1; overflow-y: auto; }
     .nav-item {
-      display: flex; align-items: center; gap: 10px;
+      display: flex; align-items: center; gap: 12px;
       padding: 10px 14px;
       color: var(--color-slate-400);
       text-decoration: none;
       border-radius: 10px;
       cursor: pointer;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       font-weight: 600;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .nav-item:hover { color: #fff; background: rgba(255,255,255,0.06); transform: translateX(2px); }
-    .nav-item.active { background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary)); color: #fff; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3); }
+    .nav-item:hover { color: #fff; background: rgba(255,255,255,0.05); transform: translateX(2px); }
+    .nav-item.active { background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary)); color: #fff; box-shadow: 0 4px 14px var(--color-primary-glow); }
+
+    /* Pulsing Status Dot */
+    .pulse-dot {
+      width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+      animation: pulseRing 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    .pulse-green { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
+    .pulse-amber { background: #f59e0b; box-shadow: 0 0 8px rgba(245, 158, 11, 0.6); }
+    .pulse-blue { background: #3b82f6; box-shadow: 0 0 8px rgba(59, 130, 246, 0.6); }
+    @keyframes pulseRing {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(1.2); }
+    }
 
     /* Main Area */
     .main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow-y: auto; }
 
     .topbar {
-      background: #ffffff;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--color-slate-200);
       padding: 16px 36px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: sticky; top: 0; z-index: 10;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+      position: sticky; top: 0; z-index: 20;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
-    .topbar-left { display: flex; align-items: center; gap: 16px; }
-    .page-title { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; color: var(--color-slate-900); }
+    .page-title { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.03em; color: var(--color-slate-900); }
     .topbar-right { display: flex; align-items: center; gap: 10px; }
 
     .date-pill {
       display: inline-flex; align-items: center; gap: 8px;
-      background: var(--color-slate-100);
+      background: #ffffff;
       padding: 8px 14px;
       border-radius: 9999px;
-      font-size: 0.82rem; font-weight: 600; color: var(--color-slate-600);
+      font-size: 0.8rem; font-weight: 600; color: var(--color-slate-600);
       border: 1px solid var(--color-slate-200);
+      box-shadow: var(--shadow-sm);
     }
 
     .content-body { padding: 32px 36px; }
     .tab-section { display: none; }
-    .tab-section.active { display: block; animation: fadeIn 0.25s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .tab-section.active { display: block; animation: tabFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes tabFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* KPI Cards */
+    /* Modern KPI Cards */
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 28px; }
     .kpi-card {
       background: #ffffff;
-      padding: 20px 22px;
-      border-radius: 14px;
+      padding: 22px 24px;
+      border-radius: var(--radius-lg);
       border: 1px solid var(--color-slate-200);
-      box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+      box-shadow: var(--shadow-sm);
       position: relative;
       overflow: hidden;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+    .kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
     .kpi-card::before {
       content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
       background: var(--card-accent, var(--color-primary-light));
     }
-    .kpi-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-    .kpi-title { font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--color-slate-500); letter-spacing: 0.05em; }
-    .kpi-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; background: var(--color-slate-100); }
-    .kpi-value { font-size: 1.9rem; font-weight: 800; color: var(--color-slate-900); letter-spacing: -0.03em; }
-    .kpi-footer { font-size: 0.8rem; margin-top: 6px; display: flex; align-items: center; gap: 6px; font-weight: 600; }
+    .kpi-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .kpi-title { font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--color-slate-500); letter-spacing: 0.06em; }
+    .kpi-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; background: var(--color-slate-100); }
+    .kpi-value { font-size: 2rem; font-weight: 800; color: var(--color-slate-900); letter-spacing: -0.03em; }
+    .kpi-footer { font-size: 0.8rem; margin-top: 8px; display: flex; align-items: center; gap: 6px; font-weight: 600; }
 
-    /* Glass Cards */
+    /* Progress & Gauges */
+    .progress-bar-container { background: #e2e8f0; border-radius: 9999px; height: 8px; overflow: hidden; margin-top: 8px; }
+    .progress-bar-fill { height: 100%; border-radius: 9999px; transition: width 0.4s ease; }
+
+    /* Glass Cards & Tables */
     .glass-card {
       background: #ffffff;
-      border-radius: 14px;
+      border-radius: var(--radius-lg);
       border: 1px solid var(--color-slate-200);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+      box-shadow: var(--shadow-sm);
       margin-bottom: 24px;
       overflow: hidden;
     }
@@ -161,19 +189,19 @@
       display: flex; justify-content: space-between; align-items: center;
       background: #fafbfc;
     }
-    .card-heading { font-size: 1.1rem; font-weight: 700; color: var(--color-slate-900); }
-    .card-subheading { font-size: 0.82rem; color: var(--color-slate-500); margin-top: 2px; }
+    .card-heading { font-size: 1.08rem; font-weight: 700; color: var(--color-slate-900); letter-spacing: -0.01em; }
+    .card-subheading { font-size: 0.8rem; color: var(--color-slate-500); margin-top: 2px; }
 
     .table-container { width: 100%; overflow-x: auto; }
-    .modern-table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; font-size: 0.9rem; }
+    .modern-table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; font-size: 0.88rem; }
     .modern-table th {
       background: #f8fafc;
       padding: 12px 20px;
       font-weight: 700;
-      color: var(--color-slate-600);
-      font-size: 0.78rem;
+      color: var(--color-slate-500);
+      font-size: 0.74rem;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.07em;
       border-bottom: 1px solid var(--color-slate-200);
     }
     .modern-table td {
@@ -185,10 +213,10 @@
     .modern-table tr:hover td { background-color: #f8fafc; }
     .modern-table tr:last-child td { border-bottom: none; }
 
-    /* Chips */
+    /* Modern Chips */
     .chip {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 4px 9px;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px;
       border-radius: 9999px;
       font-size: 0.74rem;
       font-weight: 700;
@@ -201,106 +229,145 @@
     .chip-danger { background: #fee2e2; color: #b91c1c; }
     .chip-success { background: #dcfce7; color: #15803d; }
 
-    /* Buttons */
+    /* Action Buttons */
     .btn-action {
-      display: inline-flex; align-items: center; gap: 6px;
+      display: inline-flex; align-items: center; gap: 7px;
       padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 0.85rem;
+      border-radius: 9px;
+      font-size: 0.84rem;
       font-weight: 700;
       border: none;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .btn-action-primary {
       background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
       color: #fff;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+      box-shadow: 0 4px 12px var(--color-primary-glow);
     }
     .btn-action-primary:hover { background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); transform: translateY(-1px); }
     .btn-action-secondary {
       background: #ffffff;
       color: var(--color-slate-700);
       border: 1px solid var(--color-slate-200);
+      box-shadow: var(--shadow-sm);
     }
     .btn-action-secondary:hover { background: var(--color-slate-50); border-color: var(--color-slate-300); }
 
-    /* KDS Board Grid */
-    .kds-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
-    .kds-card {
-      background: #ffffff;
-      border-radius: 12px;
-      border: 2px solid #e2e8f0;
-      padding: 18px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-      display: flex; flex-direction: column; justify-content: space-between;
+    /* KDS Dark Station Mode */
+    .kds-dark-board {
+      background: var(--color-slate-900);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-lg);
     }
-    .kds-card.station-chaud { border-top: 5px solid #ef4444; }
-    .kds-card.station-froid { border-top: 5px solid #06b6d4; }
-    .kds-card.station-patisserie { border-top: 5px solid #8b5cf6; }
+    .kds-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 18px; }
+    .kds-card {
+      background: var(--color-slate-850);
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 20px;
+      color: #fff;
+      display: flex; flex-direction: column; justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    .kds-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    }
+    .station-chaud::before { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+    .station-froid::before { background: #06b6d4; box-shadow: 0 0 10px #06b6d4; }
+    .station-patisserie::before { background: #a855f7; box-shadow: 0 0 10px #a855f7; }
+    .station-conditionnement::before { background: #10b981; box-shadow: 0 0 10px #10b981; }
 
-    /* Weekly Calendar Grid */
-    .weekly-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    /* Weekly Calendar */
+    .weekly-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
     .calendar-day-card {
       background: #ffffff;
-      border-radius: 12px;
-      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-slate-200);
+      box-shadow: var(--shadow-sm);
       overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
     }
     .calendar-day-header {
       background: #f8fafc;
       padding: 12px 16px;
       font-weight: 700;
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 1px solid var(--color-slate-200);
       display: flex; justify-content: space-between;
     }
 
-    /* Modal Backdrop */
+    /* Modern Modals */
     .modal-backdrop {
       position: fixed; inset: 0;
-      background: rgba(15, 23, 42, 0.7);
-      backdrop-filter: blur(4px);
+      background: rgba(7, 10, 18, 0.75);
+      backdrop-filter: blur(6px);
       display: none; align-items: center; justify-content: center;
       z-index: 100; padding: 20px;
     }
-    .modal-backdrop.active { display: flex; }
+    .modal-backdrop.active { display: flex; animation: modalPop 0.2s ease-out; }
+    @keyframes modalPop { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
     .modal-sheet {
       background: #fff;
-      border-radius: 16px;
+      border-radius: var(--radius-lg);
       width: 100%; max-width: 780px;
       max-height: 90vh;
       display: flex; flex-direction: column;
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      box-shadow: var(--shadow-lg);
       overflow: hidden;
     }
     .modal-sheet-header {
-      padding: 18px 24px;
+      padding: 20px 26px;
       border-bottom: 1px solid var(--color-slate-200);
       display: flex; justify-content: space-between; align-items: center;
     }
-    .modal-sheet-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+    .modal-sheet-body { padding: 22px 26px; overflow-y: auto; flex: 1; }
 
-    /* Thermal Labels */
+    /* Realistic Thermal Adhesive Sticker */
     .thermal-label-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
     .thermal-label-card {
       border: 2px dashed #94a3b8;
-      border-radius: 10px;
-      padding: 14px;
-      background: #fff;
+      border-radius: 12px;
+      padding: 18px;
+      background: #ffffff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      font-family: var(--font-sans);
     }
+    .barcode-svg { width: 100%; height: 42px; margin-top: 10px; display: block; }
+
+    /* Animated Floating Toast Notifications */
+    .toast-box {
+      position: fixed; top: 24px; right: 24px; z-index: 9999;
+      display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+    }
+    .toast-item {
+      pointer-events: auto;
+      background: #ffffff;
+      color: var(--color-slate-900);
+      border-radius: 10px;
+      padding: 12px 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      border-left: 4px solid var(--color-primary);
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.86rem; font-weight: 700;
+      animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
     @media print {
       .sidebar, .topbar, .no-print, .btn-action { display: none !important; }
       body { background: #fff !important; }
       .content-body { padding: 0 !important; }
-      .thermal-label-card { page-break-inside: avoid; border: 1px solid #000; }
+      .thermal-label-card { page-break-inside: avoid; border: 1px solid #000; box-shadow: none; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Sidebar -->
+  <!-- Floating Toast Container -->
+  <div class="toast-box" id="toastContainer"></div>
+
+  <!-- Modern Obsidian Sidebar -->
   <aside class="sidebar">
     <div class="brand-container">
       <div class="brand-icon">🍲</div>
@@ -333,8 +400,10 @@
       <li class="nav-item" onclick="switchNavTab('reports')"><span>📑</span> 14 Rapports Officiels</li>
       <li class="nav-item" onclick="switchNavTab('audit')"><span>🛡️</span> Sécurité & Audit</li>
     </ul>
-    <div style="padding: 16px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.75rem; color: var(--color-slate-500);">
-      JANITOU FOOD Platform • v0.3.0
+
+    <div style="padding: 18px 20px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.72rem; color: var(--color-slate-500); display:flex; justify-content:space-between; align-items:center;">
+      <span>JANITOU Platform • v1.0</span>
+      <span class="pulse-dot pulse-green" title="Serveur opérationnel"></span>
     </div>
   </aside>
 
@@ -346,11 +415,12 @@
       </div>
       <div class="topbar-right">
         <span class="date-pill" id="todayDatePill">📅 Aujourd'hui</span>
-        <button class="btn-action no-print" onclick="openEmergencyPackageModal()" style="border:1px solid #fca5a5; color:#991b1b; background:#fef2f2;">🚨 Urgence Atelier</button>
+        <button class="btn-action no-print" onclick="openEmergencyPackageModal()" style="border:1px solid #fecaca; color:#b91c1c; background:#fef2f2;">🚨 Urgence Atelier</button>
         <button class="btn-action btn-action-secondary no-print" onclick="downloadBackup()">💾 Backup JSON</button>
         <button class="btn-action btn-action-secondary no-print" onclick="openLabelModal()">🏷️ Étiquettes</button>
         <button class="btn-action btn-action-primary no-print" onclick="openNewOrderModal()">+ Nouvelle Commande</button>
       </div>
+    </header>
 
     <div class="content-body">
 
@@ -362,22 +432,24 @@
           <div class="kpi-card" style="--card-accent: var(--color-primary-light);">
             <div class="kpi-header"><span class="kpi-title">Chiffre d'Affaires</span><div class="kpi-icon">💰</div></div>
             <div class="kpi-value" id="kpiRevenue">-</div>
-            <div class="kpi-footer" style="color: var(--color-primary);"><span>↑</span> Commandes fermes</div>
+            <div class="kpi-footer" style="color: var(--color-primary);"><span class="pulse-dot pulse-green"></span> Commandes du jour</div>
           </div>
           <div class="kpi-card" style="--card-accent: #3b82f6;">
             <div class="kpi-header"><span class="kpi-title">Coût Matière Première</span><div class="kpi-icon">🥩</div></div>
             <div class="kpi-value" id="kpiFoodCost">-</div>
-            <div class="kpi-footer" id="kpiFoodCostRatio" style="color: #2563eb;">Ratio Food Cost : -</div>
+            <div class="progress-bar-container"><div id="foodCostBar" class="progress-bar-fill" style="width:25.4%; background:#3b82f6;"></div></div>
+            <div class="kpi-footer" id="kpiFoodCostRatio" style="color: #2563eb; margin-top:8px;">Ratio Food Cost : -</div>
           </div>
           <div class="kpi-card" style="--card-accent: #10b981;">
-            <div class="kpi-header"><span class="kpi-title">Marge Brute Estimée</span><div class="kpi-icon">📈</div></div>
+            <div class="kpi-header"><span class="kpi-title">Marge Brute Opérationnelle</span><div class="kpi-icon">📈</div></div>
             <div class="kpi-value" id="kpiGrossMargin">-</div>
-            <div class="kpi-footer" id="kpiMarginRatio" style="color: #059669;">Taux de marge : -</div>
+            <div class="progress-bar-container"><div id="grossMarginBar" class="progress-bar-fill" style="width:74.6%; background:#10b981;"></div></div>
+            <div class="kpi-footer" id="kpiMarginRatio" style="color: #059669; margin-top:8px;">Taux de marge : -</div>
           </div>
           <div class="kpi-card" style="--card-accent: #f59e0b;">
             <div class="kpi-header"><span class="kpi-title">Portions Servies</span><div class="kpi-icon">🍱</div></div>
             <div class="kpi-value" id="kpiTotalPortions">-</div>
-            <div class="kpi-footer" style="color: #d97706;">Midi & Soir combinés</div>
+            <div class="kpi-footer" style="color: #d97706;"><span class="pulse-dot pulse-amber"></span> Midi & Soir combinés</div>
           </div>
         </div>
 
@@ -385,7 +457,7 @@
           <div class="card-header-bar">
             <div>
               <div class="card-heading">Rentabilité & Coût Matière par Recette</div>
-              <div class="card-subheading">Performance économique des plats servis</div>
+              <div class="card-subheading">Performance économique des plats servis et contribution aux bénéfices</div>
             </div>
           </div>
           <div class="table-container">
@@ -396,8 +468,8 @@
                   <th>Portions</th>
                   <th>Coût Matière (DZD)</th>
                   <th>Chiffre d'Affaires (DZD)</th>
-                  <th>Marge Brute</th>
-                  <th>Rentabilité</th>
+                  <th>Marge Brute Dégagée</th>
+                  <th>Taux de Marge</th>
                 </tr>
               </thead>
               <tbody id="financialRecipeTableBody">
@@ -451,7 +523,7 @@
       </section>
 
       <!-- ============================================== -->
-      <!-- TAB: FACTURATION, SOLDES & COMPTABILITÉ (PHASE 1) -->
+      <!-- TAB 3: FACTURATION, SOLDES & COMPTABILITÉ (PHASE 1) -->
       <!-- ============================================== -->
       <section id="tab-billing" class="tab-section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -530,7 +602,7 @@
       </section>
 
       <!-- ============================================== -->
-      <!-- TAB 3: FICHES RECETTES & SIMULATEUR -->
+      <!-- TAB 4: FICHES RECETTES & SIMULATEUR -->
       <!-- ============================================== -->
       <section id="tab-recipes" class="tab-section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -553,9 +625,7 @@
             </div>
             <button class="btn-action btn-action-primary" onclick="runPricingSimulation()">Calculer Prix Idéal</button>
           </div>
-          <div id="simResultBox" style="margin-top:16px; padding:14px; background:#fff; border-radius:10px; border:1px solid #e2e8f0; display:none;">
-            <!-- Simulation result -->
-          </div>
+          <div id="simResultBox" style="margin-top:16px; padding:16px; background:#fff; border-radius:10px; border:1px solid #e2e8f0; display:none;"></div>
         </div>
 
         <div class="glass-card">
@@ -581,7 +651,7 @@
       </section>
 
       <!-- ============================================== -->
-      <!-- TAB 4: MENU DE LA SEMAINE -->
+      <!-- TAB 5: MENU DE LA SEMAINE -->
       <!-- ============================================== -->
       <section id="tab-weekly" class="tab-section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -591,6 +661,7 @@
           </div>
           <button class="btn-action btn-action-secondary" onclick="loadWeeklyCalendar()">🔄 Actualiser Calendrier</button>
         </div>
+
         <div id="menuRulesBanner" style="margin-bottom:16px;"></div>
 
         <div id="weeklyCalendarGrid" class="weekly-grid">
@@ -599,26 +670,24 @@
       </section>
 
       <!-- ============================================== -->
-      <!-- TAB 5: ÉCRAN CUISINE (KDS) -->
+      <!-- TAB 6: ÉCRAN CUISINE (KDS) -->
       <!-- ============================================== -->
       <section id="tab-kds" class="tab-section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
           <div>
             <h2 style="font-size:1.25rem; font-weight:800;">Kitchen Display System (KDS) — Écran Tactile Cuisine</h2>
-            <p style="color:var(--color-slate-500); font-size:0.85rem;">Progression des postes de travail en direct</p>
+            <p style="color:var(--color-slate-500); font-size:0.85rem;">Progression des postes de travail en direct avec affichage brigade</p>
           </div>
-          <div style="display:flex; gap:10px;">
-            <button class="btn-action btn-action-secondary" onclick="loadKdsBatches()">🔄 Actualiser KDS</button>
-          </div>
+          <button class="btn-action btn-action-secondary" onclick="loadKdsBatches()">🔄 Actualiser KDS</button>
         </div>
 
-        <div id="kdsBatchesContainer" class="kds-grid">
-          <!-- KDS Cards -->
+        <div class="kds-dark-board">
+          <div id="kdsBatchesContainer" class="kds-grid"></div>
         </div>
       </section>
 
       <!-- ============================================== -->
-      <!-- TAB 6: FICHE PRODUCTION (EXISTING) -->
+      <!-- TAB 7: FICHE PRODUCTION -->
       <!-- ============================================== -->
       <section id="tab-kitchen" class="tab-section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -655,7 +724,7 @@
       </section>
 
       <!-- ============================================== -->
-      <!-- TAB 7: STOCKS & ACHATS (EXISTING) -->
+      <!-- TAB 8: STOCKS & ACHATS -->
       <!-- ============================================== -->
       <section id="tab-inventory" class="tab-section">
         <div class="glass-card">
@@ -680,7 +749,7 @@
       </section>
 
       <!-- ============================================== -->
-      <!-- TAB 8: LOGISTIQUE & TOURNÉES (ENHANCED) -->
+      <!-- TAB 9: LOGISTIQUE & TOURNÉES -->
       <!-- ============================================== -->
       <section id="tab-logistics" class="tab-section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -699,9 +768,8 @@
         </div>
       </section>
 
-
       <!-- ============================================== -->
-      <!-- TAB: LES 14 RAPPORTS OFFICIELS (PHASE 1) -->
+      <!-- TAB 10: LES 14 RAPPORTS OFFICIELS (PHASE 1) -->
       <!-- ============================================== -->
       <section id="tab-reports" class="tab-section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -711,10 +779,7 @@
           </div>
         </div>
 
-        <!-- 14 Reports Selector Grid -->
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:24px;" id="reportsButtonsGrid">
-          <!-- Generated dynamically from catalog -->
-        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:12px; margin-bottom:24px;" id="reportsButtonsGrid"></div>
 
         <div class="glass-card" id="reportDisplayCard" style="display:none;">
           <div class="card-header-bar">
@@ -724,14 +789,12 @@
             </div>
             <button class="btn-action btn-action-primary no-print" onclick="window.print()">🖨️ Imprimer ce Rapport</button>
           </div>
-          <div style="padding:20px; overflow-x:auto;" id="reportDataContainer">
-            <!-- Report content -->
-          </div>
+          <div style="padding:20px; overflow-x:auto;" id="reportDataContainer"></div>
         </div>
       </section>
 
       <!-- ============================================== -->
-      <!-- TAB: SÉCURITÉ & JOURNAL D'AUDIT (PHASE 1) -->
+      <!-- TAB 11: SÉCURITÉ & JOURNAL D'AUDIT (PHASE 1) -->
       <!-- ============================================== -->
       <section id="tab-audit" class="tab-section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -764,6 +827,7 @@
           </div>
         </div>
       </section>
+
     </div>
   </div>
 
@@ -780,6 +844,74 @@
       <div class="modal-sheet-body">
         <div id="labelsContainer" class="thermal-label-grid"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal Emergency Workshop Package (Panne Réseau Cuisine) -->
+  <div class="modal-backdrop" id="emergencyPackageModal">
+    <div class="modal-sheet" style="max-width:850px;">
+      <div class="modal-sheet-header">
+        <div>
+          <h3 style="font-size:1.2rem; font-weight:800; color:#b91c1c;">🚨 Emergency Workshop Package (Continuité Activité Cuisine)</h3>
+          <p style="font-size:0.8rem; color:#64748b;">Fiche de secours imprimable en cas de coupure internet ou panne réseau</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn-action btn-action-primary" onclick="window.print()">🖨️ Imprimer Fiche de Secours</button>
+          <button onclick="closeEmergencyPackageModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+        </div>
+      </div>
+      <div class="modal-sheet-body" id="emergencyPackageContent"></div>
+    </div>
+  </div>
+
+  <!-- Modal Encaisser un Règlement -->
+  <div class="modal-backdrop" id="paymentModal">
+    <div class="modal-sheet" style="max-width:500px;">
+      <div class="modal-sheet-header">
+        <h3 style="font-size:1.15rem; font-weight:800;">Encaisser un Paiement / Créditer Solde</h3>
+        <button onclick="closePaymentModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+      </div>
+      <form id="paymentForm" onsubmit="submitPayment(event)" style="padding:20px;">
+        <div style="margin-bottom:12px;">
+          <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:4px;">Compte Client</label>
+          <select id="payCustomerSelect" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px;" required></select>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:4px;">Montant du Règlement (DZD)</label>
+          <input type="number" id="payAmountInput" min="100" step="50" value="5000" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px;" required>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:4px;">Mode de Paiement</label>
+          <select id="payMethodSelect" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px;" required>
+            <option value="CASH">Espèces (Cash comptoir)</option>
+            <option value="BANK_TRANSFER">Virement bancaire professionnel</option>
+            <option value="CHECK">Chèque certifié</option>
+            <option value="PREPAID_CREDIT">Crédit prépayé</option>
+          </select>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:4px;">Référence / Note</label>
+          <input type="text" id="payNotesInput" placeholder="Ex: Virement BNA ref #789012" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px;">
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="btn-action btn-action-secondary" onclick="closePaymentModal()">Annuler</button>
+          <button type="submit" class="btn-action btn-action-primary">Valider l'Encaissement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Relevé de Compte Client -->
+  <div class="modal-backdrop" id="statementModal">
+    <div class="modal-sheet" style="max-width:700px;">
+      <div class="modal-sheet-header">
+        <div>
+          <h3 style="font-size:1.15rem; font-weight:800;" id="statementClientName">Relevé de Compte Client</h3>
+          <p style="font-size:0.8rem; color:#64748b;" id="statementClientBalance">Solde actuel : -</p>
+        </div>
+        <button onclick="closeStatementModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+      </div>
+      <div class="modal-sheet-body" id="statementContent"></div>
     </div>
   </div>
 
@@ -865,78 +997,6 @@
     </div>
   </div>
 
-  <!-- Modal Emergency Workshop Package (Panne Réseau Cuisine) -->
-  <div class="modal-backdrop" id="emergencyPackageModal">
-    <div class="modal-sheet" style="max-width:850px;">
-      <div class="modal-sheet-header">
-        <div>
-          <h3 style="font-size:1.2rem; font-weight:800; color:#991b1b;">🚨 Emergency Workshop Package (Continuité Activité Cuisine)</h3>
-          <p style="font-size:0.8rem; color:#64748b;">Fiche de secours imprimable en cas de coupure internet ou panne de serveur</p>
-        </div>
-        <div style="display:flex; gap:10px;">
-          <button class="btn-action btn-action-primary" onclick="window.print()">🖨️ Imprimer la Fiche de Secours</button>
-          <button onclick="closeEmergencyPackageModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
-        </div>
-      </div>
-      <div class="modal-sheet-body" id="emergencyPackageContent">
-        <!-- Emergency Package content -->
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Encaisser un Règlement -->
-  <div class="modal-backdrop" id="paymentModal">
-    <div class="modal-sheet" style="max-width:500px;">
-      <div class="modal-sheet-header">
-        <h3 style="font-size:1.15rem; font-weight:800;">Encaisser un Paiement / Créditer Solde</h3>
-        <button onclick="closePaymentModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
-      </div>
-      <form id="paymentForm" onsubmit="submitPayment(event)" style="padding:20px;">
-        <div style="margin-bottom:12px;">
-          <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:4px;">Compte Client</label>
-          <select id="payCustomerSelect" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px;" required></select>
-        </div>
-        <div style="margin-bottom:12px;">
-          <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:4px;">Montant du Règlement (DZD)</label>
-          <input type="number" id="payAmountInput" min="100" step="50" value="5000" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px;" required>
-        </div>
-        <div style="margin-bottom:12px;">
-          <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:4px;">Mode de Paiement</label>
-          <select id="payMethodSelect" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px;" required>
-            <option value="CASH">Espèces (Cash comptoir)</option>
-            <option value="BANK_TRANSFER">Virement bancaire professionnel</option>
-            <option value="CHECK">Chèque certifié</option>
-            <option value="PREPAID_CREDIT">Crédit prépayé</option>
-          </select>
-        </div>
-        <div style="margin-bottom:16px;">
-          <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:4px;">Référence / Note</label>
-          <input type="text" id="payNotesInput" placeholder="Ex: Virement BNA ref #789012" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px;">
-        </div>
-        <div style="display:flex; justify-content:flex-end; gap:10px;">
-          <button type="button" class="btn-action btn-action-secondary" onclick="closePaymentModal()">Annuler</button>
-          <button type="submit" class="btn-action btn-action-primary">Valider l'Encaissement</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Modal Relevé de Compte Client -->
-  <div class="modal-backdrop" id="statementModal">
-    <div class="modal-sheet" style="max-width:700px;">
-      <div class="modal-sheet-header">
-        <div>
-          <h3 style="font-size:1.15rem; font-weight:800;" id="statementClientName">Relevé de Compte Client</h3>
-          <p style="font-size:0.8rem; color:#64748b;" id="statementClientBalance">Solde actuel : -</p>
-        </div>
-        <button onclick="closeStatementModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
-      </div>
-      <div class="modal-sheet-body" id="statementContent">
-        <!-- Statement content -->
-      </div>
-    </div>
-  </div>
-
   <script>
     const API = '/api/v1';
     let customersList = [];
@@ -945,6 +1005,21 @@
     let currentRole = 'ADMIN';
 
     function getTodayIso() { return new Date().toLocaleDateString('en-CA'); }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const item = document.createElement('div');
+      item.className = 'toast-item';
+      item.style.borderLeftColor = type === 'success' ? '#10b981' : '#ef4444';
+      item.innerHTML = `<span>${type === 'success' ? '✓' : '⚠️'}</span> <span>${message}</span>`;
+      container.appendChild(item);
+      setTimeout(() => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateX(50px)';
+        item.style.transition = 'all 0.3s ease';
+        setTimeout(() => item.remove(), 300);
+      }, 3500);
+    }
 
     function switchNavTab(tabId) {
       document.querySelectorAll('.tab-section').forEach(el => el.classList.remove('active'));
@@ -987,6 +1062,7 @@
       else if (newRole === 'PURCHASING') switchNavTab('inventory');
       else if (newRole === 'DELIVERY') switchNavTab('logistics');
       else switchNavTab('overview');
+      showToast(`Mode opérationnel : ${newRole}`);
     }
 
     async function initPlatform() {
@@ -1030,9 +1106,11 @@
 
       document.getElementById('kpiRevenue').innerText = (f.totalRevenue || 0).toLocaleString('fr-DZ') + ' DZD';
       document.getElementById('kpiFoodCost').innerText = (f.totalFoodCost || 0).toLocaleString('fr-DZ') + ' DZD';
-      document.getElementById('kpiFoodCostRatio').innerText = 'Ratio Matière : ' + f.foodCostPercentage + '% (Optimal)';
+      document.getElementById('kpiFoodCostRatio').innerText = 'Ratio Food Cost : ' + f.foodCostPercentage + '% (Optimal)';
+      document.getElementById('foodCostBar').style.width = Math.min(100, f.foodCostPercentage) + '%';
       document.getElementById('kpiGrossMargin').innerText = (f.grossMargin || 0).toLocaleString('fr-DZ') + ' DZD';
       document.getElementById('kpiMarginRatio').innerText = 'Taux de Marge : ' + f.grossMarginPercentage + '%';
+      document.getElementById('grossMarginBar').style.width = Math.min(100, f.grossMarginPercentage) + '%';
       document.getElementById('kpiTotalPortions').innerText = (f.totalPortions || 0) + ' portions';
 
       const tbody = document.getElementById('financialRecipeTableBody');
@@ -1093,7 +1171,7 @@
         body: JSON.stringify({ date: today })
       }).then(r => r.json());
 
-      alert(res.message);
+      showToast(res.message);
       loadOrdersList();
       loadFinancials();
     }
@@ -1131,8 +1209,8 @@
       box.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
           <div>
-            <div style="font-size:0.85rem; color:#64748b;">Coût Matière Unitaire : <strong>${s.foodCostPerPortion} DZD</strong></div>
-            <div style="font-size:1.15rem; font-weight:800; color:#047857; margin-top:4px;">Prix de Vente Recommandé : ${s.recommendedSellingPrice} DZD</div>
+            <div style="font-size:0.82rem; color:#64748b;">Coût Matière Unitaire : <strong>${s.foodCostPerPortion} DZD</strong></div>
+            <div style="font-size:1.15rem; font-weight:800; color:#047857; margin-top:2px;">Prix de Vente Recommandé : ${s.recommendedSellingPrice} DZD</div>
           </div>
           <div style="display:flex; gap:16px;">
             <div style="text-align:right;">
@@ -1177,7 +1255,7 @@
 
       closeNewRecipeModal();
       loadRecipeStudio();
-      alert('Recette ajoutée avec succès au catalogue !');
+      showToast('Nouvelle fiche recette enregistrée !');
     }
 
     async function loadWeeklyCalendar() {
@@ -1195,16 +1273,45 @@
           <div style="padding:14px;">
             <div style="margin-bottom:12px;">
               <span class="chip" style="background:#e0f2fe; color:#0369a1; margin-bottom:6px;">☀️ Midi (Déjeuner)</span>
-              <div style="font-size:0.9rem; font-weight:700; margin-top:4px;">${d.mainName || 'Menu du Chef'}</div>
+              <div style="font-size:0.88rem; font-weight:700; margin-top:4px;">${d.mainName || 'Menu du Chef'}</div>
               <small style="color:#64748b;">Entrée: ${d.starterName || 'Salade fraîche'} • Dessert: ${d.dessertName || 'Mousse chocolat'}</small>
             </div>
             <div style="border-top:1px dashed #e2e8f0; padding-top:10px;">
               <span class="chip" style="background:#fef3c7; color:#b45309; margin-bottom:6px;">🌙 Soir (Dîner)</span>
-              <div style="font-size:0.9rem; font-weight:700; margin-top:4px;">${d.dinnerMainName || 'Plat traditionnel'}</div>
+              <div style="font-size:0.88rem; font-weight:700; margin-top:4px;">${d.dinnerMainName || 'Plat traditionnel'}</div>
             </div>
           </div>
         </div>
       `).join('');
+    }
+
+    async function checkMenuRules() {
+      const res = await fetch(API + '/meal-plans/validate-rules').then(r => r.json());
+      const banner = document.getElementById('menuRulesBanner');
+      if (!banner) return;
+
+      if (res.isValid && (!res.violations || res.violations.length === 0)) {
+        banner.innerHTML = `
+          <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:10px; padding:12px 16px; color:#065f46; display:flex; align-items:center; gap:10px;">
+            <span style="font-size:1.2rem;">✓</span>
+            <div>
+              <strong>Toutes les règles opérationnelles de menu sont conformes !</strong>
+              <p style="font-size:0.8rem; margin-top:2px;">Interdiction frites midi+soir, interdiction viande hachée midi+soir, max 1x pâtes/semaine et repas samedi faciles respectés.</p>
+            </div>
+          </div>
+        `;
+      } else {
+        banner.innerHTML = `
+          <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:12px 16px; color:#92400e;">
+            <div style="display:flex; align-items:center; gap:8px; font-weight:800;">
+              <span>⚠️</span> Alertes du Moteur de Règles Opérationnelles (${res.violations.length})
+            </div>
+            <ul style="margin-top:6px; padding-left:20px; font-size:0.85rem;">
+              ${res.violations.map(v => `<li><strong>${v.ruleName} :</strong> ${v.message}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+      }
     }
 
     async function loadKdsBatches() {
@@ -1214,7 +1321,7 @@
 
       const container = document.getElementById('kdsBatchesContainer');
       if (batches.length === 0) {
-        container.innerHTML = '<div style="padding:30px; text-align:center; color:#64748b;">Aucun lot actif sur les postes cuisine.</div>';
+        container.innerHTML = '<div style="padding:30px; text-align:center; color:#94a3b8;">Aucun lot actif sur les postes cuisine.</div>';
         return;
       }
 
@@ -1236,15 +1343,15 @@
           <div class="kds-card station-${b.station.toLowerCase()}">
             <div>
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <span class="chip" style="background:#0f172a; color:#fff;">Poste : ${b.station}</span>
+                <span class="chip" style="background:#000; color:#fff;">Poste : ${b.station}</span>
                 <span class="chip ${stageColors[b.stage]}">${stageLabels[b.stage]}</span>
               </div>
-              <h3 style="font-size:1.15rem; font-weight:800; color:#0f172a; margin-bottom:6px;">${b.recipeName}</h3>
-              <div style="font-size:1.4rem; font-weight:800; color:#059669; margin-bottom:12px;">${b.portions} portions</div>
+              <h3 style="font-size:1.15rem; font-weight:800; color:#fff; margin-bottom:6px;">${b.recipeName}</h3>
+              <div style="font-size:1.5rem; font-weight:800; color:#10b981; margin-bottom:12px;">${b.portions} portions</div>
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-top:14px;" class="no-print">
-              <button class="btn-action btn-action-secondary" style="font-size:0.75rem; justify-content:center;" onclick="patchKdsStage('${b.id}', 'COOKING')">🔥 En Cuisson</button>
-              <button class="btn-action btn-action-secondary" style="font-size:0.75rem; justify-content:center;" onclick="patchKdsStage('${b.id}', 'PACKAGING')">📦 Emballage</button>
+              <button class="btn-action btn-action-secondary" style="font-size:0.75rem; justify-content:center; background:#1e293b; color:#fff; border-color:#334155;" onclick="patchKdsStage('${b.id}', 'COOKING')">🔥 En Cuisson</button>
+              <button class="btn-action btn-action-secondary" style="font-size:0.75rem; justify-content:center; background:#1e293b; color:#fff; border-color:#334155;" onclick="patchKdsStage('${b.id}', 'PACKAGING')">📦 Emballage</button>
               <button class="btn-action btn-action-primary" style="grid-column: span 2; font-size:0.8rem; justify-content:center;" onclick="patchKdsStage('${b.id}', 'READY')">✓ Marquer Prêt</button>
             </div>
           </div>
@@ -1259,287 +1366,9 @@
         body: JSON.stringify({ stage })
       });
       loadKdsBatches();
+      showToast('Statut atelier KDS mis à jour !');
     }
 
-    async function patchOrderStatus(id, status) {
-      await fetch(`${API}/orders/${id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
-      });
-      loadOrdersList();
-    }
-
-    async function loadKitchenSheet() {
-      const today = getTodayIso();
-      const res = await fetch(`${API}/production/plan?date=${today}`).then(r => r.json());
-      const p = res.plan;
-
-      document.getElementById('kitchenRecipeRows').innerHTML = p.recipes.map(r => `
-        <tr>
-          <td><strong>${r.recipeName}</strong></td>
-          <td><span class="chip" style="background:#e2e8f0; color:#334155;">${r.category}</span></td>
-          <td><strong style="font-size:1.1rem; color:var(--color-primary);">${r.totalPortions} portions</strong></td>
-          <td>${r.ordersCount} commande(s)</td>
-        </tr>
-      `).join('');
-
-      document.getElementById('kitchenIngredientRows').innerHTML = p.ingredientRequirements.map(i => {
-        const badge = i.deficit > 0 
-          ? `<span class="chip chip-danger">Déficit : -${i.deficit} ${i.unit}</span>` 
-          : `<span class="chip chip-success">Stock OK (+${i.stockAfterProduction} ${i.unit})</span>`;
-        return `
-          <tr>
-            <td><strong>${i.ingredientName}</strong></td>
-            <td>${i.unit}</td>
-            <td><strong>${i.quantityRequired} ${i.unit}</strong></td>
-            <td>${i.currentStock} ${i.unit}</td>
-            <td>${i.stockAfterProduction} ${i.unit}</td>
-            <td>${i.supplierName}</td>
-            <td>${badge}</td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    async function triggerAutoPurchase() {
-      const today = getTodayIso();
-      const res = await fetch(`${API}/production/auto-purchase-orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: today })
-      }).then(r => r.json());
-
-      alert(res.message);
-      switchNavTab('inventory');
-    }
-
-    async function loadInventoryData() {
-      const res = await fetch(API + '/ingredients').then(r => r.json());
-      const ings = res.ingredients || [];
-      document.getElementById('inventoryRows').innerHTML = ings.map(i => `
-        <tr>
-          <td><strong>${i.name}</strong></td>
-          <td>${i.unit}</td>
-          <td><strong>${i.currentStock}</strong> ${i.unit}</td>
-          <td>${i.minimumThreshold} ${i.unit}</td>
-          <td>${i.unitCost} DZD</td>
-          <td>${i.isLowStock ? '<span class="chip chip-danger">Alerte Seuil Bas</span>' : '<span class="chip chip-success">Optimal</span>'}</td>
-          <td class="no-print">
-            <button class="btn-action btn-action-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="promptUpdateStock('${i.id}', ${i.currentStock})">Modifier</button>
-          </td>
-        </tr>
-      `).join('');
-    }
-
-    async function promptUpdateStock(id, curr) {
-      const val = prompt('Niveau de stock réel :', curr);
-      if (val === null) return;
-      const num = parseFloat(val);
-      if (isNaN(num) || num < 0) return alert('Valeur non valide');
-      await fetch(`${API}/ingredients/${id}/stock`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentStock: num })
-      });
-      loadInventoryData();
-    }
-
-    async function loadPOs() {
-      const res = await fetch(API + '/purchasing/orders').then(r => r.json());
-      const pos = res.purchaseOrders || [];
-      const tbody = document.getElementById('purchaseOrderRows');
-      if (pos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--color-slate-500);">Aucun bon de commande.</td></tr>';
-        return;
-      }
-      tbody.innerHTML = pos.map(p => `
-        <tr>
-          <td><strong>${p.poNumber}</strong></td>
-          <td>${p.orderDate}</td>
-          <td><span class="chip chip-${p.status === 'RECEIVED' ? 'success' : 'danger'}">${p.status}</span></td>
-          <td><strong>${p.totalCost.toLocaleString('fr-DZ')} DZD</strong></td>
-          <td class="no-print">
-            ${p.status !== 'RECEIVED' ? `<button class="btn-action btn-action-primary" style="padding:4px 10px; font-size:0.75rem;" onclick="receivePO('${p.id}')">Réceptionner</button>` : 'Reçu ✓'}
-          </td>
-        </tr>
-      `).join('');
-    }
-
-    async function receivePO(id) {
-      await fetch(`${API}/purchasing/orders/${id}/receive`, { method: 'POST' });
-      alert('Stock réceptionné !');
-      loadPOs();
-      loadInventoryData();
-    }
-
-    async function loadLogisticsRuns() {
-      const today = getTodayIso();
-      const [rRes, oRes] = await Promise.all([
-        fetch(`${API}/delivery/runs?date=${today}`).then(r => r.json()),
-        fetch(API + '/orders').then(r => r.json())
-      ]);
-
-      const runs = rRes.deliveryRuns || [];
-      const allOrders = oRes.orders || [];
-      const container = document.getElementById('deliveryRunsList');
-
-      if (runs.length === 0) {
-        container.innerHTML = `
-          <div class="glass-card" style="padding:32px; text-align:center; color:var(--color-slate-500);">
-            Aucune tournée planifiée pour aujourd'hui. Cliquez sur "+ Créer Tournée Automatique".
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = runs.map(run => `
-        <div class="glass-card" style="margin-bottom:20px;">
-          <div class="card-header-bar">
-            <div>
-              <div class="card-heading">Tournée ${run.serviceTime === 'LUNCH' ? 'Déjeuner' : 'Dîner'} • Chauffeur : ${run.driverName} (<a href="tel:${run.driverPhone}" style="color:#059669; font-weight:700; text-decoration:none;">📞 ${run.driverPhone}</a>)</div>
-              <div class="card-subheading">${run.stops.length} points de livraison</div>
-            </div>
-            <span class="chip chip-${run.status === 'COMPLETED' ? 'success' : 'production'}">${run.status}</span>
-          </div>
-          <div class="table-container">
-            <table class="modern-table">
-              <thead>
-                <tr>
-                  <th>Arrêt</th>
-                  <th>Client & Contact</th>
-                  <th>Adresse & Navigation</th>
-                  <th>Statut</th>
-                  <th class="no-print">Émargement</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${run.stops.map(s => {
-                  const ord = allOrders.find(o => o.id === s.orderId);
-                  const cust = ord ? customersList.find(c => c.id === ord.customerId) : null;
-                  const clientName = cust ? (cust.companyName || cust.contactName) : 'Client';
-                  const clientPhone = cust ? cust.phone : '';
-                  const address = ord ? ord.deliveryAddress : 'Adresse standard';
-                  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-
-                  return `
-                    <tr>
-                      <td><strong>#${s.sequence}</strong></td>
-                      <td>
-                        <strong>${clientName}</strong><br>
-                        ${clientPhone ? `<a href="tel:${clientPhone}" style="color:#059669; font-size:0.8rem; font-weight:700; text-decoration:none;">📞 ${clientPhone}</a>` : ''}
-                      </td>
-                      <td>
-                        <small>${address}</small><br>
-                        <a href="${mapsUrl}" target="_blank" style="display:inline-block; margin-top:4px; font-size:0.75rem; color:#2563eb; font-weight:700; text-decoration:none;">📍 Navigation GPS Google Maps ↗</a>
-                      </td>
-                      <td><span class="chip chip-${s.deliveryStatus === 'DELIVERED' ? 'success' : 'danger'}">${s.deliveryStatus}</span></td>
-                      <td class="no-print">
-                        ${s.deliveryStatus !== 'DELIVERED' ? `<button class="btn-action btn-action-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="markDelivered('${run.id}', '${s.id}')">Émarger / Livré</button>` : 'Livré ✓'}
-                      </td>
-                    </tr>
-                  `;
-                }).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    async function markDelivered(runId, stopId) {
-      await fetch(`${API}/delivery/runs/${runId}/stops/${stopId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ comment: 'Remis en main propre' })
-      });
-      loadLogisticsRuns();
-    }
-
-    async function createAutoDeliveryRun() {
-      const today = getTodayIso();
-      await fetch(`${API}/delivery/runs`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          runDate: today,
-          serviceTime: 'LUNCH',
-          driverName: 'Rachid Bouzid',
-          driverPhone: '0551 22 33 44'
-        })
-      });
-      loadLogisticsRuns();
-    }
-
-    async function openLabelModal() {
-      const today = getTodayIso();
-      const res = await fetch(`${API}/packaging/labels?date=${today}`).then(r => r.json());
-      const labels = res.labels || [];
-
-      const container = document.getElementById('labelsContainer');
-      container.innerHTML = labels.map(l => `
-        <div class="thermal-label-card">
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #0f172a; padding-bottom:6px; margin-bottom:6px;">
-            <span style="font-weight:800; font-size:0.95rem;">🍲 JANITOU FOOD</span>
-            <span style="background:#0f172a; color:#fff; font-size:0.75rem; font-weight:700; padding:2px 6px; border-radius:4px;">${l.portionIndex}</span>
-          </div>
-          <div style="font-size:1.05rem; font-weight:800; color:#047857; margin:4px 0;">${l.recipeName}</div>
-          <div style="font-size:0.85rem; font-weight:700;">${l.companyName ? l.companyName + ' — ' : ''}${l.customerName}</div>
-          <div style="font-size:0.75rem; color:#64748b; margin-bottom:6px;">📍 ${l.deliveryAddress}</div>
-          <div style="background:#fef2f2; border-left:3px solid #ef4444; padding:4px 6px; font-size:0.7rem; font-weight:700; color:#991b1b; margin-bottom:6px;">⚠️ Allergènes : ${l.allergens.join(', ')}</div>
-          <div style="font-size:0.7rem; color:#334155;">♨️ ${l.heatingInstructions}</div>
-          <div style="font-family:monospace; font-size:0.95rem; letter-spacing:3px; text-align:center; border-top:1px solid #e2e8f0; padding-top:4px; margin-top:8px; font-weight:700;">${l.barcode}</div>
-        </div>
-      `).join('');
-
-      document.getElementById('labelPreviewModal').classList.add('active');
-    }
-
-    function closeLabelModal() { document.getElementById('labelPreviewModal').classList.remove('active'); }
-    function openNewRecipeModal() { document.getElementById('newRecipeModal').classList.add('active'); }
-    function closeNewRecipeModal() { document.getElementById('newRecipeModal').classList.remove('active'); }
-    function openNewOrderModal() { document.getElementById('newOrderModal').classList.add('active'); }
-    function closeNewOrderModal() { document.getElementById('newOrderModal').classList.remove('active'); }
-
-    async function submitOrder(e) {
-      e.preventDefault();
-      const payload = {
-        customerId: document.getElementById('formCustomerSelect').value,
-        deliveryDate: document.getElementById('formDeliveryDate').value,
-        serviceTime: document.getElementById('formServiceTime').value,
-        items: [
-          {
-            recipeId: document.getElementById('formRecipeSelect').value,
-            portions: parseInt(document.getElementById('formPortions').value, 10)
-          }
-        ],
-        notes: document.getElementById('formNotes').value
-      };
-
-      await fetch(API + '/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      closeNewOrderModal();
-      loadOrdersList();
-      loadFinancials();
-    }
-
-    function exportProductionCsv() {
-      const today = getTodayIso();
-      window.location.href = `${API}/export/production?date=${today}`;
-    }
-
-    function exportDeliveryCsv() {
-      const today = getTodayIso();
-      window.location.href = `${API}/export/delivery?date=${today}`;
-    }
-
-    // ==========================================
-    // Phase 1: Facturation & Soldes Prépayés
-    // ==========================================
     async function loadBilling() {
       const [cRes, invRes, payRes] = await Promise.all([
         fetch(API + '/customers').then(r => r.json()),
@@ -1624,7 +1453,7 @@
       });
 
       closePaymentModal();
-      alert('Règlement enregistré avec succès ! Le solde du client a été crédité.');
+      showToast('Paiement encaissé et solde crédité !');
       loadBilling();
     }
 
@@ -1639,7 +1468,7 @@
       const cont = document.getElementById('statementContent');
       cont.innerHTML = `
         <div style="margin-bottom:16px;">
-          <h4 style="font-size:0.95rem; font-weight:800; margin-bottom:8px;">1. Dernières Factures</h4>
+          <h4 style="font-size:0.95rem; font-weight:800; margin-bottom:8px;">1. Factures Émises</h4>
           <table class="modern-table">
             <thead><tr><th>N° Facture</th><th>Date</th><th>Montant</th><th>Statut</th></tr></thead>
             <tbody>
@@ -1662,41 +1491,6 @@
     }
     function closeStatementModal() { document.getElementById('statementModal').classList.remove('active'); }
 
-    // ==========================================
-    // Phase 1: Moteur de Validation des Règles Menu
-    // ==========================================
-    async function checkMenuRules() {
-      const res = await fetch(API + '/meal-plans/validate-rules').then(r => r.json());
-      const banner = document.getElementById('menuRulesBanner');
-      if (!banner) return;
-
-      if (res.isValid && (!res.violations || res.violations.length === 0)) {
-        banner.innerHTML = `
-          <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:10px; padding:12px 16px; color:#065f46; display:flex; align-items:center; gap:10px;">
-            <span style="font-size:1.2rem;">✓</span>
-            <div>
-              <strong>Toutes les règles opérationnelles de menu sont conformes !</strong>
-              <p style="font-size:0.8rem; margin-top:2px;">Interdiction frites midi+soir, interdiction viande hachée midi+soir, max 1x pâtes/semaine et repas samedi faciles respectés.</p>
-            </div>
-          </div>
-        `;
-      } else {
-        banner.innerHTML = `
-          <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:12px 16px; color:#92400e;">
-            <div style="display:flex; align-items:center; gap:8px; font-weight:800;">
-              <span>⚠️</span> Alertes du Moteur de Règles Opérationnelles (${res.violations.length})
-            </div>
-            <ul style="margin-top:6px; padding-left:20px; font-size:0.85rem;">
-              ${res.violations.map(v => `<li><strong>${v.ruleName} :</strong> ${v.message}</li>`).join('')}
-            </ul>
-          </div>
-        `;
-      }
-    }
-
-    // ==========================================
-    // Phase 1: Les 14 Rapports Officiels
-    // ==========================================
     async function loadReports() {
       const res = await fetch(API + '/reports').then(r => r.json());
       const list = res.reports || [];
@@ -1707,12 +1501,11 @@
           <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
             <span class="chip" style="background:#0f172a; color:#fff;">Rapport #${r.id}</span>
           </div>
-          <div style="font-size:0.9rem; font-weight:800; color:#0f172a;">${r.title}</div>
+          <div style="font-size:0.86rem; font-weight:800; color:#0f172a;">${r.title}</div>
           <small style="color:#059669; font-weight:700; margin-top:6px; display:inline-block;">Générer & Voir ↗</small>
         </div>
       `).join('');
 
-      // Load report 1 by default
       openReportDetail(1);
     }
 
@@ -1731,9 +1524,6 @@
       container.innerHTML = `<pre style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px; font-size:0.8rem; overflow-x:auto;">${JSON.stringify(r.data, null, 2)}</pre>`;
     }
 
-    // ==========================================
-    // Phase 1: Journal d'Audit Trail
-    // ==========================================
     async function loadAuditLogs() {
       const res = await fetch(API + '/audit/logs').then(r => r.json());
       const logs = res.logs || [];
@@ -1753,9 +1543,6 @@
       `).join('');
     }
 
-    // ==========================================
-    // Phase 1: Emergency Workshop Package & Backup
-    // ==========================================
     async function openEmergencyPackageModal() {
       const today = getTodayIso();
       const res = await fetch(`${API}/emergency/workshop-package?date=${today}`).then(r => r.json());
@@ -1793,12 +1580,12 @@
           <table class="modern-table" style="margin-bottom:20px;">
             <thead><tr><th>Client</th><th>Adresse</th><th>Exigence Alimentaire</th></tr></thead>
             <tbody>
-              ${pkg.alternatives.length > 0 ? pkg.alternatives.map(a => `<tr><td><strong>${a.customerName}</strong></td><td><small>${a.address}</small></td><td><span class="chip chip-danger">${a.requestedAlternative}</span></td></tr>`).join('') : '<tr><td colspan="3" style="text-align:center;">Aucun régime d\'exclusion aujourd\'hui.</td></tr>'}
+              ${pkg.alternatives.length > 0 ? pkg.alternatives.map(a => `<tr><td><strong>${a.customerName}</strong></td><td><small>${a.address}</small></td><td><span class="chip chip-danger">${a.requestedAlternative}</span></td></tr>`) : '<tr><td colspan="3" style="text-align:center;">Aucun régime d\'exclusion aujourd\'hui.</td></tr>'}
             </tbody>
           </table>
 
           <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:12px; font-size:0.85rem; color:#991b1b;">
-            <strong>Avis Brigade :</strong> Conserver cette fiche affichée à l'atelier de conditionnement. En cas de coupure réseau, la livraison doit s'effectuer selon les adresses indiquées ci-dessus.
+            <strong>Avis Brigade :</strong> Conserver cette fiche affichée à l'atelier de conditionnement. En cas de coupure réseau, la distribution s'effectue selon ces adresses.
           </div>
         </div>
       `;
@@ -1808,7 +1595,315 @@
     function closeEmergencyPackageModal() { document.getElementById('emergencyPackageModal').classList.remove('active'); }
 
     function downloadBackup() {
+      showToast('Téléchargement de la sauvegarde JSON en cours...');
       window.location.href = API + '/system/backup';
+    }
+
+    async function openLabelModal() {
+      const today = getTodayIso();
+      const res = await fetch(`${API}/packaging/labels?date=${today}`).then(r => r.json());
+      const labels = res.labels || [];
+
+      const container = document.getElementById('labelsContainer');
+      container.innerHTML = labels.map(l => `
+        <div class="thermal-label-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #0f172a; padding-bottom:6px; margin-bottom:6px;">
+            <span style="font-weight:800; font-size:0.95rem;">🍲 JANITOU FOOD</span>
+            <span style="background:#0f172a; color:#fff; font-size:0.75rem; font-weight:700; padding:2px 6px; border-radius:4px;">${l.portionIndex}</span>
+          </div>
+          <div style="font-size:1.05rem; font-weight:800; color:#047857; margin:4px 0;">${l.recipeName}</div>
+          <div style="font-size:0.85rem; font-weight:700;">${l.companyName ? l.companyName + ' — ' : ''}${l.customerName}</div>
+          <div style="font-size:0.75rem; color:#64748b; margin-bottom:6px;">📍 ${l.deliveryAddress}</div>
+          <div style="background:#fef2f2; border-left:3px solid #ef4444; padding:4px 6px; font-size:0.7rem; font-weight:700; color:#991b1b; margin-bottom:6px;">⚠️ Allergènes : ${l.allergens.join(', ')}</div>
+          <div style="font-size:0.7rem; color:#334155;">♨️ ${l.heatingInstructions}</div>
+          <svg class="barcode-svg" viewBox="0 0 200 40">
+            <rect x="10" y="0" width="3" height="35" fill="#000"/>
+            <rect x="16" y="0" width="2" height="35" fill="#000"/>
+            <rect x="22" y="0" width="4" height="35" fill="#000"/>
+            <rect x="30" y="0" width="2" height="35" fill="#000"/>
+            <rect x="36" y="0" width="3" height="35" fill="#000"/>
+            <rect x="44" y="0" width="5" height="35" fill="#000"/>
+            <rect x="52" y="0" width="2" height="35" fill="#000"/>
+            <rect x="58" y="0" width="4" height="35" fill="#000"/>
+            <rect x="66" y="0" width="3" height="35" fill="#000"/>
+            <rect x="74" y="0" width="2" height="35" fill="#000"/>
+            <rect x="80" y="0" width="5" height="35" fill="#000"/>
+            <rect x="88" y="0" width="3" height="35" fill="#000"/>
+            <rect x="96" y="0" width="2" height="35" fill="#000"/>
+            <rect x="102" y="0" width="4" height="35" fill="#000"/>
+            <rect x="110" y="0" width="2" height="35" fill="#000"/>
+            <rect x="116" y="0" width="3" height="35" fill="#000"/>
+            <rect x="124" y="0" width="5" height="35" fill="#000"/>
+            <rect x="134" y="0" width="2" height="35" fill="#000"/>
+            <rect x="140" y="0" width="4" height="35" fill="#000"/>
+            <rect x="148" y="0" width="3" height="35" fill="#000"/>
+            <rect x="156" y="0" width="2" height="35" fill="#000"/>
+            <rect x="162" y="0" width="4" height="35" fill="#000"/>
+            <rect x="170" y="0" width="3" height="35" fill="#000"/>
+            <rect x="178" y="0" width="2" height="35" fill="#000"/>
+            <text x="100" y="39" font-size="8" font-family="monospace" text-anchor="middle" fill="#000">${l.barcode}</text>
+          </svg>
+        </div>
+      `).join('');
+
+      document.getElementById('labelPreviewModal').classList.add('active');
+    }
+
+    function closeLabelModal() { document.getElementById('labelPreviewModal').classList.remove('active'); }
+    function openNewRecipeModal() { document.getElementById('newRecipeModal').classList.add('active'); }
+    function closeNewRecipeModal() { document.getElementById('newRecipeModal').classList.remove('active'); }
+    function openNewOrderModal() { document.getElementById('newOrderModal').classList.add('active'); }
+    function closeNewOrderModal() { document.getElementById('newOrderModal').classList.remove('active'); }
+
+    async function patchOrderStatus(id, status) {
+      await fetch(`${API}/orders/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      loadOrdersList();
+      showToast('Statut de la commande mis à jour !');
+    }
+
+    async function submitOrder(e) {
+      e.preventDefault();
+      const payload = {
+        customerId: document.getElementById('formCustomerSelect').value,
+        deliveryDate: document.getElementById('formDeliveryDate').value,
+        serviceTime: document.getElementById('formServiceTime').value,
+        items: [
+          {
+            recipeId: document.getElementById('formRecipeSelect').value,
+            portions: parseInt(document.getElementById('formPortions').value, 10)
+          }
+        ],
+        notes: document.getElementById('formNotes').value
+      };
+
+      await fetch(API + '/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      closeNewOrderModal();
+      loadOrdersList();
+      loadFinancials();
+      showToast('Commande créée avec succès !');
+    }
+
+    async function loadKitchenSheet() {
+      const today = getTodayIso();
+      const res = await fetch(`${API}/production/plan?date=${today}`).then(r => r.json());
+      const p = res.plan;
+
+      document.getElementById('kitchenRecipeRows').innerHTML = p.recipes.map(r => `
+        <tr>
+          <td><strong>${r.recipeName}</strong></td>
+          <td><span class="chip" style="background:#e2e8f0; color:#334155;">${r.category}</span></td>
+          <td><strong style="font-size:1.1rem; color:var(--color-primary);">${r.totalPortions} portions</strong></td>
+          <td>${r.ordersCount} commande(s)</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('kitchenIngredientRows').innerHTML = p.ingredientRequirements.map(i => {
+        const badge = i.deficit > 0 
+          ? `<span class="chip chip-danger">Déficit : -${i.deficit} ${i.unit}</span>` 
+          : `<span class="chip chip-success">Stock OK (+${i.stockAfterProduction} ${i.unit})</span>`;
+        return `
+          <tr>
+            <td><strong>${i.ingredientName}</strong></td>
+            <td>${i.unit}</td>
+            <td><strong>${i.quantityRequired} ${i.unit}</strong></td>
+            <td>${i.currentStock} ${i.unit}</td>
+            <td>${i.stockAfterProduction} ${i.unit}</td>
+            <td>${i.supplierName}</td>
+            <td>${badge}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function triggerAutoPurchase() {
+      const today = getTodayIso();
+      const res = await fetch(`${API}/production/auto-purchase-orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: today })
+      }).then(r => r.json());
+
+      showToast(res.message);
+      switchNavTab('inventory');
+    }
+
+    async function loadInventoryData() {
+      const res = await fetch(API + '/ingredients').then(r => r.json());
+      const ings = res.ingredients || [];
+      document.getElementById('inventoryRows').innerHTML = ings.map(i => `
+        <tr>
+          <td><strong>${i.name}</strong></td>
+          <td>${i.unit}</td>
+          <td><strong>${i.currentStock}</strong> ${i.unit}</td>
+          <td>${i.minimumThreshold} ${i.unit}</td>
+          <td>${i.unitCost} DZD</td>
+          <td>${i.isLowStock ? '<span class="chip chip-danger">Alerte Seuil Bas</span>' : '<span class="chip chip-success">Optimal</span>'}</td>
+          <td class="no-print">
+            <button class="btn-action btn-action-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="promptUpdateStock('${i.id}', ${i.currentStock})">Modifier</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function promptUpdateStock(id, curr) {
+      const val = prompt('Niveau de stock réel :', curr);
+      if (val === null) return;
+      const num = parseFloat(val);
+      if (isNaN(num) || num < 0) return alert('Valeur non valide');
+      await fetch(`${API}/ingredients/${id}/stock`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentStock: num })
+      });
+      loadInventoryData();
+      showToast('Stock mis à jour !');
+    }
+
+    async function loadPOs() {
+      const res = await fetch(API + '/purchasing/orders').then(r => r.json());
+      const pos = res.purchaseOrders || [];
+      const tbody = document.getElementById('purchaseOrderRows');
+      if (pos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#64748b;">Aucun bon de commande.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = pos.map(p => `
+        <tr>
+          <td><strong>${p.poNumber}</strong></td>
+          <td>${p.orderDate}</td>
+          <td><span class="chip chip-${p.status === 'RECEIVED' ? 'success' : 'danger'}">${p.status}</span></td>
+          <td><strong>${p.totalCost.toLocaleString('fr-DZ')} DZD</strong></td>
+          <td class="no-print">
+            ${p.status !== 'RECEIVED' ? `<button class="btn-action btn-action-primary" style="padding:4px 10px; font-size:0.75rem;" onclick="receivePO('${p.id}')">Réceptionner</button>` : 'Reçu ✓'}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function receivePO(id) {
+      await fetch(`${API}/purchasing/orders/${id}/receive`, { method: 'POST' });
+      showToast('Stock réceptionné et inventaire incrémenté !');
+      loadPOs();
+      loadInventoryData();
+    }
+
+    async function loadLogisticsRuns() {
+      const today = getTodayIso();
+      const [rRes, oRes] = await Promise.all([
+        fetch(`${API}/delivery/runs?date=${today}`).then(r => r.json()),
+        fetch(API + '/orders').then(r => r.json())
+      ]);
+
+      const runs = rRes.deliveryRuns || [];
+      const allOrders = oRes.orders || [];
+      const container = document.getElementById('deliveryRunsList');
+
+      if (runs.length === 0) {
+        container.innerHTML = `
+          <div class="glass-card" style="padding:32px; text-align:center; color:var(--color-slate-500);">
+            Aucune tournée planifiée pour aujourd'hui. Cliquez sur "+ Créer Tournée Automatique".
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = runs.map(run => `
+        <div class="glass-card" style="margin-bottom:20px;">
+          <div class="card-header-bar">
+            <div>
+              <div class="card-heading">Tournée ${run.serviceTime === 'LUNCH' ? 'Déjeuner' : 'Dîner'} • Chauffeur : ${run.driverName} (<a href="tel:${run.driverPhone}" style="color:#059669; font-weight:700; text-decoration:none;">📞 ${run.driverPhone}</a>)</div>
+              <div class="card-subheading">${run.stops.length} points de distribution</div>
+            </div>
+            <span class="chip chip-${run.status === 'COMPLETED' ? 'success' : 'production'}">${run.status}</span>
+          </div>
+          <div class="table-container">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th>Arrêt</th>
+                  <th>Client & Contact</th>
+                  <th>Adresse & Navigation</th>
+                  <th>Statut</th>
+                  <th class="no-print">Émargement</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${run.stops.map(s => {
+                  const ord = allOrders.find(o => o.id === s.orderId);
+                  const cust = ord ? customersList.find(c => c.id === ord.customerId) : null;
+                  const clientName = cust ? (cust.companyName || cust.contactName) : 'Client';
+                  const clientPhone = cust ? cust.phone : '';
+                  const address = ord ? ord.deliveryAddress : 'Adresse standard';
+                  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+
+                  return `
+                    <tr>
+                      <td><strong>#${s.sequence}</strong></td>
+                      <td>
+                        <strong>${clientName}</strong><br>
+                        ${clientPhone ? `<a href="tel:${clientPhone}" style="color:#059669; font-size:0.8rem; font-weight:700; text-decoration:none;">📞 ${clientPhone}</a>` : ''}
+                      </td>
+                      <td>
+                        <small>${address}</small><br>
+                        <a href="${mapsUrl}" target="_blank" style="display:inline-block; margin-top:4px; font-size:0.75rem; color:#2563eb; font-weight:700; text-decoration:none;">📍 Navigation GPS Google Maps ↗</a>
+                      </td>
+                      <td><span class="chip chip-${s.deliveryStatus === 'DELIVERED' ? 'success' : 'danger'}">${s.deliveryStatus}</span></td>
+                      <td class="no-print">
+                        ${s.deliveryStatus !== 'DELIVERED' ? `<button class="btn-action btn-action-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="markDelivered('${run.id}', '${s.id}')">Émarger / Livré</button>` : 'Livré ✓'}
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function markDelivered(runId, stopId) {
+      await fetch(`${API}/delivery/runs/${runId}/stops/${stopId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comment: 'Remis en main propre' })
+      });
+      loadLogisticsRuns();
+      showToast('Arrêt marqué comme livré !');
+    }
+
+    async function createAutoDeliveryRun() {
+      const today = getTodayIso();
+      await fetch(`${API}/delivery/runs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          runDate: today,
+          serviceTime: 'LUNCH',
+          driverName: 'Rachid Bouzid',
+          driverPhone: '0551 22 33 44'
+        })
+      });
+      loadLogisticsRuns();
+      showToast('Tournée de livraison créée avec succès !');
+    }
+
+    function exportProductionCsv() {
+      const today = getTodayIso();
+      window.location.href = `${API}/export/production?date=${today}`;
+    }
+
+    function exportDeliveryCsv() {
+      const today = getTodayIso();
+      window.location.href = `${API}/export/delivery?date=${today}`;
     }
 
     window.onload = initPlatform;
