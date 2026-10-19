@@ -2,12 +2,13 @@
 
 This folder contains technical documentation related to the development of the JANITOU FOOD platform.
 
-## Scope
-- Technical architecture
-- Database design
-- API documentation
-- Development and deployment procedures
+## Official Documentation Index
 
+1. **Technical Decisions Log:** [`TECHNICAL_DECISIONS.md`](./TECHNICAL_DECISIONS.md) (ADR-001 to ADR-006)
+2. **User Guide & Operational Manual:** [`USER_GUIDE.md`](./USER_GUIDE.md) (Step-by-step workflows for Direction, Kitchen, Stock, Logistics)
+3. **Production Deployment Procedures:** [`DEPLOYMENT_PROCEDURES.md`](./DEPLOYMENT_PROCEDURES.md) (VPS setup, Docker, Nginx, SSL Let's Encrypt)
+4. **Backup & Restore Procedures:** [`BACKUP_RESTORE_PROCEDURES.md`](./BACKUP_RESTORE_PROCEDURES.md) (Disaster recovery, automated PostgreSQL dumps, Emergency Workshop Package)
+5. **Roles, Permissions & Security:** [`ROLES_AND_PERMISSIONS.md`](./ROLES_AND_PERMISSIONS.md) (Granular RACI matrix and server-side data isolation)
 ## Documentation Rules
 - Keep technical documentation clear and up to date.
 - Document significant technical decisions.
