@@ -9,6 +9,7 @@ This folder contains technical documentation related to the development of the J
 3. **Production Deployment Procedures:** [`DEPLOYMENT_PROCEDURES.md`](./DEPLOYMENT_PROCEDURES.md) (VPS setup, Docker, Nginx, SSL Let's Encrypt)
 4. **Backup & Restore Procedures:** [`BACKUP_RESTORE_PROCEDURES.md`](./BACKUP_RESTORE_PROCEDURES.md) (Disaster recovery, automated PostgreSQL dumps, Emergency Workshop Package)
 5. **Roles, Permissions & Security:** [`ROLES_AND_PERMISSIONS.md`](./ROLES_AND_PERMISSIONS.md) (Granular RACI matrix and server-side data isolation)
+6. **Mid-term Demonstration & Acceptance Protocol:** [`DEMONSTRATION_MI_PARCOURS.md`](./DEMONSTRATION_MI_PARCOURS.md) (Live demonstration walkthrough & 30% milestone acceptance report)
 ## Documentation Rules
 - Keep technical documentation clear and up to date.
 - Document significant technical decisions.
