@@ -1,5 +1,12 @@
 # JANITOU FOOD
 
+[![Release](https://img.shields.io/badge/Release-v1.0.0--phase1-059669.svg?style=flat-square)](https://github.com/janitoufood/janitou-food-management/releases/tag/v1.0.0-phase1)
+[![Automated Tests](https://img.shields.io/badge/Tests-16%20Passed%20(100%25)-10b981.svg?style=flat-square)](https://github.com/janitoufood/janitou-food-management)
+[![TypeScript](https://img.shields.io/badge/TypeScript-ES2022-3178c6.svg?style=flat-square)](https://www.typescriptlang.org/)
+[![Database](https://img.shields.io/badge/PostgreSQL-16%20Prisma-336791.svg?style=flat-square)](https://www.postgresql.org/)
+[![Runtime](https://img.shields.io/badge/Runtime-Node.js%20%7C%20Bun-fbf0df.svg?style=flat-square)](https://bun.sh/)
+[![Documentation](https://img.shields.io/badge/Documentation-ADR--001%20to%20ADR--006-8b5cf6.svg?style=flat-square)](./docs/TECHNICAL_DECISIONS.md)
+
 ## Project Overview
 
 JANITOU FOOD is a meal management platform designed to organize customer orders, meal planning, production, packaging, and distribution.
