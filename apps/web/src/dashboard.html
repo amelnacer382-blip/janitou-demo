@@ -1027,7 +1027,8 @@
 
       const target = document.getElementById('tab-' + tabId);
       if (target) target.classList.add('active');
-
+      const activeNav = document.querySelector(`.nav-item[onclick*="${tabId}"]`);
+      if (activeNav) activeNav.classList.add('active');
       const titles = {
         overview: "Tableau de Bord Exécutif & Performances",
         orders: "Commandes & Abonnements Clients",
