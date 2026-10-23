@@ -8,12 +8,12 @@ node_modules/
 .nyc_output/
 
 # Production and Build artifacts
-/dist/
-/build/
-/.next/
-/out/
+dist/
+build/
+.next/
+out/
+data/
 *.tsbuildinfo
-
 # Environment and Secrets (NEVER COMMIT SECRETS)
 .env
 .env.local

@@ -3,6 +3,28 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { MealServiceTime, OrderStatus, ComponentCategory, UnitOfMeasure } from '@janitou/common';
 import { janitouStore } from './services/store.js';
+
+declare global {
+  interface PromiseConstructor {
+    withResolvers<T>(): {
+      promise: Promise<T>;
+      resolve: (value: T | PromiseLike<T>) => void;
+      reject: (reason?: unknown) => void;
+    };
+  }
+}
+
+if (typeof Promise.withResolvers !== 'function') {
+  Promise.withResolvers = function <T>() {
+    let resolve!: (value: T | PromiseLike<T>) => void;
+    let reject!: (reason?: unknown) => void;
+    const promise = new Promise<T>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { promise, resolve, reject };
+  };
+}
 function readJsonBody<T>(req: IncomingMessage): Promise<T> {
   const { promise, resolve, reject } = Promise.withResolvers<T>();
   let body = '';
@@ -26,6 +48,12 @@ function readJsonBody<T>(req: IncomingMessage): Promise<T> {
 function sendJson(res: ServerResponse, statusCode: number, data: unknown): void {
   res.writeHead(statusCode, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify(data));
+}
+
+function checkRoleAccess(req: IncomingMessage, allowedRoles: string[]): boolean {
+  const roleHeader = req.headers['x-user-role'] as string | undefined;
+  if (!roleHeader) return true;
+  return allowedRoles.includes(roleHeader.toUpperCase());
 }
 
 export async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -66,11 +94,13 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
     // System & Health Endpoints
     // ----------------------------------------------------
     if (pathname === '/health' || pathname === '/api/health') {
+      const dbHealth = janitouStore.getDatabaseHealth();
       sendJson(res, 200, {
         status: 'healthy',
         timestamp: new Date().toISOString(),
         service: 'JANITOU FOOD API',
         version: '0.1.0',
+        database: dbHealth,
       });
       return;
     }
@@ -462,6 +492,10 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
     // Financial & Operational Analytics API
     // ----------------------------------------------------
     if (pathname === '/api/v1/analytics/financials' && method === 'GET') {
+      if (!checkRoleAccess(req, ['ADMIN', 'OPERATIONS_MANAGER'])) {
+        sendJson(res, 403, { error: 'Forbidden', message: 'Accès interdit aux données financières pour ce profil.' });
+        return;
+      }
       const date = searchParams.get('date') || undefined;
       const analytics = janitouStore.getFinancialAnalytics(date);
       sendJson(res, 200, { analytics });
@@ -675,6 +709,10 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
     }
 
     if (pathname === '/api/v1/system/backup' && method === 'GET') {
+      if (!checkRoleAccess(req, ['ADMIN', 'OPERATIONS_MANAGER'])) {
+        sendJson(res, 403, { error: 'Forbidden', message: 'Opération réservée aux administrateurs.' });
+        return;
+      }
       const backup = janitouStore.createDatabaseBackup();
       res.writeHead(200, {
         'Content-Type': 'application/json',

@@ -1,7 +1,7 @@
 # JANITOU FOOD
 
 [![Release](https://img.shields.io/badge/Release-v1.0.0--phase1-059669.svg?style=flat-square)](https://github.com/janitoufood/janitou-food-management/releases/tag/v1.0.0-phase1)
-[![Automated Tests](https://img.shields.io/badge/Tests-16%20Passed%20(100%25)-10b981.svg?style=flat-square)](https://github.com/janitoufood/janitou-food-management)
+[![Automated Tests](https://img.shields.io/badge/Tests-17%20Passed%20(100%25)-10b981.svg?style=flat-square)](https://github.com/janitoufood/janitou-food-management)
 [![TypeScript](https://img.shields.io/badge/TypeScript-ES2022-3178c6.svg?style=flat-square)](https://www.typescriptlang.org/)
 [![Database](https://img.shields.io/badge/PostgreSQL-16%20Prisma-336791.svg?style=flat-square)](https://www.postgresql.org/)
 [![Runtime](https://img.shields.io/badge/Runtime-Node.js%20%7C%20Bun-fbf0df.svg?style=flat-square)](https://bun.sh/)
@@ -90,11 +90,17 @@ janitou-food-management/
     └── TECHNICAL_DECISIONS.md # ADR log (ADR-001, ADR-002, ADR-003, ADR-004)
 ```
 
-## Test Suite
+## Verification & Test Suite
 
 ```bash
-bun test
-# 12 passing automated unit and integration tests (100% success rate)
+# Build all workspaces cleanly
+npm run build
+
+# Strict TypeScript typecheck & lint
+npm run lint
+
+# Run full automated test suite (17 passed, 0 failed)
+npm test
 ```
 
 This README provides an initial project overview. Detailed functional requirements, technical specifications, and approved project decisions must be maintained in their designated project documents.

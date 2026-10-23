@@ -93,7 +93,7 @@ export interface DbOrder {
   notes?: string;
   items: DbOrderItem[];
   createdAt: string;
-  orderType: 'AUTOMATIC' | 'WEEKLY' | 'EXCEPTIONAL' | 'SUBSIDIARY';
+  orderType: 'AUTOMATIC' | 'WEEKLY' | 'EXCEPTIONAL' | 'SUBSIDIARY' | 'CORPORATE' | 'INDIVIDUAL';
   supplementsCost: number; // in DZD
   totalPrice: number; // in DZD
   isPaid: boolean;

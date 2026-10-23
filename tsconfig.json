@@ -3,10 +3,12 @@
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "lib": ["ES2022", "ES2024.Promise", "DOM"],
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@janitou/common": ["./packages/common/src/index.ts"]
+      "@janitou/common": ["./packages/common/src/index.ts"],
+      "@janitou/database": ["./packages/database/src/index.ts"]
     },
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true

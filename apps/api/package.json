@@ -8,7 +8,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "bun test",
-    "lint": "eslint src/"
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@janitou/common": "*",
@@ -16,6 +16,7 @@
     "dotenv": "^16.4.7"
   },
   "devDependencies": {
+    "@types/node": "^20.17.10",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }

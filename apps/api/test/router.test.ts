@@ -20,12 +20,15 @@ test('HTTP Router End-to-End Suite', async (t) => {
     server.close();
   });
 
-  await t.test('GET /health returns healthy status', async () => {
+  await t.test('GET /health returns healthy status with database integration', async () => {
     const res = await fetch(`${baseUrl}/health`);
     assert.equal(res.status, 200);
-    const data = await res.json() as { status: string; service: string };
+    const data = await res.json() as { status: string; service: string; database?: { status: string; totalRecords: number } };
     assert.equal(data.status, 'healthy');
     assert.equal(data.service, 'JANITOU FOOD API');
+    assert.ok(data.database);
+    assert.equal(data.database.status, 'healthy');
+    assert.ok(data.database.totalRecords > 0);
   });
 
   await t.test('GET / and /dashboard return HTML dashboard', async () => {
@@ -219,5 +222,19 @@ test('HTTP Router End-to-End Suite', async (t) => {
     assert.equal(emerRes.status, 200);
     const { emergencyPackage } = await emerRes.json() as { emergencyPackage: { totalMealPortions: number } };
     assert.ok(emergencyPackage.totalMealPortions > 0);
+  });
+
+  await t.test('Role Access Control — restricts sensitive financials to authorized roles', async () => {
+    // Unauthorized role
+    const forbiddenRes = await fetch(`${baseUrl}/api/v1/analytics/financials`, {
+      headers: { 'x-user-role': 'DELIVERY_DRIVER' },
+    });
+    assert.equal(forbiddenRes.status, 403);
+
+    // Authorized role
+    const allowedRes = await fetch(`${baseUrl}/api/v1/analytics/financials`, {
+      headers: { 'x-user-role': 'ADMIN' },
+    });
+    assert.equal(allowedRes.status, 200);
   });
 });

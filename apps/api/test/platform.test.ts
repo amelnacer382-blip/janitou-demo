@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { MealServiceTime, OrderStatus, UnitOfMeasure, ComponentCategory } from '@janitou/common';
 import { JanitouStore } from '../src/services/store.js';
+import { JanitouDatabase } from '@janitou/database';
+import { resolve } from 'node:path';
+import { unlinkSync, existsSync } from 'node:fs';
 
 test('1. Recipe Cost Calculation — accurately aggregates ingredient unit costs', () => {
   const store = new JanitouStore();
@@ -301,4 +304,43 @@ test('15. The 14 Official Reports — generates all 14 Phase 1 reports successfu
     assert.ok(report.summaryText.length > 5);
     assert.ok(report.data !== undefined);
   }
+});
+
+test('16. Data Persistence Across Reboots — mutations survive store restart and do not revert to mock defaults', () => {
+  const testStorage = resolve(process.cwd(), 'data/test-persistence.json');
+  if (existsSync(testStorage)) unlinkSync(testStorage);
+
+  const db = new JanitouDatabase({ storageFilePath: testStorage });
+
+  // 1. First instance: create new customer and modify ingredient stock
+  const store1 = new JanitouStore(db);
+  const createdCustomer = store1.createCustomer({
+    companyName: 'Groupe Agro Alimentaire Alger',
+    contactName: 'Sofiane Benali',
+    phone: '0555 12 34 56',
+    deliveryAddress: '12 Rue Larbi Ben M’hidi, Alger',
+    dietaryPreferences: ['Sans Gluten'],
+  });
+  assert.ok(createdCustomer.id);
+
+  store1.updateIngredientStock('ing-1', 99.5);
+
+  // 2. Second instance (simulating server shutdown and reboot): loads from same storage
+  const store2 = new JanitouStore(db);
+  const persistedCustomer = store2.getCustomerById(createdCustomer.id);
+  assert.ok(persistedCustomer, 'Customer should exist after server restart');
+  assert.equal(persistedCustomer.contactName, 'Sofiane Benali');
+  assert.equal(persistedCustomer.companyName, 'Groupe Agro Alimentaire Alger');
+
+  const persistedIngredient = store2.getIngredientById('ing-1');
+  assert.ok(persistedIngredient);
+  assert.equal(persistedIngredient.currentStock, 99.5);
+
+  // 3. Database health reports active persistence
+  const health = store2.getDatabaseHealth();
+  assert.equal(health.status, 'healthy');
+  assert.ok(health.totalRecords > 0);
+
+  // Cleanup test file
+  if (existsSync(testStorage)) unlinkSync(testStorage);
 });

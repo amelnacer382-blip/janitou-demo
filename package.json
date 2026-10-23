@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run --workspaces --if-present build",
+    "build": "npm run -w @janitou/common build && npm run -w @janitou/database build && npm run --workspaces --if-present build",
     "test": "npm run --workspaces --if-present test",
     "lint": "npm run --workspaces --if-present lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",

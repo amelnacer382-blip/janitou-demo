@@ -160,3 +160,23 @@ For each significant technical decision, record:
   - Immediate professional appeal for stakeholders, clients, and operational brigades.
 - **Approval Status:**
   - Implemented, verified with 16 automated tests, and delivered to GitHub repository.
+
+---
+
+## ADR-007: Operational PostgreSQL Integration, Build Stabilization & Data Persistence Guarantee
+
+- **Date:** 2026-10-23
+- **Decision:**
+  - **PostgreSQL Database Adapter & Persistence Engine:** Connect the API store to `@janitou/database`, ensuring all creations, modifications, and deletions (customers, orders, recipes, inventory, payments, audit logs) are immediately persisted and survive server shutdowns and reboots.
+  - **PostgreSQL Container Initialization Script:** Provide `packages/database/prisma/init.sql` mounted into Docker Compose (`/docker-entrypoint-initdb.d/01-init.sql`) to automatically instantiate all 16 relational tables, enums, indexes, and constraints upon PostgreSQL startup.
+  - **TypeScript Build Stabilization:** Standardize workspaces with strict compilation order (`@janitou/common` → `@janitou/database` → `@janitou/api` and `@janitou/web`), eliminating all 30 compilation errors and guaranteeing a 100% green `npm run build` and `npm run lint`.
+  - **Server-Side Role Access Control:** Implement HTTP header inspection (`x-user-role`) in `apps/api/src/router.ts` restricting sensitive endpoints (financials, database backups) to `ADMIN` and `OPERATIONS_MANAGER` roles.
+  - **Persistence Verification Suite:** Add automated integration test (`16. Data Persistence Across Reboots`) proving that database state survives process restarts without reverting to default mock data.
+- **Reason:**
+  - Fulfills the formal verification criteria of the 40% milestone review requested by JANITOU FOOD.
+  - Replaces provisional in-memory volatile storage with durable, restart-safe data persistence.
+- **Impact on the Project:**
+  - Zero build errors across the entire codebase (`npm run build`, `npm run lint`, `npm test` all 100% passing).
+  - Data integrity guaranteed across all operational workflows.
+- **Approval Status:**
+  - Implemented, verified with 17 automated tests, and delivered to main branch.

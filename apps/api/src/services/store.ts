@@ -4,6 +4,7 @@ import {
   ComponentCategory,
   UnitOfMeasure,
 } from '@janitou/common';
+import { JanitouDatabase, defaultDatabase, type DatabaseHealth } from '@janitou/database';
 import {
   DbSupplier,
   DbIngredient,
@@ -15,6 +16,7 @@ import {
   DbProductionBatch,
   DbPurchaseOrder,
   DbDeliveryRun,
+  DbDeliveryStop,
   DbInvoice,
   DbPayment,
   initialSuppliers,
@@ -188,11 +190,78 @@ export class JanitouStore {
   public invoices: DbInvoice[] = [];
   public payments: DbPayment[] = [];
   public auditLogs: AuditLogEntry[] = [];
+  private db: JanitouDatabase;
+  private isEphemeral: boolean;
 
-  constructor() {
+  constructor(customDb?: JanitouDatabase, options?: { ephemeral?: boolean }) {
+    this.db = customDb || defaultDatabase;
+    this.isEphemeral = options?.ephemeral ?? (process.env.NODE_ENV === 'test' && !customDb);
+
+    if (!this.isEphemeral) {
+      const savedState = this.db.loadState();
+      if (savedState) {
+        this.suppliers = (savedState.suppliers as DbSupplier[]) || [];
+        this.ingredients = (savedState.ingredients as DbIngredient[]) || [];
+        this.recipes = (savedState.recipes as DbRecipe[]) || [];
+        this.customers = (savedState.customers as DbCustomer[]) || [];
+        this.mealPlans = (savedState.mealPlans as DbMealPlan[]) || [];
+        this.orders = (savedState.orders as DbOrder[]) || [];
+        this.productionBatches = (savedState.productionBatches as DbProductionBatch[]) || [];
+        this.purchaseOrders = (savedState.purchaseOrders as DbPurchaseOrder[]) || [];
+        this.deliveryRuns = (savedState.deliveryRuns as DbDeliveryRun[]) || [];
+        this.subscriptions = (savedState.subscriptions as CustomerSubscription[]) || [];
+        this.kdsBatches = (savedState.kdsBatches as KdsBatch[]) || [];
+        this.invoices = (savedState.invoices as DbInvoice[]) || [];
+        this.payments = (savedState.payments as DbPayment[]) || [];
+        this.auditLogs = (savedState.auditLogs as AuditLogEntry[]) || [];
+        return;
+      }
+    }
+
     this.resetToDefaults();
+    if (!this.isEphemeral) {
+      this.persist();
+    }
   }
 
+  public persist(): void {
+    if (this.isEphemeral) return;
+    this.db.persistState({
+      suppliers: this.suppliers,
+      ingredients: this.ingredients,
+      recipes: this.recipes,
+      customers: this.customers,
+      mealPlans: this.mealPlans,
+      orders: this.orders,
+      productionBatches: this.productionBatches,
+      purchaseOrders: this.purchaseOrders,
+      deliveryRuns: this.deliveryRuns,
+      subscriptions: this.subscriptions,
+      kdsBatches: this.kdsBatches,
+      invoices: this.invoices,
+      payments: this.payments,
+      auditLogs: this.auditLogs,
+    });
+  }
+
+  public getDatabaseHealth(): DatabaseHealth {
+    return this.db.getHealth({
+      suppliers: this.suppliers,
+      ingredients: this.ingredients,
+      recipes: this.recipes,
+      customers: this.customers,
+      mealPlans: this.mealPlans,
+      orders: this.orders,
+      productionBatches: this.productionBatches,
+      purchaseOrders: this.purchaseOrders,
+      deliveryRuns: this.deliveryRuns,
+      subscriptions: this.subscriptions,
+      kdsBatches: this.kdsBatches,
+      invoices: this.invoices,
+      payments: this.payments,
+      auditLogs: this.auditLogs,
+    });
+  }
   public resetToDefaults(): void {
     this.suppliers = JSON.parse(JSON.stringify(initialSuppliers));
     this.ingredients = JSON.parse(JSON.stringify(initialIngredients));
@@ -242,12 +311,28 @@ export class JanitouStore {
     return this.customers.find((c) => c.id === id);
   }
 
-  public createCustomer(data: Omit<DbCustomer, 'id'>): DbCustomer {
+  public createCustomer(data: Partial<Omit<DbCustomer, 'id'>> & Pick<DbCustomer, 'contactName' | 'phone' | 'deliveryAddress'>): DbCustomer {
     const customer: DbCustomer = {
-      ...data,
+      companyName: data.companyName,
+      contactName: data.contactName,
+      phone: data.phone,
+      email: data.email || '',
+      deliveryAddress: data.deliveryAddress,
+      wilaya: data.wilaya || 'Alger',
+      commune: data.commune || 'Centre',
+      deliveryNotes: data.deliveryNotes,
+      dietaryPreferences: data.dietaryPreferences || ['Standard'],
+      parentCompanyId: data.parentCompanyId,
+      isSubsidiary: data.isSubsidiary || false,
+      status: data.status || 'ACTIVE',
+      accountBalance: data.accountBalance ?? 0,
+      whatsAppLink: data.whatsAppLink || `https://wa.me/213${(data.phone || '').replace(/\D/g, '')}`,
+      subscriptionType: data.subscriptionType || 'CORPORATE',
+      preferredDistributionType: data.preferredDistributionType || 'STANDARD_DELIVERY',
       id: `cust-${Date.now()}`,
     };
     this.customers.push(customer);
+    this.persist();
     return customer;
   }
 
@@ -270,6 +355,7 @@ export class JanitouStore {
     const ingredient = this.getIngredientById(id);
     if (ingredient) {
       ingredient.currentStock = Math.max(0, newStock);
+      this.persist();
     }
     return ingredient;
   }
@@ -307,12 +393,21 @@ export class JanitouStore {
     };
   }
 
-  public createRecipe(data: Omit<DbRecipe, 'id'>): DbRecipe {
+  public createRecipe(
+    data: Partial<Omit<DbRecipe, 'id'>> & Pick<DbRecipe, 'name' | 'category' | 'yieldPortions' | 'ingredients' | 'allergens'>
+  ): DbRecipe {
     const recipe: DbRecipe = {
-      ...data,
+      name: data.name,
+      category: data.category,
+      description: data.description || '',
+      yieldPortions: data.yieldPortions,
+      preparationTimeMinutes: data.preparationTimeMinutes ?? 30,
+      ingredients: data.ingredients,
+      allergens: data.allergens,
       id: `rec-${Date.now()}`,
     };
     this.recipes.push(recipe);
+    this.persist();
     return recipe;
   }
 
@@ -360,6 +455,7 @@ export class JanitouStore {
     } else {
       this.mealPlans.push(newPlan);
     }
+    this.persist();
     return newPlan;
   }
 
@@ -447,9 +543,14 @@ export class JanitouStore {
         specialNotes: it.specialNotes,
       })),
       createdAt: new Date().toISOString(),
+      orderType: 'EXCEPTIONAL',
+      supplementsCost: 0,
+      totalPrice: 0,
+      isPaid: false,
     };
 
     this.orders.unshift(newOrder);
+    this.persist();
     return newOrder;
   }
 
@@ -457,6 +558,7 @@ export class JanitouStore {
     const order = this.getOrderById(id);
     if (order) {
       order.status = status;
+      this.persist();
     }
     return order;
   }
@@ -539,7 +641,7 @@ export class JanitouStore {
         deficit,
         unitCost: ing.unitCost,
         totalDeficitCost: lineDeficitCost,
-        supplierId: ing.supplierId,
+        supplierId: ing.supplierId || '',
         supplierName: supplier ? supplier.name : 'Fournisseur non assigné',
       });
     }
@@ -547,7 +649,7 @@ export class JanitouStore {
     const totalMealPortions = recipes.reduce((sum, r) => sum + r.totalPortions, 0);
 
     return {
-      date,
+      date: targetDate,
       serviceTime,
       totalOrders: relevantOrders.length,
       totalMealPortions,
@@ -619,6 +721,7 @@ export class JanitouStore {
     }
 
     po.status = 'RECEIVED';
+    this.persist();
     return po;
   }
 
@@ -663,6 +766,7 @@ export class JanitouStore {
     };
 
     this.deliveryRuns.push(run);
+    this.persist();
     return run;
   }
 
@@ -684,7 +788,7 @@ export class JanitouStore {
     if (allDelivered) {
       run.status = 'COMPLETED';
     }
-
+    this.persist();
     return run;
   }
 
@@ -858,6 +962,7 @@ export class JanitouStore {
       id: `sub-${Date.now()}`,
     };
     this.subscriptions.push(sub);
+    this.persist();
     return sub;
   }
 
@@ -949,6 +1054,7 @@ export class JanitouStore {
     if (batch) {
       batch.stage = stage;
       batch.updatedAt = new Date().toISOString();
+      this.persist();
     }
     return batch;
   }
@@ -963,6 +1069,7 @@ export class JanitouStore {
       timestamp: new Date().toISOString(),
     };
     this.auditLogs.unshift(log);
+    this.persist();
     return log;
   }
 
@@ -1110,7 +1217,7 @@ export class JanitouStore {
       entityId: payment.id,
       afterSnapshot: payment,
     });
-
+    this.persist();
     return payment;
   }
 
@@ -1177,7 +1284,7 @@ export class JanitouStore {
       beforeSnapshot: before,
       afterSnapshot: { newDriverName, newDriverPhone, reason },
     });
-
+    this.persist();
     return run;
   }
 
@@ -1265,6 +1372,7 @@ export class JanitouStore {
     if (Array.isArray(d.ingredients)) this.ingredients = d.ingredients as DbIngredient[];
     if (Array.isArray(d.invoices)) this.invoices = d.invoices as DbInvoice[];
     if (Array.isArray(d.payments)) this.payments = d.payments as DbPayment[];
+    this.persist();
     return true;
   }
 
