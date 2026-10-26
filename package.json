@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "build": "npm run -w @janitou/common build && npm run -w @janitou/database build && npm run --workspaces --if-present build",
+    "build:bun": "bun build packages/common/src/index.ts --outdir packages/common/dist --target node && bun build packages/database/src/index.ts --outdir packages/database/dist --target node",
     "test": "npm run --workspaces --if-present test",
     "lint": "npm run --workspaces --if-present lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
