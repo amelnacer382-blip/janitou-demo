@@ -89,6 +89,23 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse): 
         return;
       }
     }
+    if (pathname === '/logo.png' || pathname === '/janitou-logo.png' || pathname === '/janitou.jfif') {
+      try {
+        const isJfif = pathname.endsWith('.jfif');
+        const imgPath = resolve(process.cwd(), isJfif ? 'apps/web/src/janitou.jfif' : 'apps/web/src/logo.png');
+        const imgData = await readFile(imgPath);
+        res.writeHead(200, {
+          'Content-Type': isJfif ? 'image/jpeg' : 'image/png',
+          'Cache-Control': 'public, max-age=86400',
+        });
+        res.end(imgData);
+        return;
+      } catch {
+        res.writeHead(404);
+        res.end();
+        return;
+      }
+    }
 
     // ----------------------------------------------------
     // System & Health Endpoints
