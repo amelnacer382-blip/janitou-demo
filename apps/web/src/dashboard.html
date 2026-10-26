@@ -331,6 +331,54 @@
     .station-patisserie::before { background: #a855f7; box-shadow: 0 0 10px #a855f7; }
     .station-conditionnement::before { background: #10b981; box-shadow: 0 0 10px #10b981; }
 
+    .station-tab-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .station-tab-btn:hover { background: rgba(255, 255, 255, 0.12); }
+    .station-tab-btn.active {
+      background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+      border-color: var(--color-primary);
+      color: #fff;
+      box-shadow: 0 2px 10px var(--color-primary-glow);
+    }
+    .nav-count-badge {
+      margin-left: auto;
+      background: rgba(255, 255, 255, 0.14);
+      color: #fff;
+      font-size: 0.68rem;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      font-weight: 700;
+    }
+    .nav-item.active .nav-count-badge {
+      background: rgba(18, 9, 6, 0.35);
+      color: #fff;
+    }
+    .pill-filter-btn {
+      padding: 5px 12px;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border: 1px solid var(--color-slate-200);
+      background: #ffffff;
+      color: var(--color-slate-600);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .pill-filter-btn:hover { background: var(--color-slate-100); }
+    .pill-filter-btn.active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #ffffff;
+    }
     /* Weekly Calendar */
     .weekly-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
     .calendar-day-card {
@@ -442,13 +490,13 @@
 
     <ul class="nav-menu">
       <li class="nav-item active" onclick="switchNavTab('overview')"><span>📊</span> Vue Globale & Finance</li>
-      <li class="nav-item" onclick="switchNavTab('orders')"><span>📦</span> Commandes & Abonnements</li>
+      <li class="nav-item" onclick="switchNavTab('orders')"><span>📦</span> Commandes & Abonnements <span class="nav-count-badge" id="navCountOrders">4</span></li>
       <li class="nav-item" onclick="switchNavTab('billing')"><span>💳</span> Facturation & Soldes</li>
-      <li class="nav-item" onclick="switchNavTab('recipes')"><span>🍳</span> Fiches Recettes & Simulateur</li>
+      <li class="nav-item" onclick="switchNavTab('recipes')"><span>🍳</span> Fiches Recettes & Simulateur <span class="nav-count-badge" id="navCountRecipes">4</span></li>
       <li class="nav-item" onclick="switchNavTab('weekly')"><span>📅</span> Menu de la Semaine</li>
-      <li class="nav-item" onclick="switchNavTab('kds')"><span>📺</span> Écran Cuisine (KDS)</li>
+      <li class="nav-item" onclick="switchNavTab('kds')"><span>📺</span> Écran Cuisine (KDS) <span class="nav-count-badge" id="navCountKds">0</span></li>
       <li class="nav-item" onclick="switchNavTab('kitchen')"><span>👨‍🍳</span> Fiche de Production</li>
-      <li class="nav-item" onclick="switchNavTab('inventory')"><span>🥦</span> Stocks & Achats</li>
+      <li class="nav-item" onclick="switchNavTab('inventory')"><span>🥦</span> Stocks & Achats <span class="nav-count-badge" id="navCountInventory">12</span></li>
       <li class="nav-item" onclick="switchNavTab('logistics')"><span>🚚</span> Tournées & Manifeste</li>
       <li class="nav-item" onclick="switchNavTab('reports')"><span>📑</span> 14 Rapports Officiels</li>
       <li class="nav-item" onclick="switchNavTab('audit')"><span>🛡️</span> Sécurité & Audit</li>
@@ -472,8 +520,10 @@
           <div style="font-size:0.75rem; color:var(--color-slate-500); font-weight:600;">Plateforme Traiteur & Production Janitou</div>
         </div>
       </div>
-      <div class="topbar-right">
+      <div class="topbar-right" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
         <span class="date-pill" id="todayDatePill">📅 Aujourd'hui</span>
+        <span class="date-pill" id="liveClockPill" style="font-family:var(--font-mono); font-size:0.78rem; font-weight:700; color:var(--color-primary-dark);"><span class="pulse-dot pulse-amber"></span> <span id="clockDigits">12:00:00</span></span>
+        <button class="btn-action btn-action-secondary no-print" onclick="window.print()" title="Imprimer la vue">🖨️ Imprimer</button>
         <button class="btn-action no-print" onclick="openEmergencyPackageModal()" style="border:1px solid #fecaca; color:#b91c1c; background:#fef2f2;">🚨 Urgence Atelier</button>
         <button class="btn-action btn-action-secondary no-print" onclick="downloadBackup()">💾 Backup JSON</button>
         <button class="btn-action btn-action-secondary no-print" onclick="openLabelModal()">🏷️ Étiquettes</button>
@@ -552,13 +602,17 @@
         </div>
 
         <div class="glass-card">
-          <div class="card-header-bar">
-            <div class="card-heading">Commandes Actives</div>
-            <select id="filterOrdersService" class="role-select" style="background:#fff; border:1px solid #cbd5e1; color:#0f172a; padding:6px 12px; border-radius:8px; width:auto;" onchange="loadOrdersList()">
-              <option value="">Tous les services</option>
-              <option value="LUNCH">Déjeuner (Midi)</option>
-              <option value="DINNER">Dîner (Soir)</option>
-            </select>
+          <div class="card-header-bar" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div class="card-heading">Commandes Actives (<span id="ordersTableCount">0</span>)</div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;" class="no-print">
+              <input type="text" id="searchOrdersInput" placeholder="🔍 Rechercher client, n°..." oninput="filterOrdersTable(this.value)" style="padding:6px 12px; border-radius:8px; border:1px solid var(--color-slate-200); font-size:0.82rem; width:190px; outline:none;" />
+              <select id="filterOrdersService" class="role-select" style="background:#fff; border:1px solid var(--color-slate-200); color:var(--color-slate-800); padding:6px 12px; border-radius:8px; width:auto;" onchange="loadOrdersList()">
+                <option value="">Tous les services</option>
+                <option value="LUNCH">Déjeuner (Midi)</option>
+                <option value="DINNER">Dîner (Soir)</option>
+              </select>
+              <button class="btn-action btn-action-secondary" style="padding:5px 12px; font-size:0.78rem;" onclick="exportTableToCsv('ordersFullTableBody', 'commandes_janitou')">📥 Exporter CSV</button>
+            </div>
           </div>
           <div class="table-container">
             <table class="modern-table">
@@ -732,12 +786,20 @@
       <!-- TAB 6: ÉCRAN CUISINE (KDS) -->
       <!-- ============================================== -->
       <section id="tab-kds" class="tab-section">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
           <div>
             <h2 style="font-size:1.25rem; font-weight:800;">Kitchen Display System (KDS) — Écran Tactile Cuisine</h2>
             <p style="color:var(--color-slate-500); font-size:0.85rem;">Progression des postes de travail en direct avec affichage brigade</p>
           </div>
           <button class="btn-action btn-action-secondary" onclick="loadKdsBatches()">🔄 Actualiser KDS</button>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;" class="no-print">
+          <button class="station-tab-btn active" onclick="filterKdsStation('ALL', this)">Tous les Postes (<span id="countKdsAll">0</span>)</button>
+          <button class="station-tab-btn" onclick="filterKdsStation('CHAUD', this)">🔥 Chaud (<span id="countKdsChaud">0</span>)</button>
+          <button class="station-tab-btn" onclick="filterKdsStation('FROID', this)">🥗 Froid (<span id="countKdsFroid">0</span>)</button>
+          <button class="station-tab-btn" onclick="filterKdsStation('PATISSERIE', this)">🍰 Pâtisserie (<span id="countKdsPatisserie">0</span>)</button>
+          <button class="station-tab-btn" onclick="filterKdsStation('CONDITIONNEMENT', this)">📦 Conditionnement (<span id="countKdsConditionnement">0</span>)</button>
         </div>
 
         <div class="kds-dark-board">
@@ -1055,6 +1117,19 @@
       </form>
     </div>
   </div>
+  <!-- Modal Bon de Commande & Livraison Officiel (Phase 1) -->
+  <div class="modal-backdrop" id="orderSlipModal">
+    <div class="modal-sheet" style="max-width:680px;">
+      <div class="modal-sheet-header no-print" style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="font-size:1.15rem; font-weight:800;">Bon de Commande & Livraison Officiel</h3>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-action btn-action-primary" onclick="window.print()">🖨️ Imprimer</button>
+          <button onclick="closeOrderSlipModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+        </div>
+      </div>
+      <div class="modal-sheet-body" id="orderSlipContent" style="padding:24px; background:#fff;"></div>
+    </div>
+  </div>
 
   <script>
     const API = '/api/v1';
@@ -1156,11 +1231,26 @@
         `<option value="${i.id}">${i.name} (${i.unitCost} DZD/${i.unit})</option>`
       ).join('');
 
+      const navR = document.getElementById('navCountRecipes');
+      if (navR) navR.innerText = recipesList.length;
+      const navI = document.getElementById('navCountInventory');
+      if (navI) navI.innerText = ingredientsList.length;
+
+      function updateClock() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('fr-DZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const clockEl = document.getElementById('clockDigits');
+        if (clockEl) clockEl.innerText = timeStr;
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      loadOrdersList();
+      loadKdsBatches();
       loadFinancials();
       const initialTab = new URLSearchParams(window.location.search).get('tab');
       if (initialTab) switchNavTab(initialTab);
     }
-
     async function loadFinancials() {
       const today = getTodayIso();
       const res = await fetch(`${API}/analytics/financials?date=${today}`).then(r => r.json());
@@ -1192,13 +1282,29 @@
       }).join('');
     }
 
+    let cachedOrders = [];
+
     async function loadOrdersList() {
       const s = document.getElementById('filterOrdersService').value;
       const url = API + '/orders' + (s ? '?serviceTime=' + s : '');
       const res = await fetch(url).then(r => r.json());
-      const orders = res.orders || [];
+      cachedOrders = res.orders || [];
 
+      const countEl = document.getElementById('ordersTableCount');
+      if (countEl) countEl.innerText = cachedOrders.length;
+      const navBadge = document.getElementById('navCountOrders');
+      if (navBadge) navBadge.innerText = cachedOrders.length;
+
+      renderOrdersRows(cachedOrders);
+    }
+
+    function renderOrdersRows(orders) {
       const tbody = document.getElementById('ordersFullTableBody');
+      if (!tbody) return;
+      if (orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:24px; color:var(--color-slate-500);">Aucune commande trouvée.</td></tr>';
+        return;
+      }
       tbody.innerHTML = orders.map(o => {
         const cust = customersList.find(c => c.id === o.customerId);
         const name = cust ? (cust.companyName || cust.contactName) : o.customerId;
@@ -1206,23 +1312,41 @@
         return `
           <tr>
             <td><strong>${o.orderNumber}</strong></td>
-            <td>${name}</td>
+            <td><strong>${name}</strong></td>
             <td>${o.deliveryDate} <br><small style="color:var(--color-slate-500);">${service}</small></td>
             <td><strong style="color:var(--color-primary);">${o.totalPortions}</strong> port.</td>
             <td><small>${o.deliveryAddress}</small></td>
             <td><span class="chip chip-${o.status.toLowerCase()}">${o.status}</span></td>
-            <td class="no-print">
-              <select onchange="patchOrderStatus('${o.id}', this.value)" style="padding:4px 8px; border-radius:6px; font-size:0.8rem; border:1px solid #cbd5e1;">
+            <td class="no-print" style="white-space:nowrap;">
+              <select onchange="patchOrderStatus('${o.id}', this.value)" style="padding:4px 8px; border-radius:6px; font-size:0.8rem; border:1px solid #cbd5e1; outline:none;">
                 <option value="CONFIRMED" ${o.status==='CONFIRMED'?'selected':''}>CONFIRMED</option>
                 <option value="IN_PRODUCTION" ${o.status==='IN_PRODUCTION'?'selected':''}>IN_PRODUCTION</option>
                 <option value="PORTIONED_PACKAGED" ${o.status==='PORTIONED_PACKAGED'?'selected':''}>PORTIONED_PACKAGED</option>
                 <option value="DISPATCHED" ${o.status==='DISPATCHED'?'selected':''}>DISPATCHED</option>
                 <option value="DELIVERED" ${o.status==='DELIVERED'?'selected':''}>DELIVERED</option>
               </select>
+              <button class="btn-action btn-action-secondary" style="padding:4px 8px; font-size:0.75rem; margin-left:6px;" onclick="openOrderSlip('${o.id}')" title="Voir le Bon officiel">📄 Bon</button>
             </td>
           </tr>
         `;
       }).join('');
+    }
+
+    function filterOrdersTable(query) {
+      if (!query || query.trim() === '') {
+        renderOrdersRows(cachedOrders);
+        return;
+      }
+      const q = query.toLowerCase().trim();
+      const filtered = cachedOrders.filter(o => {
+        const cust = customersList.find(c => c.id === o.customerId);
+        const name = cust ? (cust.companyName || cust.contactName).toLowerCase() : '';
+        return o.orderNumber.toLowerCase().includes(q) ||
+               name.includes(q) ||
+               (o.deliveryAddress || '').toLowerCase().includes(q) ||
+               (o.status || '').toLowerCase().includes(q);
+      });
+      renderOrdersRows(filtered);
     }
 
     async function generateOrdersFromSubscriptions() {
@@ -1376,51 +1500,72 @@
       }
     }
 
+    let cachedKdsBatches = [];
+    let currentKdsFilter = 'ALL';
+
     async function loadKdsBatches() {
       const today = getTodayIso();
       const res = await fetch(`${API}/kds/batches?date=${today}`).then(r => r.json());
-      const batches = res.batches || [];
+      cachedKdsBatches = res.batches || [];
 
+      const setC = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+      setC('countKdsAll', cachedKdsBatches.length);
+      setC('countKdsChaud', cachedKdsBatches.filter(b => b.station === 'CHAUD').length);
+      setC('countKdsFroid', cachedKdsBatches.filter(b => b.station === 'FROID').length);
+      setC('countKdsPatisserie', cachedKdsBatches.filter(b => b.station === 'PATISSERIE').length);
+      setC('countKdsConditionnement', cachedKdsBatches.filter(b => b.station === 'CONDITIONNEMENT').length);
+      setC('navCountKds', cachedKdsBatches.length);
+
+      renderKdsCards(currentKdsFilter === 'ALL' ? cachedKdsBatches : cachedKdsBatches.filter(b => b.station === currentKdsFilter));
+    }
+
+    function filterKdsStation(station, btn) {
+      currentKdsFilter = station;
+      document.querySelectorAll('.station-tab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      const filtered = station === 'ALL' ? cachedKdsBatches : cachedKdsBatches.filter(b => b.station === station);
+      renderKdsCards(filtered);
+    }
+
+    function renderKdsCards(batches) {
       const container = document.getElementById('kdsBatchesContainer');
+      if (!container) return;
       if (batches.length === 0) {
-        container.innerHTML = '<div style="padding:30px; text-align:center; color:#94a3b8;">Aucun lot actif sur les postes cuisine.</div>';
+        container.innerHTML = '<div style="padding:40px; text-align:center; color:#94a3b8; grid-column:1/-1;">Aucun lot actif pour cette station.</div>';
         return;
       }
 
-      container.innerHTML = batches.map(b => {
-        const stageColors = {
-          TO_PREPARE: 'chip-danger',
-          COOKING: 'chip-production',
-          PACKAGING: 'chip-packaged',
-          READY: 'chip-delivered'
-        };
-        const stageLabels = {
-          TO_PREPARE: '1. À Préparer',
-          COOKING: '2. En Cuisson',
-          PACKAGING: '3. En Barquette',
-          READY: '4. Prêt au Départ ✓'
-        };
+      const stageColors = {
+        TO_PREPARE: 'chip-danger',
+        COOKING: 'chip-production',
+        PACKAGING: 'chip-packaged',
+        READY: 'chip-delivered'
+      };
+      const stageLabels = {
+        TO_PREPARE: '1. À Préparer',
+        COOKING: '2. En Cuisson',
+        PACKAGING: '3. En Barquette',
+        READY: '4. Prêt au Départ ✓'
+      };
 
-        return `
-          <div class="kds-card station-${b.station.toLowerCase()}">
-            <div>
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <span class="chip" style="background:#000; color:#fff;">Poste : ${b.station}</span>
-                <span class="chip ${stageColors[b.stage]}">${stageLabels[b.stage]}</span>
-              </div>
-              <h3 style="font-size:1.15rem; font-weight:800; color:#fff; margin-bottom:6px;">${b.recipeName}</h3>
-              <div style="font-size:1.5rem; font-weight:800; color:var(--color-primary-light); margin-bottom:12px;">${b.portions} portions</div>
+      container.innerHTML = batches.map(b => `
+        <div class="kds-card station-${b.station.toLowerCase()}">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span class="chip" style="background:#000; color:#fff;">Poste : ${b.station}</span>
+              <span class="chip ${stageColors[b.stage]}">${stageLabels[b.stage]}</span>
             </div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-top:14px;" class="no-print">
-              <button class="btn-action btn-action-secondary" style="font-size:0.75rem; justify-content:center; background:#1e293b; color:#fff; border-color:#334155;" onclick="patchKdsStage('${b.id}', 'COOKING')">🔥 En Cuisson</button>
-              <button class="btn-action btn-action-secondary" style="font-size:0.75rem; justify-content:center; background:#1e293b; color:#fff; border-color:#334155;" onclick="patchKdsStage('${b.id}', 'PACKAGING')">📦 Emballage</button>
-              <button class="btn-action btn-action-primary" style="grid-column: span 2; font-size:0.8rem; justify-content:center;" onclick="patchKdsStage('${b.id}', 'READY')">✓ Marquer Prêt</button>
-            </div>
+            <h3 style="font-size:1.15rem; font-weight:800; color:#fff; margin-bottom:6px;">${b.recipeName}</h3>
+            <div style="font-size:1.5rem; font-weight:800; color:var(--color-primary-light); margin-bottom:12px;">${b.portions} portions</div>
           </div>
-        `;
-      }).join('');
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-top:14px;" class="no-print">
+            <button class="btn-action btn-action-secondary" style="font-size:0.75rem; justify-content:center; background:#261510; color:#fff; border-color:#4a3026;" onclick="patchKdsStage('${b.id}', 'COOKING')">🔥 En Cuisson</button>
+            <button class="btn-action btn-action-secondary" style="font-size:0.75rem; justify-content:center; background:#261510; color:#fff; border-color:#4a3026;" onclick="patchKdsStage('${b.id}', 'PACKAGING')">📦 Emballage</button>
+            <button class="btn-action btn-action-primary" style="grid-column: span 2; font-size:0.8rem; justify-content:center;" onclick="patchKdsStage('${b.id}', 'READY')">✓ Marquer Prêt</button>
+          </div>
+        </div>
+      `).join('');
     }
-
     async function patchKdsStage(id, stage) {
       await fetch(`${API}/kds/batches/${id}/stage`, {
         method: 'PATCH',
@@ -1966,6 +2111,115 @@
     function exportDeliveryCsv() {
       const today = getTodayIso();
       window.location.href = `${API}/export/delivery?date=${today}`;
+    }
+    function exportTableToCsv(tbodyId, filename) {
+      const tbody = document.getElementById(tbodyId);
+      if (!tbody) return;
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const csv = [];
+      rows.forEach(tr => {
+        const cols = Array.from(tr.querySelectorAll('td, th')).map(td => {
+          let text = td.innerText.replace(/\n+/g, ' ').replace(/"/g, '""').trim();
+          return `"${text}"`;
+        });
+        if (cols.length > 0) csv.push(cols.join(';'));
+      });
+      const blob = new Blob(["\uFEFF" + csv.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(`Export CSV téléchargé : ${a.download}`);
+    }
+
+    function openOrderSlip(orderId) {
+      const o = (cachedOrders || []).find(x => x.id === orderId);
+      if (!o) return;
+      const cust = customersList.find(c => c.id === o.customerId);
+      const clientName = cust ? (cust.companyName || cust.contactName) : o.customerId;
+      const clientPhone = cust ? cust.phone : '';
+      const service = o.serviceTime === 'LUNCH' ? 'Déjeuner (Midi)' : 'Dîner (Soir)';
+
+      const content = document.getElementById('orderSlipContent');
+      content.innerHTML = `
+        <div style="border: 2px solid var(--color-slate-200); border-radius: 12px; padding: 24px; font-family: var(--font-sans);">
+          <!-- En-tête officiel JANITOU FOOD -->
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom: 2px solid var(--color-primary); padding-bottom: 16px; margin-bottom: 16px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <img src="/logo.png" alt="Janitou" style="width:54px; height:54px; object-fit:cover; border-radius:10px; border:1px solid #ddd;" onerror="this.src='/janitou.jfif'" />
+              <div>
+                <div style="font-size:1.35rem; font-weight:800; color:var(--color-slate-900);">JANITOU FOOD</div>
+                <div style="font-size:0.75rem; color:var(--color-slate-500); text-transform:uppercase; font-weight:700;">Plateforme Traiteur, Production & Logistique Repas</div>
+                <div style="font-size:0.72rem; color:var(--color-slate-600);">Alger, Algérie • Contact Cuisine : +213 550 00 00 00</div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="background:var(--color-primary); color:#fff; font-size:0.78rem; font-weight:800; padding:4px 10px; border-radius:6px; display:inline-block;">BON DE LIVRAISON TRAITEUR</div>
+              <div style="font-size:1.1rem; font-weight:800; color:var(--color-slate-900); margin-top:4px;">${o.orderNumber}</div>
+              <div style="font-size:0.75rem; color:var(--color-slate-500);">Émis le : ${new Date(o.createdAt || Date.now()).toLocaleDateString('fr-DZ')}</div>
+            </div>
+          </div>
+
+          <!-- Informations Destinataire & Livraison -->
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom: 20px; background:#fcfaf6; border:1px solid #ede3d6; border-radius:8px; padding:14px;">
+            <div>
+              <div style="font-size:0.7rem; text-transform:uppercase; font-weight:700; color:var(--color-slate-500);">Destinataire / Client</div>
+              <div style="font-size:1rem; font-weight:800; color:var(--color-slate-900); margin-top:2px;">${clientName}</div>
+              <div style="font-size:0.82rem; color:var(--color-slate-700); margin-top:2px;">📞 ${clientPhone || 'Non renseigné'}</div>
+            </div>
+            <div>
+              <div style="font-size:0.7rem; text-transform:uppercase; font-weight:700; color:var(--color-slate-500);">Date & Adresse de Livraison</div>
+              <div style="font-size:0.88rem; font-weight:700; color:var(--color-primary-dark); margin-top:2px;">📅 ${o.deliveryDate} • ${service}</div>
+              <div style="font-size:0.82rem; color:var(--color-slate-700); margin-top:2px;">📍 ${o.deliveryAddress}</div>
+            </div>
+          </div>
+
+          <!-- Détail des Plats -->
+          <table class="modern-table" style="margin-bottom: 20px; border:1px solid #ede3d6;">
+            <thead>
+              <tr style="background:#f6efe6;">
+                <th style="padding:10px 14px;">Désignation Recette</th>
+                <th style="padding:10px 14px; text-align:center;">Portions</th>
+                <th style="padding:10px 14px;">Instructions Spéciales</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(o.items || []).map(it => {
+                const r = recipesList.find(x => x.id === it.recipeId);
+                const rName = r ? r.name : it.recipeId;
+                return `
+                  <tr>
+                    <td style="padding:12px 14px;"><strong>${rName}</strong></td>
+                    <td style="padding:12px 14px; text-align:center;"><strong style="font-size:1.1rem; color:var(--color-primary-dark);">${it.portions}</strong></td>
+                    <td style="padding:12px 14px; font-size:0.8rem; color:var(--color-slate-600);">${it.specialNotes || o.notes || 'Aucune note particulière'}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+
+          <!-- Cadre Signature & Émargement -->
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-top:24px; padding-top:16px; border-top:1px dashed #cbd5e1;">
+            <div style="border:1px solid #e2e8f0; border-radius:6px; padding:12px; height:80px;">
+              <div style="font-size:0.7rem; text-transform:uppercase; font-weight:700; color:var(--color-slate-500);">Visa Responsable Cuisine / Expédition</div>
+              <div style="font-size:0.75rem; color:#94a3b8; margin-top:4px;">Signature & Heure de départ</div>
+            </div>
+            <div style="border:1px solid #e2e8f0; border-radius:6px; padding:12px; height:80px;">
+              <div style="font-size:0.7rem; text-transform:uppercase; font-weight:700; color:var(--color-slate-500);">Émargement Réception Client</div>
+              <div style="font-size:0.75rem; color:#94a3b8; margin-top:4px;">Date, Nom & Signature</div>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('orderSlipModal').classList.add('active');
+    }
+
+    function closeOrderSlipModal() {
+      document.getElementById('orderSlipModal').classList.remove('active');
     }
 
     window.onload = initPlatform;
