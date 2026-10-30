@@ -237,4 +237,32 @@ test('HTTP Router End-to-End Suite', async (t) => {
     });
     assert.equal(allowedRes.status, 200);
   });
+
+  await t.test('Security & OpenAPI — verifies security headers and interactive documentation', async () => {
+    const res = await fetch(`${baseUrl}/health`);
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
+    assert.equal(res.headers.get('x-frame-options'), 'SAMEORIGIN');
+    assert.ok(res.headers.get('x-ratelimit-remaining'));
+
+    // OpenAPI Spec
+    const openapiRes = await fetch(`${baseUrl}/api/v1/openapi.json`);
+    assert.equal(openapiRes.status, 200);
+    const spec = await openapiRes.json() as { openapi: string; info: { title: string } };
+    assert.equal(spec.openapi, '3.0.3');
+    assert.equal(spec.info.title, 'JANITOU FOOD Management Platform API');
+
+    // Swagger UI
+    const docsRes = await fetch(`${baseUrl}/api/docs`);
+    assert.equal(docsRes.status, 200);
+    const docsHtml = await docsRes.text();
+    assert.ok(docsHtml.includes('SwaggerUIBundle'));
+    assert.ok(docsHtml.includes('JANITOU FOOD'));
+
+    // Suppliers endpoint
+    const supRes = await fetch(`${baseUrl}/api/v1/purchasing/suppliers`);
+    assert.equal(supRes.status, 200);
+    const supData = await supRes.json() as { suppliers: unknown[] };
+    assert.ok(supData.suppliers.length > 0);
+  });
 });

@@ -500,6 +500,7 @@
       <li class="nav-item" onclick="switchNavTab('logistics')"><span>🚚</span> Tournées & Manifeste</li>
       <li class="nav-item" onclick="switchNavTab('reports')"><span>📑</span> 14 Rapports Officiels</li>
       <li class="nav-item" onclick="switchNavTab('audit')"><span>🛡️</span> Sécurité & Audit</li>
+      <li class="nav-item" style="border-top: 1px dashed rgba(217, 119, 6, 0.25); margin-top: 6px;"><a href="/api/docs" target="_blank" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:10px; width:100%;"><span>⚡</span> Documentation API <span style="font-size:0.62rem; padding:2px 6px; border-radius:4px; background:rgba(245,158,11,0.2); color:#fbbf24; margin-left:auto;">Swagger</span></a></li>
     </ul>
 
     <div style="padding: 18px 20px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.72rem; color: var(--color-slate-500); display:flex; justify-content:space-between; align-items:center;">
@@ -523,6 +524,7 @@
       <div class="topbar-right" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
         <span class="date-pill" id="todayDatePill">📅 Aujourd'hui</span>
         <span class="date-pill" id="liveClockPill" style="font-family:var(--font-mono); font-size:0.78rem; font-weight:700; color:var(--color-primary-dark);"><span class="pulse-dot pulse-amber"></span> <span id="clockDigits">12:00:00</span></span>
+        <a href="/api/docs" target="_blank" class="btn-action btn-action-secondary no-print" style="text-decoration:none; display:inline-flex; align-items:center; gap:5px;" title="Documentation interactive OpenAPI">⚡ API Docs</a>
         <button class="btn-action btn-action-secondary no-print" onclick="window.print()" title="Imprimer la vue">🖨️ Imprimer</button>
         <button class="btn-action no-print" onclick="openEmergencyPackageModal()" style="border:1px solid #fecaca; color:#b91c1c; background:#fef2f2;">🚨 Urgence Atelier</button>
         <button class="btn-action btn-action-secondary no-print" onclick="downloadBackup()">💾 Backup JSON</button>
