@@ -1,4 +1,22 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: janitou_food_app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-4000}:4000"
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${DB_USER:-janitou_user}:${DB_PASSWORD:-janitou_dev_password}@postgres:5432/${DB_NAME:-janitou_food_db}?schema=public
+    volumes:
+      - janitou_data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   postgres:
     image: postgres:16-alpine
     container_name: janitou_food_postgres
@@ -21,3 +39,5 @@ services:
 volumes:
   postgres_data:
     name: janitou_food_postgres_data
+  janitou_data:
+    name: janitou_food_app_data
