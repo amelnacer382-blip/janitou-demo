@@ -5,7 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-ES2022-3178c6.svg?style=flat-square)](https://www.typescriptlang.org/)
 [![Database](https://img.shields.io/badge/PostgreSQL-16%20Prisma-336791.svg?style=flat-square)](https://www.postgresql.org/)
 [![Runtime](https://img.shields.io/badge/Runtime-Node.js%20%7C%20Bun-fbf0df.svg?style=flat-square)](https://bun.sh/)
-[![Documentation](https://img.shields.io/badge/Documentation-ADR--001%20to%20ADR--006-8b5cf6.svg?style=flat-square)](./docs/TECHNICAL_DECISIONS.md)
+[![Documentation](https://img.shields.io/badge/Documentation-ADR--001%20to%20ADR--008-8b5cf6.svg?style=flat-square)](./docs/TECHNICAL_DECISIONS.md)
 
 ## Project Overview
 
@@ -51,11 +51,17 @@ bun test
 ```bash
 bun apps/api/src/server.ts
 ```
-Once started, access the interactive management dashboard at:
+Once started, access the platform interfaces at:
 - **Web Dashboard:** [http://localhost:4000/dashboard](http://localhost:4000/dashboard) (or [http://localhost:4000/](http://localhost:4000/))
+- **Interactive API Documentation (Swagger UI):** [http://localhost:4000/api/docs](http://localhost:4000/api/docs)
+- **OpenAPI 3.0 Specification:** [http://localhost:4000/api/v1/openapi.json](http://localhost:4000/api/v1/openapi.json)
 - **API Health Check:** [http://localhost:4000/health](http://localhost:4000/health)
 - **API Discovery:** [http://localhost:4000/api/v1](http://localhost:4000/api/v1)
 
+### 4. Full-Stack Production Deployment (Docker Compose)
+```bash
+docker compose up -d
+```
 ## Key Platform Modules
 
 1. **Executive Financial Dashboard:**

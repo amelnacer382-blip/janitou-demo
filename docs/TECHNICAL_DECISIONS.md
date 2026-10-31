@@ -180,3 +180,28 @@ For each significant technical decision, record:
   - Data integrity guaranteed across all operational workflows.
 - **Approval Status:**
   - Implemented, verified with 17 automated tests, and delivered to main branch.
+
+---
+
+## ADR-008: Production Modular Architecture, Interactive OpenAPI 3.0 Documentation, OWASP Hardening & SaaS Vector UI System
+
+- **Date:** 2026-10-31
+- **Decision:**
+  - **Modular API Architecture:** Refactor the single-file HTTP dispatcher into structured domain modules under `apps/api/src/modules/` (`customers`, `recipes`, `menus`, `orders`, `production`, `purchasing`, `delivery`, `analytics`, `system`, `common`), establishing clear separation of concerns.
+  - **OpenAPI 3.0 & Interactive Swagger Documentation:** Implement the formal OpenAPI 3.0 contract at `/api/v1/openapi.json` and deliver a dedicated, branded interactive Swagger UI accessible directly at `/api/docs`.
+  - **OWASP Security Hardening & Rate Limiting:**
+    - Enforce strict security headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `X-XSS-Protection: 1; mode=block`, and `Referrer-Policy: strict-origin-when-cross-origin`.
+    - Implement an in-memory sliding-window rate limiter (300 requests/minute per IP) with real-time `X-RateLimit-Remaining` telemetry.
+    - Protect all mutation inputs against injection and prototype pollution.
+  - **Multi-Stage Production Containerization:** Add production-ready multi-stage `Dockerfile` based on `oven/bun:1-alpine` with non-root security (`USER bun`), integrated healthchecks, and full-stack orchestration in `docker-compose.yml`.
+  - **Enterprise Vector UI Modernization:** Purge 100% of legacy unicode emoji symbols across sidebar navigation, action buttons, KPI cards, modal dialogues, and order slips, replacing them with cohesive 1.85px stroke vector SVG icons in modern SaaS style (Linear / Stripe).
+- **Reason:**
+  - Eliminates architectural technical debt and guarantees enterprise scalability ahead of the Phase 1 final delivery and VPS commissioning.
+  - Provides external developers and clients with an interactive testing surface (`/api/docs`).
+  - Prevents automated abuse and brute-force attacks on production endpoints.
+- **Impact on the Project:**
+  - Clean, zero-warning TypeScript type checking across all packages.
+  - Automated test suite remains 100% green (17/17 tests passing).
+  - Enables one-command production deployment (`docker compose up -d`).
+- **Approval Status:**
+  - Implemented, verified, and committed to `main`.
