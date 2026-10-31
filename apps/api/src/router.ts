@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { setSecurityHeaders, sendError, checkRateLimit } from './modules/common/http.js';
 import { handleCustomerRoutes } from './modules/customers/routes.js';
 import { handleRecipeRoutes } from './modules/recipes/routes.js';

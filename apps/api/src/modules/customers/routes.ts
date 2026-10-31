@@ -63,9 +63,9 @@ export async function handleCustomerRoutes(
       return true;
     }
 
+    const balance = customer.accountBalance ?? 0;
     const customerOrders = janitouStore.getOrders().filter((o) => o.customerId === customerId);
     const customerInvoices = janitouStore.getInvoices().filter((i) => i.customerId === customerId);
-    const balance = janitouStore.getCustomerBalance(customerId);
 
     sendJson(res, 200, {
       customer,

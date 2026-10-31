@@ -27,5 +27,8 @@
     "distribution"
   ],
   "author": "JANITOU FOOD",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@types/node": "^26.6.6"
+  }
 }
