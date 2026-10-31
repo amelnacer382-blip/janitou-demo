@@ -6,6 +6,7 @@
 [![Database](https://img.shields.io/badge/PostgreSQL-16%20Prisma-336791.svg?style=flat-square)](https://www.postgresql.org/)
 [![Runtime](https://img.shields.io/badge/Runtime-Node.js%20%7C%20Bun-fbf0df.svg?style=flat-square)](https://bun.sh/)
 [![Documentation](https://img.shields.io/badge/Documentation-ADR--001%20to%20ADR--008-8b5cf6.svg?style=flat-square)](./docs/TECHNICAL_DECISIONS.md)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/janitoufood/janitou-food-management)
 
 ## Project Overview
 

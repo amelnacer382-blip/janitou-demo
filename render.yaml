@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: janitou-food-management
+    runtime: docker
+    plan: free
+    region: frankfurt
+    envVars:
+      - key: NODE_ENV
+        value: production
