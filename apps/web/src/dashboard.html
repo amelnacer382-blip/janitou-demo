@@ -691,6 +691,11 @@
         <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
         <span>Sécurité & Audit</span>
       </li>
+      <li class="nav-item" onclick="openClientPortalSimulatorModal()" style="background: rgba(217, 119, 6, 0.12); border-left: 3px solid var(--color-primary); margin-top: 4px;">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span style="font-weight:700; color:var(--color-primary-light);">Parcours Client (Phase 2)</span>
+        <span style="font-size:0.62rem; padding:2px 6px; border-radius:4px; background:var(--color-primary); color:#fff; margin-left:auto;">Démo</span>
+      </li>
       <li class="nav-item" style="border-top: 1px dashed rgba(217, 119, 6, 0.25); margin-top: 6px;">
         <a href="/api/docs" target="_blank" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:12px; width:100%;">
           <svg class="nav-icon" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
@@ -729,6 +734,7 @@
         <button class="btn-action no-print" onclick="openEmergencyPackageModal()" style="border:1px solid #fecaca; color:#b91c1c; background:#fef2f2;"><svg class="btn-icon-svg" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg> Urgence Atelier</button>
         <button class="btn-action btn-action-secondary no-print" onclick="downloadBackup()"><svg class="btn-icon-svg" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> Sauvegarde</button>
         <button class="btn-action btn-action-secondary no-print" onclick="openLabelModal()"><svg class="btn-icon-svg" viewBox="0 0 24 24"><path d="m12 2 3.5 3.5L8.5 12.5 5 9Z"/><path d="M18 8.5 21.5 12l-7 7L11 15.5"/><circle cx="16.5" cy="5.5" r="1.5"/></svg> Étiquettes</button>
+        <button class="btn-action no-print" onclick="openClientPortalSimulatorModal()" style="background:var(--color-primary-dark); color:#fff; border:none; box-shadow:0 2px 6px rgba(180,83,9,0.25);" title="Tester le parcours commande client (Phase 2)"><svg class="btn-icon-svg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Espace Client (Simulation)</button>
         <button class="btn-action btn-action-primary no-print" onclick="openNewOrderModal()"><svg class="btn-icon-svg" viewBox="0 0 24 24"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg> Nouvelle Commande</button>
       </div>
     </header>
@@ -801,6 +807,13 @@
             <p style="color:var(--color-slate-500); font-size:0.85rem;">Flux opérationnel et conversion automatique des abonnements</p>
           </div>
           <button class="btn-action btn-action-primary" onclick="generateOrdersFromSubscriptions()"><svg class="btn-icon-svg" viewBox="0 0 24 24"><path d="M21.5 2v6h-6"/><path d="M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg> Convertir Abonnements en Commandes</button>
+        </div>
+        <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:12px 18px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;" class="no-print">
+          <div>
+            <strong style="color:#92400e; font-size:0.88rem;">Aperçu Parcours Client (Phase 2) :</strong>
+            <span style="color:#b45309; font-size:0.82rem; margin-left:6px;">Testez en direct la sélection des repas programmés, le calcul plafonné pain/salade, les alternatives avec quotas/suppléments et le choix d'emballage.</span>
+          </div>
+          <button class="btn-action btn-action-primary" style="font-size:0.8rem; padding:6px 14px;" onclick="openClientPortalSimulatorModal()"><svg class="btn-icon-svg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Tester le Parcours Client</button>
         </div>
 
         <div class="glass-card">
@@ -1332,6 +1345,163 @@
       <div class="modal-sheet-body" id="orderSlipContent" style="padding:24px; background:#fff;"></div>
     </div>
   </div>
+  <!-- Modal Simulateur Parcours Client & Application Mobile (Phase 2) -->
+  <div class="modal-backdrop" id="clientPortalModal">
+    <div class="modal-sheet" style="max-width:680px; max-height:92vh; overflow-y:auto;">
+      <div class="modal-sheet-header" style="background:#fffbf2; border-bottom:1px solid #ede3d6;">
+        <div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <h3 style="font-size:1.15rem; font-weight:800; color:var(--color-slate-900);">Espace Client & Commande Self-Service</h3>
+            <span style="background:var(--color-primary); color:#fff; font-size:0.68rem; font-weight:800; padding:2px 8px; border-radius:12px; text-transform:uppercase;">Phase 2 Preview</span>
+          </div>
+          <p style="font-size:0.75rem; color:var(--color-slate-500); margin-top:2px;">Simulation fidèle de l'application mobile client et de ses règles culinaires</p>
+        </div>
+        <button onclick="closeClientPortalSimulatorModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+      </div>
+
+      <form id="simOrderForm" onsubmit="submitSimulatorOrder(event)" style="padding:20px; display:flex; flex-direction:column; gap:16px;">
+        <!-- 1. Authentification & Compte Client -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px;">
+          <div style="font-size:0.75rem; text-transform:uppercase; font-weight:800; color:var(--color-slate-600); margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+            <svg class="btn-icon-svg" viewBox="0 0 24 24" style="width:14px; height:14px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            1. Compte Client & Données Personnelles
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div>
+              <label style="display:block; font-size:0.75rem; font-weight:700; margin-bottom:3px;">Compte Connecté</label>
+              <select id="simCustomerSelect" onchange="onSimCustomerChange()" style="width:100%; padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.82rem; background:#fff;" required></select>
+            </div>
+            <div>
+              <label style="display:block; font-size:0.75rem; font-weight:700; margin-bottom:3px;">Solde Prépayé Actuel</label>
+              <div id="simCustomerBalanceBadge" style="padding:6px 10px; border-radius:6px; background:#ecfdf5; border:1px solid #a7f3d0; font-size:0.82rem; font-weight:800; color:#065f46;">0 DA</div>
+            </div>
+          </div>
+          <div style="margin-top:8px;">
+            <label style="display:block; font-size:0.75rem; font-weight:700; margin-bottom:3px;">Adresse de Livraison (modifiable par le client)</label>
+            <input type="text" id="simDeliveryAddress" style="width:100%; padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.82rem;" required />
+          </div>
+        </div>
+
+        <!-- 2. Date & Service de Restauration -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div>
+            <label style="display:block; font-size:0.78rem; font-weight:700; margin-bottom:4px;">Date du Repas</label>
+            <input type="date" id="simDeliveryDate" onchange="updateSimulatorMenu()" style="width:100%; padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.82rem;" required />
+          </div>
+          <div>
+            <label style="display:block; font-size:0.78rem; font-weight:700; margin-bottom:4px;">Service</label>
+            <select id="simServiceTime" onchange="updateSimulatorMenu()" style="width:100%; padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.82rem; background:#fff;" required>
+              <option value="LUNCH">Déjeuner (Midi)</option>
+              <option value="DINNER">Dîner (Soir)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 3. Sélection du Repas & Alternatives (avec Quotas et Suppléments) -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <label style="font-size:0.82rem; font-weight:800; color:var(--color-slate-900);">Choix du Plat Programmé ou de l'Alternative</label>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:0.75rem; font-weight:700; color:var(--color-slate-600);">Portions :</span>
+              <input type="number" id="simPortions" min="1" max="50" value="1" oninput="onSimPortionsChange()" style="width:60px; padding:4px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem; font-weight:800; text-align:center;" required />
+            </div>
+          </div>
+
+          <div id="simMealOptionsContainer" style="display:flex; flex-direction:column; gap:8px;">
+            <!-- Dynamically populated meal & alternative cards -->
+          </div>
+        </div>
+
+        <!-- 4. Règle Métier Janitou : Calcul Automatique Pain & Salade -->
+        <div style="background:#fffbf0; border:1px solid #fde68a; border-radius:8px; padding:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <div style="font-size:0.75rem; font-weight:800; color:#92400e; text-transform:uppercase;">Règles Culinaire Janitou • Dotation Pain & Salade</div>
+            <span style="font-size:0.7rem; background:#fef3c7; color:#92400e; padding:2px 8px; border-radius:10px; font-weight:700;">Calcul automatique</span>
+          </div>
+          <p style="font-size:0.73rem; color:#78350f; margin-bottom:8px; line-height:1.3;">
+            Conformément aux règles Janitou, la dotation par portion est calculée automatiquement. Vous pouvez réduire les quantités à votre convenance, mais vous ne pouvez pas dépasser le plafond calculé.
+          </p>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:700; margin-bottom:3px;">
+                <span>Pain (Baguettes)</span>
+                <span id="simBreadMaxNote" style="color:#b45309;">Max : 1</span>
+              </div>
+              <input type="number" id="simBreadQty" min="0" max="1" value="1" oninput="validateBreadSaladCaps()" style="width:100%; padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem; font-weight:700;" />
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:700; margin-bottom:3px;">
+                <span>Salade d'accompagnement</span>
+                <span id="simSaladMaxNote" style="color:#b45309;">Max : 1</span>
+              </div>
+              <input type="number" id="simSaladQty" min="0" max="1" value="1" oninput="validateBreadSaladCaps()" style="width:100%; padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem; font-weight:700;" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Choix de l'Emballage -->
+        <div>
+          <label style="display:block; font-size:0.78rem; font-weight:700; margin-bottom:6px;">Format d'Emballage</label>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <label style="display:flex; align-items:flex-start; gap:8px; padding:10px; border:1px solid #cbd5e1; border-radius:8px; cursor:pointer; background:#fff;">
+              <input type="radio" name="simPackaging" value="INDIVIDUAL_KRAFT" checked style="margin-top:2px;" />
+              <div>
+                <div style="font-size:0.8rem; font-weight:700; color:var(--color-slate-900);">Barquette Kraft Individuelle</div>
+                <div style="font-size:0.7rem; color:var(--color-slate-500);">Étiquette thermique 76x51mm, nom client, réchauffage & allergènes</div>
+              </div>
+            </label>
+            <label style="display:flex; align-items:flex-start; gap:8px; padding:10px; border:1px solid #cbd5e1; border-radius:8px; cursor:pointer; background:#fff;">
+              <input type="radio" name="simPackaging" value="COLLECTIVE_ISOTHERMAL" style="margin-top:2px;" />
+              <div>
+                <div style="font-size:0.8rem; font-weight:700; color:var(--color-slate-900);">Bac Traiteur Collectif</div>
+                <div style="font-size:0.7rem; color:var(--color-slate-500);">Service buffet d'entreprise, maintien en température</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 6. Récapitulatif Financier Avant Confirmation -->
+        <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:10px; padding:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #e2e8f0; padding-bottom:6px;">
+            <span style="font-size:0.78rem; font-weight:800; text-transform:uppercase; color:var(--color-slate-600);">Récapitulatif Financier</span>
+            <span style="font-size:0.72rem; color:var(--color-slate-500);">Calcul direct en DZD</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:4px; font-size:0.8rem; color:var(--color-slate-700);">
+            <div style="display:flex; justify-content:space-between;">
+              <span id="simSummaryMealLine">Plat : -</span>
+              <span id="simSummaryMealPrice">0 DA</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span id="simSummaryAlternativeLine">Suppléments Alternatives :</span>
+              <span id="simSummaryAlternativeCost" style="color:#b45309; font-weight:700;">+0 DA</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span>Dotation Pain & Salade :</span>
+              <span style="color:#059669; font-weight:700;">Inclus</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span>Emballage sélectionné :</span>
+              <span style="color:#059669; font-weight:700;">Inclus</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1; font-size:1.05rem; font-weight:900; color:var(--color-slate-900);">
+              <span>Montant Total à Confirmer :</span>
+              <span id="simSummaryTotal" style="color:var(--color-primary-dark);">0 DA</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.73rem; color:var(--color-slate-500); margin-top:4px;">
+              <span>Solde prépayé après débit :</span>
+              <span id="simSummaryRemainingBalance" style="font-weight:700;">-</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. Actions -->
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="btn-action btn-action-secondary" onclick="closeClientPortalSimulatorModal()">Fermer</button>
+          <button type="submit" class="btn-action btn-action-primary" style="padding:10px 20px; font-weight:800;"><svg class="btn-icon-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Valider la Commande Client</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script>
     const API = '/api/v1';
@@ -1521,6 +1691,14 @@
     function renderOrdersRows(orders) {
       const tbody = document.getElementById('ordersFullTableBody');
       if (!tbody) return;
+      const countEl = document.getElementById('ordersTableCount');
+      if (countEl) {
+        if (cachedOrders && orders.length !== cachedOrders.length) {
+          countEl.innerText = `${orders.length} sur ${cachedOrders.length}`;
+        } else {
+          countEl.innerText = orders.length;
+        }
+      }
       if (orders.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:24px; color:var(--color-slate-500);">Aucune commande trouvée.</td></tr>';
         return;
@@ -1545,7 +1723,7 @@
                 <option value="DISPATCHED" ${o.status==='DISPATCHED'?'selected':''}>DISPATCHED</option>
                 <option value="DELIVERED" ${o.status==='DELIVERED'?'selected':''}>DELIVERED</option>
               </select>
-              <button class="btn-action btn-action-secondary" style="padding:4px 8px; font-size:0.75rem; margin-left:6px;" onclick="openOrderSlip('${o.id}')" title="Voir le Bon officiel">Bon</button>
+              <button class="btn-action btn-action-secondary" style="padding:4px 8px; font-size:0.75rem; margin-left:6px;" onclick="openOrderSlip('${o.id}')" title="Imprimer le bon de livraison"><svg class="btn-icon-svg" viewBox="0 0 24 24" style="width:12px; height:12px; margin-right:3px;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg> Bon de livraison</button>
             </td>
           </tr>
         `;
@@ -2336,15 +2514,37 @@
     function exportTableToCsv(tbodyId, filename) {
       const tbody = document.getElementById(tbodyId);
       if (!tbody) return;
-      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const table = tbody.closest('table');
       const csv = [];
+
+      // Extract header row from thead, excluding any .no-print columns (e.g. actions)
+      if (table) {
+        const thead = table.querySelector('thead');
+        if (thead) {
+          const headers = Array.from(thead.querySelectorAll('tr th:not(.no-print)')).map(th => {
+            const text = th.innerText.replace(/\n+/g, ' ').replace(/"/g, '""').trim();
+            return `"${text}"`;
+          });
+          if (headers.length > 0) csv.push(headers.join(';'));
+        }
+      }
+
+      // Extract data rows from tbody, strictly excluding .no-print columns
+      const rows = Array.from(tbody.querySelectorAll('tr'));
       rows.forEach(tr => {
-        const cols = Array.from(tr.querySelectorAll('td, th')).map(td => {
+        const cells = Array.from(tr.querySelectorAll('td:not(.no-print)'));
+        if (cells.length === 0) return;
+        const cols = cells.map(td => {
           let text = td.innerText.replace(/\n+/g, ' ').replace(/"/g, '""').trim();
           return `"${text}"`;
         });
         if (cols.length > 0) csv.push(cols.join(';'));
       });
+
+      if (csv.length === 0) {
+        showToast('Aucune donnée à exporter.', 'error');
+        return;
+      }
       const blob = new Blob(["\uFEFF" + csv.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -2354,7 +2554,7 @@
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast(`Export CSV téléchargé : ${a.download}`);
+      showToast(`Export CSV téléchargé avec en-têtes : ${a.download}`);
     }
 
     function openOrderSlip(orderId) {
@@ -2441,6 +2641,228 @@
 
     function closeOrderSlipModal() {
       document.getElementById('orderSlipModal').classList.remove('active');
+    }
+
+    // ==========================================
+    // SIMULATEUR PARCOURS CLIENT (PHASE 2)
+    // ==========================================
+    function openClientPortalSimulatorModal() {
+      const select = document.getElementById('simCustomerSelect');
+      if (select && customersList.length > 0) {
+        select.innerHTML = customersList.map(c => {
+          const name = c.companyName ? `${c.companyName} (${c.contactName})` : c.contactName;
+          return `<option value="${c.id}">${name}</option>`;
+        }).join('');
+      }
+      const dateEl = document.getElementById('simDeliveryDate');
+      if (dateEl) dateEl.value = getTodayIso();
+      onSimCustomerChange();
+      updateSimulatorMenu();
+      document.getElementById('clientPortalModal').classList.add('active');
+    }
+
+    function closeClientPortalSimulatorModal() {
+      document.getElementById('clientPortalModal').classList.remove('active');
+    }
+
+    function onSimCustomerChange() {
+      const custId = document.getElementById('simCustomerSelect')?.value;
+      const cust = customersList.find(c => c.id === custId);
+      if (!cust) return;
+      const addrEl = document.getElementById('simDeliveryAddress');
+      if (addrEl) addrEl.value = cust.deliveryAddress || '';
+      const balEl = document.getElementById('simCustomerBalanceBadge');
+      if (balEl) balEl.innerText = `${(cust.prepaidBalance || 0).toLocaleString('fr-DZ')} DA disponibles`;
+      recalculateSimulatorTotal();
+    }
+
+    function onSimPortionsChange() {
+      const portions = Math.max(1, parseInt(document.getElementById('simPortions')?.value || '1', 10));
+      const breadInput = document.getElementById('simBreadQty');
+      const saladInput = document.getElementById('simSaladQty');
+      const breadNote = document.getElementById('simBreadMaxNote');
+      const saladNote = document.getElementById('simSaladMaxNote');
+      if (breadInput) {
+        breadInput.max = portions;
+        if (parseInt(breadInput.value, 10) > portions || breadInput.value === '') breadInput.value = portions;
+      }
+      if (saladInput) {
+        saladInput.max = portions;
+        if (parseInt(saladInput.value, 10) > portions || saladInput.value === '') saladInput.value = portions;
+      }
+      if (breadNote) breadNote.innerText = `Max : ${portions}`;
+      if (saladNote) saladNote.innerText = `Max : ${portions}`;
+      recalculateSimulatorTotal();
+    }
+
+    function validateBreadSaladCaps() {
+      const portions = Math.max(1, parseInt(document.getElementById('simPortions')?.value || '1', 10));
+      const breadInput = document.getElementById('simBreadQty');
+      const saladInput = document.getElementById('simSaladQty');
+      if (breadInput && parseInt(breadInput.value, 10) > portions) {
+        breadInput.value = portions;
+        showToast(`Quantité de pain limitée à ${portions} (plafond contractuel).`, 'error');
+      }
+      if (saladInput && parseInt(saladInput.value, 10) > portions) {
+        saladInput.value = portions;
+        showToast(`Quantité de salade limitée à ${portions} (plafond contractuel).`, 'error');
+      }
+    }
+
+    function updateSimulatorMenu() {
+      const service = document.getElementById('simServiceTime')?.value || 'LUNCH';
+      const container = document.getElementById('simMealOptionsContainer');
+      if (!container) return;
+
+      const programmedDish = service === 'LUNCH'
+        ? { name: 'Poulet Mariné Rôti aux Herbes & Pommes au Four', basePrice: 650, recipeId: 'rec-1' }
+        : { name: 'Couscous Royal Artisanal au Poulet & Légumes', basePrice: 850, recipeId: 'rec-2' };
+
+      container.innerHTML = `
+        <label style="display:flex; align-items:flex-start; gap:10px; padding:12px; border:2px solid var(--color-primary); border-radius:8px; cursor:pointer; background:#fffcf6;">
+          <input type="radio" name="simMealOption" value="PROGRAMMED" checked onchange="recalculateSimulatorTotal()" style="margin-top:4px;" />
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="font-size:0.85rem; color:var(--color-slate-900);">${programmedDish.name}</strong>
+              <span style="font-size:0.75rem; font-weight:800; color:var(--color-primary); background:#fef3c7; padding:2px 8px; border-radius:6px;">REPAS DU JOUR</span>
+            </div>
+            <div style="font-size:0.73rem; color:var(--color-slate-600); margin-top:2px;">Plat programmé par l'administration • ${programmedDish.basePrice} DA / portion</div>
+          </div>
+        </label>
+
+        <label style="display:flex; align-items:flex-start; gap:10px; padding:12px; border:1px solid #cbd5e1; border-radius:8px; cursor:pointer; background:#fff;">
+          <input type="radio" name="simMealOption" value="ALT_SAME_PRICE" onchange="recalculateSimulatorTotal()" style="margin-top:4px;" />
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="font-size:0.85rem; color:var(--color-slate-900);">Salade Méditerranéenne Croquante & Protéines Végétales</strong>
+              <span style="font-size:0.72rem; font-weight:700; color:#059669; background:#ecfdf5; padding:2px 8px; border-radius:6px;">8 disponibles</span>
+            </div>
+            <div style="font-size:0.73rem; color:var(--color-slate-600); margin-top:2px;">Alternative légère • Même prix (aucun supplément) • <strong>+0 DA</strong></div>
+          </div>
+        </label>
+
+        <label style="display:flex; align-items:flex-start; gap:10px; padding:12px; border:1px solid #cbd5e1; border-radius:8px; cursor:pointer; background:#fff;">
+          <input type="radio" name="simMealOption" value="ALT_SUPPLEMENT" onchange="recalculateSimulatorTotal()" style="margin-top:4px;" />
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="font-size:0.85rem; color:var(--color-slate-900);">Couscous Royal Artisanal au Poulet & Légumes</strong>
+              <span style="font-size:0.72rem; font-weight:700; color:#b45309; background:#fef3c7; padding:2px 8px; border-radius:6px;">4 disponibles</span>
+            </div>
+            <div style="font-size:0.73rem; color:var(--color-slate-600); margin-top:2px;">Alternative supérieure • Supplément automatique : <strong>+200 DA / portion</strong></div>
+          </div>
+        </label>
+
+        <label style="display:flex; align-items:flex-start; gap:10px; padding:12px; border:1px solid #fecaca; border-radius:8px; opacity:0.6; background:#fef2f2; cursor:not-allowed;">
+          <input type="radio" name="simMealOption" value="ALT_EXHAUSTED" disabled style="margin-top:4px;" />
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="font-size:0.85rem; color:#991b1b; text-decoration:line-through;">Tajine d'Agneau Caramélisé aux Pruneaux</strong>
+              <span style="font-size:0.72rem; font-weight:800; color:#991b1b; background:#fee2e2; padding:2px 8px; border-radius:6px;">0 DISPONIBLE (ÉPUISÉ)</span>
+            </div>
+            <div style="font-size:0.73rem; color:#b91c1c; margin-top:2px;">Quota quotidien épuisé pour ce service • Commande verrouillée automatiquement</div>
+          </div>
+        </label>
+      `;
+
+      onSimPortionsChange();
+    }
+
+    function recalculateSimulatorTotal() {
+      const portions = Math.max(1, parseInt(document.getElementById('simPortions')?.value || '1', 10));
+      const service = document.getElementById('simServiceTime')?.value || 'LUNCH';
+      const basePrice = service === 'LUNCH' ? 650 : 850;
+      const selectedOption = document.querySelector('input[name="simMealOption"]:checked')?.value || 'PROGRAMMED';
+
+      let supplement = 0;
+      let mealTitle = service === 'LUNCH' ? 'Poulet Mariné Rôti aux Herbes' : 'Couscous Royal Artisanal';
+
+      if (selectedOption === 'ALT_SAME_PRICE') {
+        supplement = 0;
+        mealTitle = 'Salade Méditerranéenne Croquante (Alternative)';
+      } else if (selectedOption === 'ALT_SUPPLEMENT') {
+        supplement = 200;
+        mealTitle = 'Couscous Royal Artisanal (Alternative Prestige)';
+      }
+
+      const totalBase = portions * basePrice;
+      const totalSupplement = portions * supplement;
+      const totalOrder = totalBase + totalSupplement;
+
+      const lineEl = document.getElementById('simSummaryMealLine');
+      const priceEl = document.getElementById('simSummaryMealPrice');
+      const altLineEl = document.getElementById('simSummaryAlternativeLine');
+      const altCostEl = document.getElementById('simSummaryAlternativeCost');
+      const totalEl = document.getElementById('simSummaryTotal');
+      if (lineEl) lineEl.innerText = `${mealTitle} (${portions} × ${basePrice} DA) :`;
+      if (priceEl) priceEl.innerText = `${totalBase.toLocaleString('fr-DZ')} DA`;
+      if (altLineEl) altLineEl.innerText = `Suppléments (${portions} × ${supplement} DA) :`;
+      if (altCostEl) altCostEl.innerText = `+${totalSupplement.toLocaleString('fr-DZ')} DA`;
+      if (totalEl) totalEl.innerText = `${totalOrder.toLocaleString('fr-DZ')} DA`;
+
+      const custId = document.getElementById('simCustomerSelect')?.value;
+      const cust = customersList.find(c => c.id === custId);
+      const curBalance = cust ? (cust.prepaidBalance || 0) : 0;
+      const remBalance = curBalance - totalOrder;
+      const remEl = document.getElementById('simSummaryRemainingBalance');
+      if (remEl) {
+        remEl.innerText = `${remBalance.toLocaleString('fr-DZ')} DA (solde actuel : ${curBalance.toLocaleString('fr-DZ')} DA)`;
+        remEl.style.color = remBalance >= 0 ? '#059669' : '#b91c1c';
+      }
+    }
+
+    async function submitSimulatorOrder(event) {
+      event.preventDefault();
+      const custId = document.getElementById('simCustomerSelect')?.value;
+      const deliveryDate = document.getElementById('simDeliveryDate')?.value;
+      const serviceTime = document.getElementById('simServiceTime')?.value;
+      const deliveryAddress = document.getElementById('simDeliveryAddress')?.value;
+      const portions = Math.max(1, parseInt(document.getElementById('simPortions')?.value || '1', 10));
+      const breadQty = parseInt(document.getElementById('simBreadQty')?.value || '0', 10);
+      const saladQty = parseInt(document.getElementById('simSaladQty')?.value || '0', 10);
+      const packaging = document.querySelector('input[name="simPackaging"]:checked')?.value || 'INDIVIDUAL_KRAFT';
+      const selectedOption = document.querySelector('input[name="simMealOption"]:checked')?.value || 'PROGRAMMED';
+
+      if (breadQty > portions || saladQty > portions) {
+        showToast('Les quantités de pain et salade ne peuvent pas dépasser le plafond calculé.', 'error');
+        return;
+      }
+
+      let recipeId = serviceTime === 'LUNCH' ? 'rec-1' : 'rec-2';
+      let specialNotes = `Emballage: ${packaging === 'INDIVIDUAL_KRAFT' ? 'Barquette Kraft' : 'Bac Isotherme'} | Pain: ${breadQty} | Salade: ${saladQty}`;
+      if (selectedOption === 'ALT_SAME_PRICE') {
+        recipeId = 'rec-3';
+        specialNotes += ' | [ALTERNATIVE DEMANDÉE: Salade Méditerranéenne Croquante (0 DA)]';
+      } else if (selectedOption === 'ALT_SUPPLEMENT') {
+        recipeId = 'rec-2';
+        specialNotes += ' | [ALTERNATIVE AVEC SUPPLÉMENT: +200 DA/portion]';
+      }
+
+      try {
+        const res = await fetch(API + '/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerId: custId,
+            deliveryDate,
+            serviceTime,
+            deliveryAddress,
+            notes: specialNotes,
+            items: [{ recipeId, portions, specialNotes }]
+          })
+        }).then(r => r.json());
+
+        if (res.order) {
+          showToast(`Commande ${res.order.orderNumber} confirmée avec succès ! Transmise en cuisine & production.`);
+          closeClientPortalSimulatorModal();
+          await loadOrdersList();
+          await loadFinancials();
+          await loadKdsBatches();
+        } else {
+          showToast(res.error || 'Erreur lors de la validation.', 'error');
+        }
+      } catch (err) {
+        showToast('Erreur de transmission : ' + err.message, 'error');
+      }
     }
 
     window.onload = initPlatform;
