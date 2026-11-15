@@ -10,6 +10,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Durable snapshot of the domain state.
+// The Phase 1 domain store predates relational access; it is persisted
+// atomically in PostgreSQL while the relational models below are migrated
+// incrementally. See docs/TECHNICAL_DECISIONS.md.
+model AppState {
+  id        String   @id
+  version   Int      @default(1)
+  payload   Json
+  updatedAt DateTime @updatedAt
+
+  @@map("app_state")
+}
+
 enum Role {
   ADMIN
   OPERATIONS_MANAGER
@@ -343,4 +356,64 @@ model DeliveryStop {
   driverComment String?
 
   @@map("delivery_stops")
+}
+
+// ==========================================
+// Staff Identity, Sessions & Audit (relational source)
+// ==========================================
+model StaffAccount {
+  id                 String         @id
+  email              String         @unique
+  fullName           String
+  role               Role
+  passwordSalt       String
+  passwordHash       String
+  isActive           Boolean        @default(true)
+  mfaSecret          String?
+  mfaEnabled         Boolean        @default(false)
+  recoveryCodeHashes String[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  sessions           StaffSession[]
+
+  @@map("staff_accounts")
+}
+
+model StaffSession {
+  tokenHash String       @id
+  staffId   String
+  staff     StaffAccount @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime     @default(now())
+
+  @@index([staffId])
+  @@index([expiresAt])
+  @@map("staff_sessions")
+}
+
+model ClientSession {
+  tokenHash  String   @id
+  customerId String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([customerId])
+  @@index([expiresAt])
+  @@map("client_sessions")
+}
+
+model AuditLog {
+  id             String   @id
+  timestamp      DateTime @default(now())
+  userId         String
+  userName       String
+  action         String
+  entityType     String
+  entityId       String?
+  beforeSnapshot Json?
+  afterSnapshot  Json?
+
+  @@index([timestamp])
+  @@index([entityType, action])
+  @@map("audit_logs")
 }

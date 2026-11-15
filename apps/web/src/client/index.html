@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#8c6420" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="/client/manifest.webmanifest" />
+  <link rel="icon" type="image/png" href="/logo.png" />
+  <link rel="apple-touch-icon" href="/app/icon-192.png" />
+  <title>جانيتو فود — اطلب وجبتك</title>
+  <script>
+    if (localStorage.getItem('janitou_lang') === 'fr') {
+      document.documentElement.lang = 'fr';
+      document.documentElement.dir = 'ltr';
+    }
+  </script>
+  <style>
+    :root {
+      --gold: #c99a2e;
+      --gold-light: #f0d27a;
+      --gold-dark: #8c6420;
+      --ink: #241a10;
+      --teal: #8c6420; --teal-dark: #2a1f14; --soft: #f6edda;
+      --bg: #faf6ee; --card: #fffdf8; --text: #241a10; --muted: #7d6a54;
+      --line: #ecdfca; --danger: #b3261e; --warning: #a16207;
+      --shadow: 0 10px 30px rgba(58, 42, 24, 0.10); --radius: 18px;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; min-height: 100%; }
+    body { font-family: "Segoe UI", "Noto Naskh Arabic", Tahoma, system-ui, sans-serif; background: var(--bg); color: var(--text); direction: rtl; }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { border: 0; background: none; cursor: pointer; }
+    .shell { max-width: 560px; margin: 0 auto; min-height: 100vh; padding-bottom: calc(80px + env(safe-area-inset-bottom)); position: relative; }
+    .topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: calc(10px + env(safe-area-inset-top)) 16px 10px; background: rgba(250,246,238,0.93); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(236,223,202,0.8); }
+    .topbar h1 { font-size: 0.95rem; margin: 0; white-space: nowrap; }
+    [dir="ltr"] .topbar h1 { font-size: 0.95rem; }
+    .topbar-actions { display: flex; align-items: center; gap: 4px; }
+    .lang-btn {
+      min-width: 38px; height: 34px; padding: 0 8px; border-radius: 10px;
+      border: 1px solid var(--line); background: var(--card); color: var(--teal-dark);
+      font-size: 0.72rem; font-weight: 800;
+    }
+    .bell-btn { position: relative; }
+    .notif-badge {
+      position: absolute; top: 2px; left: 2px; min-width: 16px; height: 16px;
+      border-radius: 999px; background: var(--danger); color: #fff;
+      font-size: 0.6rem; font-weight: 800; display: flex; align-items: center;
+      justify-content: center; padding: 0 4px;
+    }
+    .notif-item { display: flex; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .notif-item:last-child { border-bottom: 0; }
+    .notif-icon { width: 34px; height: 34px; border-radius: 11px; background: var(--soft); color: var(--teal-dark); display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+    .notif-item strong { display: block; font-size: 0.82rem; }
+    .notif-item p { margin: 2px 0 0; font-size: 0.72rem; color: var(--muted); line-height: 1.5; }
+    .notif-item.unread strong { color: var(--teal-dark); }
+    .balance-card { background: linear-gradient(140deg, #3a2a18, #241a10); color: var(--gold-light); border: 1px solid rgba(201,154,46,0.45); border-radius: 20px; padding: 16px; margin-bottom: 12px; box-shadow: 0 14px 28px rgba(36,26,16,0.22); }
+    .balance-card span { font-size: 0.72rem; opacity: 0.8; }
+    .balance-card b { display: block; font-size: 1.5rem; margin-top: 4px; }
+    .pending-banner { display: flex; align-items: center; gap: 8px; background: #fffbeb; border: 1px solid #fde68a; color: #92400e; border-radius: 14px; padding: 11px 13px; font-size: 0.76rem; margin-bottom: 12px; }
+    .brand { display: flex; align-items: center; gap: 8px; font-weight: 800; color: var(--teal-dark); font-size: 0.82rem; }
+    .brand img { width: 32px; height: 32px; border-radius: 10px; object-fit: contain; background: var(--soft); padding: 3px; }
+    main { padding: 14px 16px 24px; }
+    .screen { display: none; animation: fade 0.18s ease; }
+    .screen.active { display: block; }
+    @keyframes fade { from { opacity: 0.4; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .auth { max-width: 420px; margin: 0 auto; padding: calc(24px + env(safe-area-inset-top)) 20px 40px; }
+    .auth-logo { text-align: center; margin-bottom: 18px; }
+    .auth-logo img { width: 84px; height: 84px; border-radius: 24px; object-fit: contain; background: var(--card); padding: 10px; box-shadow: var(--shadow); }
+    .auth-logo h1 { margin: 12px 0 2px; font-size: 1.35rem; }
+    .auth-logo p { margin: 0; color: var(--muted); font-size: 0.82rem; }
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #e9efed; padding: 5px; border-radius: 15px; margin-bottom: 14px; }
+    .tabs button { padding: 10px; border-radius: 11px; font-weight: 700; font-size: 0.84rem; color: var(--muted); }
+    .tabs button.active { background: var(--teal); color: #fff; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 0.78rem; font-weight: 700; margin-bottom: 6px; color: #4a3826; }
+    .field input, .field textarea, .field select { width: 100%; border: 1px solid var(--line); background: #fffdf8; border-radius: 12px; padding: 13px 12px; font-size: 0.9rem; outline: none; }
+    .field input:focus, .field textarea:focus { border-color: var(--teal); background: #fff; }
+    .field .row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .btn { width: 100%; padding: 14px; border-radius: 14px; background: var(--teal); color: #fff; font-weight: 800; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn:disabled { opacity: 0.55; }
+    .btn.secondary { background: #f3ecdf; color: var(--teal-dark); border: 1px solid var(--line); }
+    .btn.danger { background: #fff1f1; color: var(--danger); }
+    .hint { font-size: 0.74rem; color: var(--muted); text-align: center; line-height: 1.7; margin-top: 12px; }
+    .banner { border-radius: 14px; padding: 13px 14px; font-size: 0.8rem; margin-bottom: 12px; line-height: 1.6; }
+    .banner.warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+    .banner.ok { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
+    .banner.danger { background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; }
+    .date-pill { display: inline-flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 8px 13px; font-size: 0.8rem; color: var(--muted); margin-bottom: 12px; }
+    .day-card { padding: 13px 14px 14px; margin-bottom: 12px; }
+    .day-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .day-head strong { font-size: 0.92rem; }
+    .day-head small { color: var(--muted); font-size: 0.75rem; margin-inline-start: 8px; }
+    .day-state { font-size: 0.68rem; font-weight: 800; padding: 5px 9px; border-radius: 999px; background: var(--soft); color: var(--teal-dark); }
+    .day-state.closed { background: #f3ecdf; color: var(--muted); }
+    .services { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .dish { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #fffdf8; }
+    .dish img { width: 100%; height: 92px; object-fit: cover; display: block; }
+    .dish .fallback { height: 92px; display: flex; align-items: center; justify-content: center; background: var(--soft); color: var(--teal); font-weight: 800; font-size: 1.4rem; }
+    .dish .meta { padding: 8px 10px 10px; }
+    .dish small { color: var(--muted); font-size: 0.68rem; }
+    .dish b { display: block; font-size: 0.78rem; line-height: 1.4; margin-top: 2px; }
+    .dish .price { color: var(--teal-dark); font-weight: 800; font-size: 0.78rem; margin-top: 5px; }
+    .order-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 12px 14px; border-radius: 13px; background: var(--soft); color: var(--teal-dark); font-weight: 800; font-size: 0.84rem; }
+    .order-btn:disabled { background: #f3ecdf; color: var(--muted); }
+    .order-btn svg { width: 18px; height: 18px; }
+
+    .catalog-hero {
+      position: relative; overflow: hidden; border-radius: 24px; padding: 22px 20px;
+      background: linear-gradient(135deg, #241a10 0%, #3a2a18 60%, #8c6420 140%);
+      color: #fff7e8; margin-bottom: 16px; box-shadow: 0 18px 38px rgba(36,26,16,0.25);
+    }
+    .catalog-hero::after { content: ""; position: absolute; inset: auto -40px -60px auto; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(201,154,46,0.4), transparent 65%); }
+    .catalog-hero h2 { margin: 6px 0 6px; font-size: 1.35rem; line-height: 1.3; }
+    .catalog-hero p { margin: 0 0 14px; font-size: 0.78rem; color: #e9d8b8; max-width: 30ch; line-height: 1.6; }
+    .catalog-hero .btn { width: auto; padding: 11px 18px; background: var(--gold); color: #241a10; border-radius: 999px; font-size: 0.82rem; }
+    .chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 12px; scrollbar-width: none; }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip { flex: 0 0 auto; padding: 8px 13px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--muted); font-size: 0.74rem; font-weight: 700; }
+    .chip.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+    .catalog-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; }
+    .catalog-card { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--card); box-shadow: 0 8px 18px rgba(58,42,24,0.06); display: flex; flex-direction: column; }
+    .catalog-card .photo { height: 116px; background: var(--soft); position: relative; }
+    .catalog-card .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .catalog-card .photo .fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; color: var(--teal); }
+    .catalog-card .body { padding: 9px 10px 10px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .catalog-card .cat { font-size: 0.62rem; color: var(--muted); font-weight: 700; }
+    .catalog-card b { font-size: 0.8rem; line-height: 1.35; min-height: 2.1em; }
+    .catalog-card .foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .catalog-card .price { font-size: 0.78rem; font-weight: 800; color: var(--teal-dark); }
+    .catalog-card .add { width: 30px; height: 30px; border-radius: 10px; background: var(--teal); color: #fff; font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+    .section-title { display: flex; align-items: center; justify-content: space-between; margin: 8px 0 10px; }
+    .section-title h3 { margin: 0; font-size: 0.95rem; }
+    .section-title span { font-size: 0.7rem; color: var(--muted); }
+    .catalog-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+    .catalog-row:last-child { border-bottom: 0; }
+    .catalog-row img, .catalog-row .fallback { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; flex: 0 0 auto; background: var(--soft); display: flex; align-items: center; justify-content: center; color: var(--teal); font-weight: 800; }
+    .catalog-row .grow { flex: 1; min-width: 0; }
+    .catalog-row b { display: block; font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .catalog-row small { color: var(--muted); font-size: 0.68rem; }
+    .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 560px; z-index: 25; display: grid; grid-template-columns: repeat(4, 1fr); background: rgba(255,255,255,0.97); backdrop-filter: blur(14px); border-top: 1px solid var(--line); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); }
+    .order-actions { width: 100%; display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+    .order-actions button { flex: 1; border-radius: 10px; padding: 9px; font-size: 0.76rem; font-weight: 800; background: var(--soft); color: var(--teal-dark); }
+    .order-actions button.cancel { background: #fff1f1; color: var(--danger); }
+    .pack-select { width: 92px; padding: 8px 6px; border: 1px solid var(--line); border-radius: 9px; background: #fffdf8; font-size: 0.72rem; }
+    .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 4px; color: var(--muted); font-size: 0.68rem; font-weight: 700; border-radius: 12px; }
+    .nav-btn svg { width: 22px; height: 22px; }
+    .nav-btn.active { color: var(--teal); }
+    .list { display: flex; flex-direction: column; gap: 10px; }
+    .row-card { padding: 13px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .row-card strong { display: block; font-size: 0.86rem; }
+    .row-card span { font-size: 0.74rem; color: var(--muted); }
+    .price-total { font-weight: 800; color: var(--teal-dark); font-size: 0.9rem; white-space: nowrap; }
+    .status { font-size: 0.68rem; font-weight: 800; padding: 5px 9px; border-radius: 999px; background: #f3ecdf; color: #475569; }
+    .status.done { background: #dcfce7; color: #15803d; }
+    .status.progress { background: #fef3c7; color: #b45309; }
+    .status.cancel { background: #fee2e2; color: #b91c1c; }
+    .empty { text-align: center; color: var(--muted); padding: 30px 16px; border: 1px dashed var(--line); border-radius: var(--radius); background: rgba(255,255,255,0.6); font-size: 0.85rem; }
+    .sheet-backdrop { position: fixed; inset: 0; background: rgba(36,26,16,0.5); z-index: 50; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.18s; }
+    .sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+    .sheet { width: 100%; max-width: 560px; background: var(--card); border-radius: 24px 24px 0 0; padding: 10px 18px calc(20px + env(safe-area-inset-bottom)); max-height: 90vh; overflow-y: auto; transform: translateY(14px); transition: transform 0.2s; }
+    .sheet-backdrop.open .sheet { transform: none; }
+    .grip { width: 42px; height: 4px; border-radius: 999px; background: #d8e1df; margin: 6px auto 12px; }
+    .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; position: sticky; top: 0; z-index: 2; background: var(--card); padding: 4px 0 8px; }
+    .sheet-head h2 { margin: 0; font-size: 1rem; }
+    .sheet-head button { width: 36px; height: 36px; border-radius: 12px; background: #f3ecdf; display: flex; align-items: center; justify-content: center; }
+    .sheet-head svg { width: 18px; height: 18px; }
+    .qty-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .qty-row:last-child { border-bottom: 0; }
+    .qty-row b { font-size: 0.85rem; display: block; }
+    .qty-row small { color: var(--muted); font-size: 0.72rem; }
+    .stepper { display: inline-flex; align-items: center; gap: 0; border: 1px solid var(--line); border-radius: 11px; overflow: hidden; }
+    .stepper button { width: 36px; height: 36px; font-size: 1.1rem; font-weight: 700; color: var(--teal-dark); background: #fffdf8; }
+    .stepper span { min-width: 34px; text-align: center; font-weight: 800; font-size: 0.88rem; }
+    .pack { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 14px; }
+    .pack label { display: flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 11px; padding: 10px; font-size: 0.78rem; font-weight: 700; background: #fffdf8; }
+    .pack input { accent-color: var(--teal); }
+    .mini-head { font-size: 0.8rem; font-weight: 800; margin: 16px 0 6px; color: #4a3826; }
+    .total-box { display: flex; align-items: center; justify-content: space-between; background: var(--soft); border-radius: 13px; padding: 12px 14px; margin: 14px 0; font-weight: 800; color: var(--teal-dark); }
+    .toast-wrap { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(90px + env(safe-area-inset-bottom)); z-index: 80; width: min(90%, 420px); display: flex; flex-direction: column; gap: 6px; }
+    .toast { background: #241a10; color: #fff; padding: 12px 14px; border-radius: 12px; font-size: 0.8rem; box-shadow: 0 12px 28px rgba(0,0,0,0.2); }
+    .toast.error { background: #7f1d1d; }
+    .skeleton { height: 110px; border-radius: var(--radius); background: linear-gradient(90deg, #f3ecdf, #f8faf9, #f3ecdf); background-size: 200% 100%; animation: shimmer 1.2s infinite; margin-bottom: 12px; }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    @media (min-width: 700px) { body { background: #efe4d2; } .shell { box-shadow: 0 0 40px rgba(0,0,0,0.06); } }
+    [dir="ltr"] body { direction: ltr; text-align: left; }
+    [dir="ltr"] .order-btn svg, [dir="ltr"] .day-actions svg { transform: scaleX(-1); }
+    [dir="ltr"] .brand { flex-direction: row-reverse; }
+    [dir="ltr"] .stat, [dir="ltr"] .qty-row, [dir="ltr"] .day-head { text-align: left; }
+    [dir="ltr"] .notif-badge { left: auto; right: 2px; }
+    @media (min-width: 760px) {
+      body { background: radial-gradient(circle at 20% 10%, #f2e7d5, #f3ecdf 45%, #efe4d2); }
+      main { padding: 20px 22px 30px; }
+      .day-card, .card { transition: box-shadow 0.18s ease, transform 0.18s ease; }
+      .day-card:hover { box-shadow: 0 16px 36px rgba(140,100,32,0.12); }
+      .order-btn:hover { background: #f0dfb8; }
+      .bottom-nav { border-radius: 18px 18px 0 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell" id="appShell" style="display:none;">
+    <header class="topbar">
+      <div class="brand"><img src="/logo.png" alt="" /><span>جانيتو فود</span></div>
+      <h1 id="pageTitle">القائمة</h1>
+      <div class="topbar-actions">
+        <button class="lang-btn" id="langBtn">FR</button>
+        <button class="nav-btn bell-btn" id="bellBtn" style="display:none; width:auto; flex-direction:row; padding:8px;" aria-label="الإشعارات">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+          <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+        </button>
+        <button class="nav-btn" id="logoutBtn" style="display:none; width:auto; flex-direction:row; gap:6px; padding:8px;" aria-label="خروج">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        </button>
+      </div>
+    </header>
+    <main>
+      <section id="screen-menu" class="screen active">
+        <div id="menuContent"><div class="skeleton"></div><div class="skeleton"></div></div>
+      </section>
+      <section id="screen-program" class="screen">
+        <div id="programContent"><div class="skeleton"></div></div>
+      </section>
+      <section id="screen-orders" class="screen">
+        <div id="ordersContent"><div class="skeleton"></div></div>
+      </section>
+      <section id="screen-account" class="screen">
+        <div id="accountContent"><div class="skeleton"></div></div>
+      </section>
+    </main>
+    <nav class="bottom-nav" style="grid-template-columns: repeat(2, 1fr);">
+      <button class="nav-btn active" data-screen="menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M4 9h16M8 13h3M8 16h6"/></svg>
+        القائمة
+      </button>
+      <button class="nav-btn" data-screen="orders">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+        طلباتي
+      </button>
+    </nav>
+  </div>
+
+  <div class="auth" id="authScreen" style="display:none;">
+    <div class="auth-logo">
+      <img src="/logo.png" alt="JANITOU FOOD" />
+      <h1>جانيتو فود</h1>
+      <p>اطلب وجبتك اليومية بسهولة</p>
+    </div>
+    <form id="loginForm" class="card" style="padding:16px;">
+      <div class="field"><label>رقم الهاتف</label><input type="tel" name="phone" inputmode="tel" autocomplete="tel" placeholder="0555 44 33 22" required /></div>
+      <div class="field"><label>رمز الدخول (4 أرقام)</label><input type="password" name="pin" inputmode="numeric" maxlength="4" pattern="\d{4}" placeholder="••••" required /></div>
+      <button class="btn" type="submit">دخول</button>
+      <p class="hint">نسخة تجريبية: 0555 44 33 22 — الرمز 1234</p>
+    </form>
+
+    <p class="hint" style="margin-top:16px;">الحساب يُنشأ من طرف مطعم جانيتو فود. للحصول على رمز الدخول، تواصل مع الإدارة.</p>
+  </div>
+
+  <div class="sheet-backdrop" id="sheetBackdrop">
+    <div class="sheet" id="sheet">
+      <div class="grip"></div>
+      <div class="sheet-head"><h2 id="sheetTitle"></h2><button id="sheetClose" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div id="sheetBody"></div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script src="/app/i18n.js"></script>
+  <script>
+    const API = '/api/v1/client';
+    const TOKEN_KEY = 'janitou_client_token';
+    const LANG = localStorage.getItem('janitou_lang') === 'fr' ? 'fr' : 'ar';
+    const AR = 'ar-DZ-u-nu-latn';
+    const LOCALE = LANG === 'fr' ? 'fr-DZ' : AR;
+    const PENDING_KEY = 'janitou_pending_order';
+    const STATUS = {
+      DRAFT: { ar: 'مسودة', cls: '' }, PENDING_APPROVAL: { ar: 'بانتظار الاعتماد', cls: 'progress' }, CONFIRMED: { ar: 'مؤكدة', cls: 'progress' }, PLANNED: { ar: 'مبرمجة', cls: 'progress' },
+      IN_PRODUCTION: { ar: 'قيد التحضير', cls: 'progress' }, PORTIONED_PACKAGED: { ar: 'معبأة', cls: 'progress' },
+      DISPATCHED: { ar: 'في التوصيل', cls: 'progress' }, DELIVERED: { ar: 'تم التسليم', cls: 'done' }, CANCELLED: { ar: 'ملغاة', cls: 'cancel' },
+    };
+    const CATEGORY_LABELS = {
+      STARTER: 'مقبلات', MAIN_COURSE: 'أطباق رئيسية', SIDE_DISH: 'أطباق جانبية',
+      DESSERT: 'تحليات', BEVERAGE: 'مشروبات', BREAD: 'خبز',
+    };
+    const ACCOUNT_STATUS = {
+      PENDING: { ar: 'حسابك قيد المراجعة. ستتمكن من الطلب بعد اعتماد الإدارة.', cls: 'warn' },
+      ACTIVE: { ar: '', cls: 'ok' },
+      SUSPENDED: { ar: 'الحساب موقوف مؤقتاً. تواصل مع الإدارة.', cls: 'danger' },
+      FROZEN: { ar: 'الحساب مجمد. تواصل مع الإدارة.', cls: 'danger' },
+      CANCELLED: { ar: 'الحساب ملغى.', cls: 'danger' },
+    };
+    const state = { screen: 'menu', account: null, days: [], dishes: [], catalogueSettings: null, catalogueCategory: 'ALL', config: null, orders: [], program: null, notifications: [] };
+
+    const $ = (selector) => document.querySelector(selector);
+
+    function esc(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+    }
+    function isoToday() {
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+    function isoAdd(iso, days) {
+      const [y, m, d] = iso.split('-').map(Number);
+      const date = new Date(y, m - 1, d + days);
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    }
+    function formatDay(iso) {
+      return new Intl.DateTimeFormat(LOCALE, { weekday: 'long' }).format(new Date(`${iso}T12:00:00`));
+    }
+    function formatDate(iso) {
+      return new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'long' }).format(new Date(`${iso}T12:00:00`));
+    }
+    function formatDeadline(isoString) {
+      return new Intl.DateTimeFormat(LOCALE, {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: LANG === 'fr' ? 'h23' : undefined,
+      }).format(new Date(isoString));
+    }
+    function money(value) {
+      return `${Number(value || 0).toLocaleString('en-US')}${LANG === 'fr' ? ' DA' : ' دج'}`;
+    }
+    function toast(message, isError) {
+      const el = document.createElement('div');
+      el.className = 'toast' + (isError ? ' error' : '');
+      el.textContent = message;
+      $('#toastWrap').appendChild(el);
+      setTimeout(() => el.remove(), 3200);
+    }
+
+    function token() { return localStorage.getItem(TOKEN_KEY); }
+    async function api(path, options = {}) {
+      const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+      if (token()) headers.Authorization = `Bearer ${token()}`;
+      const res = await fetch(API + path, { ...options, headers });
+      const text = await res.text();
+      let data = {};
+      try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
+      if (res.status === 401) {
+        localStorage.removeItem(TOKEN_KEY);
+        showAuth();
+        throw new Error(data.message || 'انتهت الجلسة، أعد الدخول.');
+      }
+      if (!res.ok) throw new Error(data.message || 'تعذر تنفيذ العملية');
+      return data;
+    }
+
+    function showAuth() {
+      state.account = null;
+      $('#appShell').style.display = 'none';
+      $('#authScreen').style.display = 'block';
+    }
+    function showApp() {
+      $('#authScreen').style.display = 'none';
+      $('#appShell').style.display = 'block';
+    }
+
+    function titleFor(screen) {
+      return { menu: 'القائمة', orders: 'طلباتي' }[screen] || 'جانيتو فود';
+    }
+    function go(screen) {
+      state.screen = screen;
+      document.querySelectorAll('.screen').forEach((section) => section.classList.toggle('active', section.id === 'screen-' + screen));
+      document.querySelectorAll('.nav-btn[data-screen]').forEach((btn) => btn.classList.toggle('active', btn.dataset.screen === screen));
+      $('#pageTitle').textContent = titleFor(screen);
+      if (screen === 'menu') loadMenu();
+      if (screen === 'orders') loadGuestOrders();
+    }
+
+    async function boot() {
+      try {
+        state.config = (await api('/config')).settings;
+        showApp();
+        await loadMenu();
+      } catch (error) {
+        $('#menuContent').innerHTML = `<div class="empty">${esc(error.message)}</div>`;
+      }
+    }
+
+    async function loadMenu() {
+      try {
+        if (!state.config) state.config = (await api('/config')).settings;
+        const from = isoToday();
+        const [menuData, catalogue] = await Promise.all([
+          api(`/menu?from=${from}&to=${isoAdd(from, 6)}`),
+          api('/catalogue'),
+        ]);
+        state.days = menuData.days;
+        state.dishes = catalogue.dishes || [];
+        state.catalogueSettings = catalogue;
+        renderMenu();
+      } catch (error) {
+        $('#menuContent').innerHTML = `<div class="empty">${esc(error.message)}</div>`;
+      }
+    }
+
+    function statusBanner() {
+      if (!state.account) return '';
+      if (state.account.reviewRequired) {
+        return `<div class="banner warn">${LANG === 'fr'
+          ? 'Votre compte doit être revu par l’administration avant de reprendre les commandes.'
+          : 'يجب مراجعة الحساب من الإدارة قبل استئناف الطلبات.'}</div>`;
+      }
+      const status = state.account.accountStatus || 'ACTIVE';
+      const info = ACCOUNT_STATUS[status] || ACCOUNT_STATUS.ACTIVE;
+      if (!info.ar) return '';
+      return `<div class="banner ${info.cls}">${esc(info.ar)}</div>`;
+    }
+
+    function categoryLabel(category) {
+      return CATEGORY_LABELS[category] || category || '';
+    }
+
+    function catalogueCard(dish) {
+      const canOrder = true;
+      return `<article class="catalog-card">
+        <div class="photo">${dish.photoUrl ? `<img src="${esc(dish.photoUrl)}" alt="${esc(dish.displayName)}" loading="lazy" />` : `<div class="fallback">${esc(dish.displayName.charAt(0))}</div>`}</div>
+        <div class="body">
+          <span class="cat">${esc(categoryLabel(dish.category))}</span>
+          <b>${esc(dish.displayName)}</b>
+          <div class="foot"><span class="price">${money(dish.price)}</span><button class="add" ${canOrder ? '' : 'disabled'} onclick="openCatalogueOrder('${esc(dish.id)}')" aria-label="أضف">+</button></div>
+        </div>
+      </article>`;
+    }
+
+    function dishCard(dish, label, price) {
+      return `<div class="dish">
+        ${dish.photoUrl ? `<img src="${esc(dish.photoUrl)}" alt="${esc(dish.displayName)}" loading="lazy" />` : `<div class="fallback">${esc(dish.displayName.charAt(0))}</div>`}
+        <div class="meta"><small>${label}</small><b>${esc(dish.displayName)}</b><div class="price">${money(price)}</div></div>
+      </div>`;
+    }
+
+    function renderMenu() {
+      const dishes = state.dishes || [];
+      const categories = ['ALL', ...new Set(dishes.map((dish) => dish.category).filter(Boolean))];
+      const filtered = state.catalogueCategory === 'ALL'
+        ? dishes
+        : dishes.filter((dish) => dish.category === state.catalogueCategory);
+      const catalogueHtml = dishes.length
+        ? `<div class="catalog-grid">${filtered.map(catalogueCard).join('')}</div>`
+        : '<div class="empty">لا توجد أطباق منشورة حالياً</div>';
+
+      $('#menuContent').innerHTML = `
+        <section class="catalog-hero">
+          <small>JANITOU FOOD</small>
+          <h2>كل أطباق جانيتو<br />في مكان واحد</h2>
+          <p>اختر ما يعجبك، حدّد الكمية ووقت التسليم، وأدخل معلومات التوصيل عند تأكيد الطلب.</p>
+          <button class="btn" onclick="openCatalogueOrder()">اطلب الآن</button>
+        </section>
+        <div class="chips">
+          ${categories.map((category) => `<button class="chip ${state.catalogueCategory === category ? 'active' : ''}" onclick="setCatalogueCategory('${category}')">${category === 'ALL' ? 'كل الأطباق' : esc(categoryLabel(category))}</button>`).join('')}
+        </div>
+        ${catalogueHtml}`;
+    }
+
+    function setCatalogueCategory(category) {
+      state.catalogueCategory = category;
+      renderMenu();
+    }
+
+    function savedGuestContact() {
+      try { return JSON.parse(localStorage.getItem('janitou_guest_contact') || '{}'); } catch { return {}; }
+    }
+
+    function openCatalogueOrder(preselectedId) {
+      const settings = state.catalogueSettings || {};
+      const dishes = state.dishes || [];
+      if (!dishes.length) { toast('لا توجد أطباق متاحة', true); return; }
+      const draft = Object.fromEntries(dishes.map((dish) => [dish.id, dish.id === preselectedId ? 1 : 0]));
+      const extras = {};
+      const availableExtras = (settings.extras || []).filter((extra) => !extra.families?.length);
+      for (const extra of availableExtras) extras[extra.name] = 0;
+      const selectedDish = dishes.find((dish) => dish.id === preselectedId);
+      const contact = savedGuestContact();
+      const html = `
+        <form id="catalogueForm">
+          <div class="mini-head">معلومات التوصيل</div>
+          <div class="field"><label>الاسم</label><input name="contactName" maxlength="80" value="${esc(contact.contactName || '')}" required /></div>
+          <div class="field"><label>رقم الهاتف</label><input name="phone" type="tel" maxlength="20" value="${esc(contact.phone || '')}" required /></div>
+          <div class="field"><label>عنوان التوصيل</label><input name="deliveryAddress" maxlength="200" value="${esc(contact.deliveryAddress || '')}" required /></div>
+          <div class="mini-head">تاريخ التسليم</div>
+          <div class="field"><input type="date" name="date" min="${isoToday()}" max="${isoAdd(isoToday(), 30)}" value="${isoToday()}" required /></div>
+          <div class="mini-head">وقت الوجبة</div>
+          <div class="pack">
+            <label><input type="radio" name="serviceTime" value="LUNCH" checked /> غداء</label>
+            <label><input type="radio" name="serviceTime" value="DINNER" /> عشاء</label>
+          </div>
+          <div class="mini-head">اختر الأطباق</div>
+          ${dishes.map((dish) => `
+            <div class="catalog-row">
+              ${dish.photoUrl ? `<img src="${esc(dish.photoUrl)}" alt="" />` : `<span class="fallback">${esc(dish.displayName.charAt(0))}</span>`}
+              <div class="grow"><b>${esc(dish.displayName)}</b><small>${money(dish.price)} · ${esc(categoryLabel(dish.category))}</small></div>
+              <div class="stepper" data-cat-dish="${esc(dish.id)}"><button type="button" data-step="-1">−</button><span>${draft[dish.id]}</span><button type="button" data-step="1">+</button></div>
+            </div>`).join('')}
+          ${selectedDish ? `<p class="hint" style="text-align:right;">تم اختيار «${esc(selectedDish.displayName)}»</p>` : ''}
+          <div class="mini-head">التغليف</div>
+          <div class="pack">
+            <label><input type="radio" name="packaging" value="INDIVIDUAL" checked /> فردي</label>
+            <label><input type="radio" name="packaging" value="COLLECTIVE" /> جماعي</label>
+          </div>
+          ${availableExtras.length ? `<div class="mini-head">الإضافات</div>
+            ${availableExtras.map((extra) => `
+              <div class="qty-row">
+                <div><b>${esc(extra.name)}</b><small>${money(extra.price)}</small></div>
+                <div class="stepper" data-cat-extra="${esc(extra.name)}"><button type="button" data-step="-1">−</button><span>0</span><button type="button" data-step="1">+</button></div>
+              </div>`).join('')}` : ''}
+          <div class="field" style="margin-top:14px;"><label>ملاحظات</label><textarea name="notes" rows="2" maxlength="300" placeholder="بدون بصل، حار قليل..."></textarea></div>
+          <div class="total-box"><span>المجموع</span><span id="catalogueTotal">0 دج</span></div>
+          <button class="btn" type="submit" id="submitCatalogue">تأكيد الطلب</button>
+        </form>`;
+      openSheet('اطلب من كل الأطباق', html);
+      const updateTotal = () => {
+        let portions = 0;
+        let total = 0;
+        for (const dish of dishes) {
+          const quantity = draft[dish.id] || 0;
+          portions += quantity;
+          total += quantity * dish.price;
+        }
+        for (const extra of availableExtras) {
+          total += (extras[extra.name] || 0) * extra.price;
+        }
+        if (portions > 0) total += (settings.deliveryPrice || 0) + (settings.packagingPrice || 0) * portions;
+        $('#catalogueTotal').textContent = money(total);
+        return { portions, total };
+      };
+      updateTotal();
+      document.querySelectorAll('#sheetBody .stepper').forEach((stepper) => {
+        stepper.addEventListener('click', (event) => {
+          const button = event.target.closest('[data-step]');
+          if (!button) return;
+          const span = stepper.querySelector('span');
+          if (stepper.dataset.catDish) {
+            const id = stepper.dataset.catDish;
+            draft[id] = Math.max(0, Math.min(50, Number(span.textContent) + Number(button.dataset.step)));
+            span.textContent = String(draft[id]);
+          } else if (stepper.dataset.catExtra) {
+            const name = stepper.dataset.catExtra;
+            extras[name] = Math.max(0, Math.min(50, Number(span.textContent) + Number(button.dataset.step)));
+            span.textContent = String(extras[name]);
+          }
+          updateTotal();
+        });
+      });
+      $('#catalogueForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const summary = updateTotal();
+        if (summary.portions === 0) { toast('اختر طبقاً واحداً على الأقل', true); return; }
+        const submit = $('#submitCatalogue');
+        submit.disabled = true;
+        const contact = {
+          contactName: form.elements.contactName.value.trim(),
+          phone: form.elements.phone.value.trim(),
+          deliveryAddress: form.elements.deliveryAddress.value.trim(),
+        };
+        const payload = {
+          ...contact,
+          date: form.elements.date.value,
+          serviceTime: form.elements.serviceTime.value,
+          packaging: form.elements.packaging.value,
+          items: dishes.filter((dish) => draft[dish.id] > 0).map((dish) => ({ dishId: dish.id, portions: draft[dish.id] })),
+          extras: availableExtras.filter((extra) => extras[extra.name] > 0).map((extra) => ({ name: extra.name, quantity: extras[extra.name] })),
+          notes: form.elements.notes.value,
+        };
+        try {
+          const result = await api('/guest-orders', { method: 'POST', body: JSON.stringify(payload) });
+          localStorage.setItem('janitou_guest_contact', JSON.stringify(contact));
+          localStorage.setItem('janitou_guest_phone', contact.phone);
+          state.guestPhone = contact.phone;
+          closeSheet();
+          openSheet('تم تسجيل طلبك', `
+            <div class="banner ${result.order.pending ? 'warn' : 'ok'}">${result.order.pending ? 'تم استلام طلبكم وهو بانتظار اعتماد الإدارة. سنتواصل معكم بعد التأكيد.' : 'تم تأكيد طلبكم بنجاح. سنتواصل معكم لتأكيد التوصيل.'}</div>
+            <div class="total-box"><span>رقم الطلب</span><span>${esc(result.order.orderNumber)}</span></div>
+            <p class="hint">المجموع: ${money(result.order.totalPrice)}</p>
+            <button class="btn" onclick="closeSheet(); go('orders')">تتبع الطلب</button>
+            <button class="btn secondary" style="margin-top:8px;" onclick="closeSheet()">إغلاق</button>
+          `);
+        } catch (error) {
+          toast(error.message, true);
+          submit.disabled = false;
+        }
+      });
+    }
+
+    async function openOrder(date, existing) {
+      let day = state.days.find((entry) => entry.date === date);
+      if (!day) {
+        try {
+          const data = await api(`/menu?from=${date}&to=${date}`);
+          day = data.days[0];
+          if (!day) throw new Error('لا توجد قائمة لهذا اليوم');
+          state.days.push(day);
+        } catch (error) {
+          toast(error.message, true);
+          return;
+        }
+      }
+      if (!state.config) return;
+      const lunchStart = existing ? existing.lunchPortions : 0;
+      const dinnerStart = existing ? existing.dinnerPortions : 0;
+      const lunchPack = existing?.packaging?.lunch || 'INDIVIDUAL';
+      const dinnerPack = existing?.packaging?.dinner || 'INDIVIDUAL';
+      const initialAlternatives = Object.fromEntries((existing?.alternatives || []).map((entry) => [entry.dishId, entry.portions]));
+      const initialExtras = Object.fromEntries((existing?.extras || []).map((entry) => [entry.name, entry.quantity]));
+      const html = `
+        <form id="orderForm">
+          <div class="mini-head">الغداء</div>
+          <div class="qty-row">
+            <div><b>${esc(day.lunch ? day.lunch.displayName : 'لا يوجد طبق')}</b><small>${money(state.config.lunchPrice)} للوجبة</small></div>
+            <div class="stepper" data-service="lunch"><button type="button" data-step="-1">−</button><span id="lunchCount">${lunchStart}</span><button type="button" data-step="1">+</button></div>
+          </div>
+          <div class="pack" id="lunchPack">
+            <label><input type="radio" name="lunchPackaging" value="INDIVIDUAL" ${lunchPack === 'INDIVIDUAL' ? 'checked' : ''} /> تغليف فردي</label>
+            <label><input type="radio" name="lunchPackaging" value="COLLECTIVE" ${lunchPack === 'COLLECTIVE' ? 'checked' : ''} /> تغليف جماعي</label>
+          </div>
+
+          <div class="mini-head">العشاء</div>
+          <div class="qty-row">
+            <div><b>${esc(day.dinner ? day.dinner.displayName : 'لا يوجد طبق')}</b><small>${money(state.config.dinnerPrice)} للوجبة</small></div>
+            <div class="stepper" data-service="dinner"><button type="button" data-step="-1">−</button><span id="dinnerCount">${dinnerStart}</span><button type="button" data-step="1">+</button></div>
+          </div>
+          <div class="pack" id="dinnerPack">
+            <label><input type="radio" name="dinnerPackaging" value="INDIVIDUAL" ${dinnerPack === 'INDIVIDUAL' ? 'checked' : ''} /> تغليف فردي</label>
+            <label><input type="radio" name="dinnerPackaging" value="COLLECTIVE" ${dinnerPack === 'COLLECTIVE' ? 'checked' : ''} /> تغليف جماعي</label>
+          </div>
+
+          <div class="mini-head">البدائل</div>
+          ${day.alternatives.slice(0, 8).map((dish) => `
+            <div class="qty-row">
+              <div><b>${esc(dish.displayName)}</b><small>${money(dish.price)} للوجبة</small></div>
+              <div class="stepper" data-alt="${esc(dish.id)}"><button type="button" data-step="-1">−</button><span>${initialAlternatives[dish.id] || 0}</span><button type="button" data-step="1">+</button></div>
+            </div>`).join('') || '<p class="hint">لا توجد بدائل</p>'}
+
+          <div class="mini-head">الإضافات</div>
+          ${(state.config.extras || []).map((extra) => `
+            <div class="qty-row">
+              <div><b>${esc(extra.name)}</b><small>${money(extra.price)} · <span data-suggest>المقترح: 0</span></small></div>
+              <div class="stepper" data-extra="${esc(extra.name)}"><button type="button" data-step="-1">−</button><span>${initialExtras[extra.name] || 0}</span><button type="button" data-step="1">+</button></div>
+            </div>`).join('') || '<p class="hint">لا توجد إضافات</p>'}
+
+          <div class="field" style="margin-top:14px;"><label>ملاحظات</label><textarea name="notes" rows="2" maxlength="300" placeholder="ملاحظات خاصة بالطلب">${esc(existing?.notes || '')}</textarea></div>
+
+          <div class="total-box"><span>المجموع</span><span id="orderTotal">0 دج</span></div>
+          <button class="btn" type="submit" id="submitOrder">${existing ? 'حفظ التعديل' : 'تأكيد الطلب'}</button>
+        </form>`;
+      openSheet(`${existing ? 'تعديل طلب' : 'طلب'} ${formatDay(date)} ${formatDate(date)}`, html);
+      const draft = { lunch: lunchStart, dinner: dinnerStart, alternatives: { ...initialAlternatives }, extras: { ...initialExtras } };
+      const updateTotal = () => {
+        const meals = draft.lunch + draft.dinner;
+        const familyCounts = {};
+        const addFamily = (family, quantity) => {
+          if (!family || quantity <= 0) return;
+          familyCounts[family] = (familyCounts[family] || 0) + quantity;
+        };
+        addFamily(day.lunch?.family, draft.lunch);
+        addFamily(day.dinner?.family, draft.dinner);
+        let alternativeMeals = 0;
+        for (const [dishId, quantity] of Object.entries(draft.alternatives)) {
+          const dish = day.alternatives.find((entry) => entry.id === dishId);
+          alternativeMeals += quantity;
+          addFamily(dish?.family, quantity);
+        }
+        const totalMeals = meals + alternativeMeals;
+        const suggestions = {};
+        for (const extra of state.config.extras || []) {
+          const perMeals = extra.perMeals || 1;
+          const eligible = extra.families?.length
+            ? extra.families.reduce((sum, family) => sum + (familyCounts[family] || 0), 0)
+            : totalMeals;
+          suggestions[extra.name] = Math.ceil(eligible / perMeals);
+        }
+        for (const name of Object.keys(draft.extras)) {
+          draft.extras[name] = Math.min(draft.extras[name], suggestions[name] || 0);
+        }
+        let total = draft.lunch * state.config.lunchPrice + draft.dinner * state.config.dinnerPrice;
+        total += Object.entries(draft.alternatives).reduce((sum, [dishId, quantity]) => {
+          const dish = day.alternatives.find((entry) => entry.id === dishId);
+          return sum + (dish ? dish.price * quantity : 0);
+        }, 0);
+        total += Object.entries(draft.extras).reduce((sum, [name, quantity]) => {
+          const extra = state.config.extras.find((entry) => entry.name === name);
+          return sum + (extra ? extra.price * quantity : 0);
+        }, 0);
+        total += state.config.deliveryPrice + state.config.packagingPrice * meals;
+        $('#orderTotal').textContent = money(total);
+        document.querySelectorAll('[data-extra]').forEach((stepper) => {
+          const quantity = draft.extras[stepper.dataset.extra] || 0;
+          const suggested = suggestions[stepper.dataset.extra] || 0;
+          stepper.querySelector('span').textContent = String(quantity);
+          stepper.querySelector('[data-step="1"]').disabled = quantity >= suggested;
+          const suggest = stepper.closest('.qty-row').querySelector('[data-suggest]');
+          if (suggest) suggest.textContent = `المقترح: ${suggested}`;
+        });
+        $('#lunchPack').style.display = draft.lunch > 0 ? 'grid' : 'none';
+        $('#dinnerPack').style.display = draft.dinner > 0 ? 'grid' : 'none';
+      };
+      updateTotal();
+
+      document.querySelectorAll('.stepper').forEach((stepper) => {
+        stepper.addEventListener('click', (event) => {
+          const button = event.target.closest('[data-step]');
+          if (!button) return;
+          const span = stepper.querySelector('span');
+          const next = Math.max(0, Number(span.textContent) + Number(button.dataset.step));
+          if (stepper.dataset.service === 'lunch') draft.lunch = day.lunch ? Math.min(next, 30) : 0;
+          else if (stepper.dataset.service === 'dinner') draft.dinner = day.dinner ? Math.min(next, 30) : 0;
+          else if (stepper.dataset.alt) draft.alternatives[stepper.dataset.alt] = Math.min(next, 20);
+          else if (stepper.dataset.extra) draft.extras[stepper.dataset.extra] = Math.min(next, draft.lunch + draft.dinner);
+          span.textContent = String(
+            stepper.dataset.service === 'lunch' ? draft.lunch :
+            stepper.dataset.service === 'dinner' ? draft.dinner :
+            stepper.dataset.alt ? draft.alternatives[stepper.dataset.alt] :
+            draft.extras[stepper.dataset.extra]
+          );
+          updateTotal();
+        });
+      });
+
+      $('#orderForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (draft.lunch + draft.dinner === 0) { toast('اختر وجبة غداء أو عشاء', true); return; }
+        const form = event.target;
+        const submit = $('#submitOrder');
+        submit.disabled = true;
+        const orderPath = existing ? `/orders/${existing.id}` : '/orders';
+        const orderMethod = existing ? 'PATCH' : 'POST';
+        const orderPayload = {
+          date,
+          lunchPortions: draft.lunch,
+          dinnerPortions: draft.dinner,
+          lunchPackaging: draft.lunch > 0 ? form.elements.lunchPackaging.value : undefined,
+          dinnerPackaging: draft.dinner > 0 ? form.elements.dinnerPackaging.value : undefined,
+          alternatives: Object.entries(draft.alternatives).map(([dishId, portions]) => ({ dishId, portions })),
+          extras: Object.entries(draft.extras).map(([name, quantity]) => ({ name, quantity })),
+          notes: form.elements.notes.value,
+        };
+        try {
+          await api(orderPath, {
+            method: orderMethod,
+            body: JSON.stringify(orderPayload),
+          });
+          closeSheet();
+          toast(existing ? 'تم حفظ التعديل' : 'تم تسجيل الطلب بنجاح');
+          loadGuestOrders();
+          loadMenu();
+          loadNotifications();
+        } catch (error) {
+          if (!navigator.onLine || error instanceof TypeError) {
+            await queuePending(orderPath, orderMethod, orderPayload);
+            closeSheet();
+          } else {
+            toast(error.message, true);
+            submit.disabled = false;
+          }
+        }
+      });
+    }
+
+    const WEEKDAYS = LANG === 'fr'
+      ? ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
+      : ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+    async function loadProgram() {
+      try {
+        const data = await api('/program');
+        state.program = data.entries;
+        renderProgram();
+      } catch (error) {
+        $('#programContent').innerHTML = `<div class="empty">${esc(error.message)}</div>`;
+      }
+    }
+
+    function renderProgram() {
+      if (!state.program) return;
+      const rows = state.program.map((entry) => {
+        const active = entry.lunchPortions + entry.dinnerPortions > 0;
+        return `<article class="card day-card">
+          <div class="day-head"><strong>${WEEKDAYS[entry.weekday]}</strong><span class="day-state ${active ? '' : 'closed'}">${active ? 'مفعّل' : 'غير مفعّل'}</span></div>
+          <div class="qty-row">
+            <div><b>الغداء</b><small>${money(state.config?.lunchPrice)} للوجبة</small></div>
+            <div class="stepper" data-prog-day="${entry.weekday}" data-prog-service="lunch">
+              <button type="button" data-step="-1">−</button><span>${entry.lunchPortions}</span><button type="button" data-step="1">+</button>
+            </div>
+            <select class="pack-select" data-prog-pack-day="${entry.weekday}" data-prog-pack-service="lunch">
+              <option value="INDIVIDUAL" ${entry.lunchPackaging !== 'COLLECTIVE' ? 'selected' : ''}>فردي</option>
+              <option value="COLLECTIVE" ${entry.lunchPackaging === 'COLLECTIVE' ? 'selected' : ''}>جماعي</option>
+            </select>
+          </div>
+          <div class="qty-row">
+            <div><b>العشاء</b><small>${money(state.config?.dinnerPrice)} للوجبة</small></div>
+            <div class="stepper" data-prog-day="${entry.weekday}" data-prog-service="dinner">
+              <button type="button" data-step="-1">−</button><span>${entry.dinnerPortions}</span><button type="button" data-step="1">+</button>
+            </div>
+            <select class="pack-select" data-prog-pack-day="${entry.weekday}" data-prog-pack-service="dinner">
+              <option value="INDIVIDUAL" ${entry.dinnerPackaging !== 'COLLECTIVE' ? 'selected' : ''}>فردي</option>
+              <option value="COLLECTIVE" ${entry.dinnerPackaging === 'COLLECTIVE' ? 'selected' : ''}>جماعي</option>
+            </select>
+          </div>
+        </article>`;
+      }).join('');
+      $('#programContent').innerHTML = `${statusBanner()}
+        <div class="banner ok">حدّد كميات الغداء والعشاء لكل يوم. بعد الحفظ تُنشأ الطلبات تلقائياً لليوم والستة أيام القادمة.</div>
+        ${rows}
+        <button class="btn" id="saveProgram" style="margin-top:6px;">حفظ البرنامج وتوليد الطلبات</button>`;
+    }
+
+    function guestPhone() {
+      return state.guestPhone || savedGuestContact().phone || localStorage.getItem('janitou_guest_phone') || '';
+    }
+
+    async function loadGuestOrders(orderNumber = '') {
+      const phone = guestPhone();
+      if (!phone) {
+        state.orders = [];
+        renderOrders();
+        return;
+      }
+      try {
+        const query = new URLSearchParams({ phone });
+        if (orderNumber) query.set('orderNumber', orderNumber);
+        const data = await api(`/guest-orders?${query.toString()}`);
+        state.orders = data.orders || [];
+        renderOrders();
+      } catch (error) {
+        $('#ordersContent').innerHTML = `<div class="empty">${esc(error.message)}</div>`;
+      }
+    }
+
+    function renderOrders() {
+      const phone = guestPhone();
+      const lookup = `
+        <form class="card" id="trackForm" style="padding:14px; margin-bottom:12px;">
+          <div class="field"><label>رقم الهاتف</label><input name="phone" type="tel" maxlength="20" value="${esc(phone)}" required /></div>
+          <div class="field"><label>رقم الطلب (اختياري)</label><input name="orderNumber" maxlength="40" placeholder="JNT-..." /></div>
+          <button class="btn" type="submit">عرض الطلبات</button>
+        </form>`;
+      if (!phone) {
+        $('#ordersContent').innerHTML = `${lookup}<div class="empty">أدخل رقم الهاتف لعرض طلباتك.</div>`;
+      } else if (!state.orders.length) {
+        $('#ordersContent').innerHTML = `${lookup}<div class="empty">لا توجد طلبات لهذا الرقم.</div>`;
+      } else {
+        $('#ordersContent').innerHTML = `${lookup}<div class="list">${state.orders.map((order) => {
+          const status = STATUS[order.status] || { ar: order.status, cls: '' };
+          return `<article class="card row-card" style="flex-wrap:wrap;">
+            <div style="flex:1; min-width:0;">
+              <strong>${esc(formatDay(order.deliveryDate))} ${esc(formatDate(order.deliveryDate))}</strong>
+              <span>${order.totalPortions} وجبة · <bdi>${esc(order.orderNumber)}</bdi> · ${order.serviceTime === 'LUNCH' ? 'غداء' : 'عشاء'}</span>
+              ${order.items?.length ? `<small style="display:block;margin-top:4px;color:var(--muted);">${order.items.map((item) => `${esc(item.name)} ×${item.portions}`).join(' · ')}</small>` : ''}
+              <span class="status ${status.cls}" style="display:inline-block; margin-top:6px;">${esc(status.ar)}</span>
+            </div>
+            <span class="price-total">${money(order.totalPrice)}</span>
+          </article>`;
+        }).join('')}</div>`;
+      }
+      const form = $('#trackForm');
+      if (form) {
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const data = new FormData(event.target);
+          const nextPhone = String(data.get('phone') || '').trim();
+          const orderNumber = String(data.get('orderNumber') || '').trim();
+          localStorage.setItem('janitou_guest_phone', nextPhone);
+          state.guestPhone = nextPhone;
+          state.orders = [];
+          void loadGuestOrders(orderNumber);
+        });
+      }
+    }
+
+    function renderAccount() {
+      if (!state.account) return;
+      const status = state.account.accountStatus || 'ACTIVE';
+      const statusLabels = LANG === 'fr'
+        ? { PENDING: 'En attente', ACTIVE: 'Actif', SUSPENDED: 'Suspendu', FROZEN: 'Gelé', CANCELLED: 'Annulé' }
+        : { PENDING: 'بانتظار الاعتماد', ACTIVE: 'نشط', SUSPENDED: 'موقوف', FROZEN: 'مجمد', CANCELLED: 'ملغى' };
+      const info = ACCOUNT_STATUS[status] || ACCOUNT_STATUS.ACTIVE;
+      $('#accountContent').innerHTML = `
+        ${statusBanner()}
+        <div class="balance-card">
+          <span>${LANG === 'fr' ? 'Solde disponible' : 'الرصيد المتاح'}</span>
+          <b>${money(state.account.balance)}</b>
+        </div>
+        <div class="card" style="padding:16px; margin-bottom:12px;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+            <div style="width:52px;height:52px;border-radius:16px;background:var(--soft);color:var(--teal-dark);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.15rem;">${esc(state.account.contactName.charAt(0))}</div>
+            <div><strong style="display:block;">${esc(state.account.companyName || state.account.contactName)}</strong><span style="color:var(--muted);font-size:0.76rem;"><bdi>${esc(state.account.phone)}</bdi></span></div>
+          </div>
+          <p class="hint" style="text-align:right;margin:0 0 6px;"><bdi>${esc(state.account.deliveryAddress)}</bdi></p>
+          ${state.account.distribution ? `<p class="hint" style="text-align:right;margin:0 0 6px;">${LANG === 'fr' ? 'Distribution' : 'التوزيع'} : ${esc(state.account.distribution.label || distributionLabel(state.account.distribution.type))}</p>` : ''}
+          <p class="hint" style="text-align:right;margin:0;">${LANG === 'fr' ? 'Statut' : 'الحالة'} : ${esc(statusLabels[status] || status)}</p>
+        </div>
+        <button class="btn secondary" onclick="go('orders')">طلباتي</button>
+      `;
+    }
+
+    function distributionLabel(type) {
+      const labels = {
+        STANDARD_DELIVERY: { ar: 'توصيل عادي', fr: 'Livraison standard' },
+        EXPRESS: { ar: 'توصيل سريع', fr: 'Livraison express' },
+        PICKUP: { ar: 'استلام من الفرع', fr: 'Retrait sur place' },
+      };
+      return (labels[type] || labels.STANDARD_DELIVERY)[LANG];
+    }
+
+    function pendingPayload() {
+      try {
+        const raw = localStorage.getItem(PENDING_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function pendingBanner() {
+      if (!pendingPayload()) return '';
+      return `<div class="pending-banner">${LANG === 'fr'
+        ? 'Une commande est en attente d’envoi (hors ligne). Elle sera transmise au retour du réseau.'
+        : 'يوجد طلب في انتظار الإرسال (دون اتصال). سيُرسل تلقائياً عند عودة الشبكة.'}</div>`;
+    }
+
+    async function queuePending(path, method, body) {
+      localStorage.setItem(PENDING_KEY, JSON.stringify({ path, method, body }));
+      toast(LANG === 'fr' ? 'Commande conservée hors ligne' : 'تم حفظ الطلب دون اتصال');
+      renderMenu();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function flushPending() {
+      const pending = pendingPayload();
+      if (!pending || !navigator.onLine) return;
+      try {
+        await api(pending.path, {
+          method: pending.method,
+          body: JSON.stringify(pending.body),
+        });
+        localStorage.removeItem(PENDING_KEY);
+        toast(LANG === 'fr' ? 'Commande hors ligne envoyée' : 'تم إرسال الطلب المؤجل');
+        await loadGuestOrders();
+        await loadMenu();
+        await loadNotifications();
+      } catch {
+        // Keep the draft for the next retry.
+      }
+    }
+
+    function notificationText(notification) {
+      const data = notification.data || {};
+      const fr = LANG === 'fr';
+      switch (notification.type) {
+        case 'ORDER_CREATED':
+          return {
+            title: fr ? 'Commande enregistrée' : 'تم تسجيل الطلب',
+            body: fr
+              ? `${data.orderNumber} — ${formatDate(String(data.date))} — ${money(data.total)}`
+              : `${data.orderNumber} — ${formatDate(String(data.date))} — ${money(data.total)}`,
+          };
+        case 'ORDER_UPDATED':
+          return {
+            title: fr ? 'Commande modifiée' : 'تم تعديل الطلب',
+            body: fr
+              ? `${data.orderNumber} — nouveau total ${money(data.total)}`
+              : `${data.orderNumber} — المجموع الجديد ${money(data.total)}`,
+          };
+        case 'ORDER_CANCELLED':
+          return {
+            title: fr ? 'Commande annulée' : 'تم إلغاء الطلب',
+            body: String(data.orderNumber || ''),
+          };
+        case 'ACCOUNT_CREDITED':
+          return {
+            title: fr ? 'Compte crédité' : 'تمت تعبئة الرصيد',
+            body: fr
+              ? `+${money(data.amount)} — solde ${money(data.balance)}`
+              : `+${money(data.amount)} — الرصيد ${money(data.balance)}`,
+          };
+        case 'ACCOUNT_REVIEWED':
+          return {
+            title: fr ? 'Compte réactivé' : 'تمت مراجعة الحساب',
+            body: fr ? 'Vous pouvez reprendre les commandes.' : 'يمكنك استئناف الطلبات.',
+          };
+        default:
+          return { title: notification.type, body: '' };
+      }
+    }
+
+    function updateNotifBadge() {
+      const unread = state.notifications.filter((notification) => !notification.readAt).length;
+      const badge = $('#notifBadge');
+      if (!badge) return;
+      badge.textContent = String(unread);
+      badge.style.display = unread > 0 ? 'flex' : 'none';
+    }
+
+    async function loadNotifications() {
+      try {
+        const data = await api('/notifications');
+        state.notifications = data.notifications;
+        updateNotifBadge();
+      } catch {
+        // Notifications are non-blocking.
+      }
+    }
+
+    async function openNotifications() {
+      const items = state.notifications.map((notification) => {
+        const text = notificationText(notification);
+        return `<div class="notif-item ${notification.readAt ? '' : 'unread'}">
+          <div class="notif-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></div>
+          <div><strong>${esc(text.title)}</strong><p>${esc(text.body)}</p><p>${esc(formatDeadline(notification.createdAt))}</p></div>
+        </div>`;
+      }).join('');
+      openSheet(
+        LANG === 'fr' ? 'Notifications' : 'الإشعارات',
+        items || `<div class="empty">${LANG === 'fr' ? 'Aucune notification' : 'لا توجد إشعارات'}</div>`
+      );
+      if (state.notifications.some((notification) => !notification.readAt)) {
+        try {
+          await api('/notifications/read', { method: 'PATCH' });
+          state.notifications = state.notifications.map((notification) => ({
+            ...notification,
+            readAt: notification.readAt || new Date().toISOString(),
+          }));
+          updateNotifBadge();
+        } catch {
+          // Ignore read failures.
+        }
+      }
+    }
+
+    function openSheet(title, html) {
+      $('#sheetTitle').textContent = title;
+      $('#sheetBody').innerHTML = html;
+      $('#sheetBackdrop').classList.add('open');
+    }
+    function closeSheet() {
+      $('#sheetBackdrop').classList.remove('open');
+      $('#sheetBody').innerHTML = '';
+    }
+
+    document.addEventListener('click', async (event) => {
+      const nav = event.target.closest('[data-screen]');
+      if (nav) go(nav.dataset.screen);
+      if (event.target.closest('#sheetClose') || event.target === $('#sheetBackdrop')) closeSheet();
+      if (event.target.closest('#logoutBtn')) {
+        const current = token();
+        localStorage.removeItem(TOKEN_KEY);
+        if (current) fetch(API + '/logout', { method: 'POST', headers: { Authorization: `Bearer ${current}` } }).catch(() => {});
+        showAuth();
+        return;
+      }
+
+      const editButton = event.target.closest('[data-edit-order]');
+      if (editButton) {
+        const order = state.orders.find((entry) => entry.id === editButton.dataset.editOrder);
+        if (order) await openOrder(order.deliveryDate, order);
+        return;
+      }
+      const cancelButton = event.target.closest('[data-cancel-order]');
+      if (cancelButton) {
+        if (!confirm('إلغاء هذا الطلب؟')) return;
+        try {
+          await api(`/orders/${cancelButton.dataset.cancelOrder}`, { method: 'DELETE' });
+          toast('تم إلغاء الطلب');
+          loadGuestOrders();
+        } catch (error) {
+          toast(error.message, true);
+        }
+        return;
+      }
+
+      const programStep = event.target.closest('#programContent [data-step]');
+      if (programStep && state.program) {
+        const stepper = programStep.closest('.stepper');
+        const entry = state.program.find((item) => item.weekday === Number(stepper.dataset.progDay));
+        if (!entry) return;
+        const field = stepper.dataset.progService === 'lunch' ? 'lunchPortions' : 'dinnerPortions';
+        entry[field] = Math.max(0, Math.min(30, entry[field] + Number(programStep.dataset.step)));
+        stepper.querySelector('span').textContent = String(entry[field]);
+        const badge = stepper.closest('.day-card').querySelector('.day-state');
+        const active = entry.lunchPortions + entry.dinnerPortions > 0;
+        badge.textContent = active ? 'مفعّل' : 'غير مفعّل';
+        badge.classList.toggle('closed', !active);
+        return;
+      }
+
+      if (event.target.closest('#saveProgram') && state.program) {
+        try {
+          const data = await api('/program', {
+            method: 'PUT',
+            body: JSON.stringify({ entries: state.program }),
+          });
+          state.program = data.entries;
+          renderProgram();
+          toast(`تم حفظ البرنامج — ${data.generatedCount} طلب جديد`);
+          loadGuestOrders();
+        } catch (error) {
+          toast(error.message, true);
+        }
+      }
+    });
+
+    $('#programContent').addEventListener('change', (event) => {
+      const select = event.target.closest('[data-prog-pack-day]');
+      if (!select || !state.program) return;
+      const entry = state.program.find((item) => item.weekday === Number(select.dataset.progPackDay));
+      if (!entry) return;
+      const field = select.dataset.progPackService === 'lunch' ? 'lunchPackaging' : 'dinnerPackaging';
+      entry[field] = select.value;
+    });
+
+    $('#loginForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = new FormData(event.target);
+      try {
+        const data = await fetch(API + '/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: form.get('phone'), pin: form.get('pin') }),
+        }).then(async (res) => {
+          const payload = await res.json();
+          if (!res.ok) throw new Error(payload.message || 'تعذر الدخول');
+          return payload;
+        });
+        localStorage.setItem(TOKEN_KEY, data.token);
+        state.account = data.account;
+        state.config = (await api('/config')).settings;
+        showApp();
+        await loadMenu();
+        await loadNotifications();
+        void flushPending();
+        toast('مرحباً ' + data.account.contactName);
+      } catch (error) {
+        toast(error.message, true);
+      }
+    });
+
+    $('#bellBtn').addEventListener('click', openNotifications);
+    $('#langBtn').textContent = LANG === 'fr' ? 'ع' : 'FR';
+    $('#langBtn').addEventListener('click', () => {
+      localStorage.setItem('janitou_lang', LANG === 'fr' ? 'ar' : 'fr');
+      location.reload();
+    });
+    window.addEventListener('online', () => {
+      void flushPending();
+    });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/client/sw.js', { scope: '/client/' }).catch(() => {});
+    }
+
+    boot();
+  </script>
+</body>
+</html>

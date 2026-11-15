@@ -4,7 +4,19 @@ import { MealServiceTime, OrderStatus, UnitOfMeasure, ComponentCategory } from '
 import { JanitouStore } from '../src/services/store.js';
 import { JanitouDatabase } from '@janitou/database';
 import { resolve } from 'node:path';
-import { unlinkSync, existsSync } from 'node:fs';
+import { readFileSync, rmSync, unlinkSync, existsSync } from 'node:fs';
+import { createBackupFile } from '../src/services/backup.js';
+
+function isBackup(value: unknown): value is { data: Record<string, unknown> } {
+  return Boolean(
+    value &&
+      typeof value === 'object' &&
+      'data' in value &&
+      value.data &&
+      typeof value.data === 'object' &&
+      !Array.isArray(value.data)
+  );
+}
 
 test('1. Recipe Cost Calculation — accurately aggregates ingredient unit costs', () => {
   const store = new JanitouStore();
@@ -306,7 +318,7 @@ test('15. The 14 Official Reports — generates all 14 Phase 1 reports successfu
   }
 });
 
-test('16. Data Persistence Across Reboots — mutations survive store restart and do not revert to mock defaults', () => {
+test('16. Data Persistence Across Reboots — mutations survive store restart and do not revert to mock defaults', async () => {
   const testStorage = resolve(process.cwd(), 'data/test-persistence.json');
   if (existsSync(testStorage)) unlinkSync(testStorage);
 
@@ -314,6 +326,7 @@ test('16. Data Persistence Across Reboots — mutations survive store restart an
 
   // 1. First instance: create new customer and modify ingredient stock
   const store1 = new JanitouStore(db);
+  await store1.ready();
   const createdCustomer = store1.createCustomer({
     companyName: 'Groupe Agro Alimentaire Alger',
     contactName: 'Sofiane Benali',
@@ -324,9 +337,11 @@ test('16. Data Persistence Across Reboots — mutations survive store restart an
   assert.ok(createdCustomer.id);
 
   store1.updateIngredientStock('ing-1', 99.5);
+  await store1.flush();
 
   // 2. Second instance (simulating server shutdown and reboot): loads from same storage
   const store2 = new JanitouStore(db);
+  await store2.ready();
   const persistedCustomer = store2.getCustomerById(createdCustomer.id);
   assert.ok(persistedCustomer, 'Customer should exist after server restart');
   assert.equal(persistedCustomer.contactName, 'Sofiane Benali');
@@ -343,4 +358,63 @@ test('16. Data Persistence Across Reboots — mutations survive store restart an
 
   // Cleanup test file
   if (existsSync(testStorage)) unlinkSync(testStorage);
+});
+
+test('17. Backup files can be restored without losing the baseline', async () => {
+  const backupsDir = resolve(process.cwd(), 'data/test-backups');
+  rmSync(backupsDir, { recursive: true, force: true });
+
+  const store = new JanitouStore(undefined, { ephemeral: true });
+  const baselineCustomers = store.getCustomers().length;
+  const file = await createBackupFile(store, backupsDir, 2);
+  const parsed: unknown = JSON.parse(readFileSync(file, 'utf-8'));
+  assert.ok(isBackup(parsed), 'Backup file must contain data');
+
+  store.createCustomer({
+    companyName: 'Client ajouté après sauvegarde',
+    contactName: 'Test Backup',
+    phone: '0777 00 11 22',
+    deliveryAddress: '1 Rue du Test, Alger',
+  });
+  assert.equal(store.getCustomers().length, baselineCustomers + 1);
+
+  assert.equal(store.restoreDatabaseFromBackup(parsed), true);
+  assert.equal(store.getCustomers().length, baselineCustomers);
+  rmSync(backupsDir, { recursive: true, force: true });
+});
+
+test('18. Staff sessions survive a restart and logout is durable', async () => {
+  const storage = resolve(process.cwd(), 'data/test-sessions.json');
+  if (existsSync(storage)) unlinkSync(storage);
+  const db = new JanitouDatabase({ storageFilePath: storage });
+
+  const store1 = new JanitouStore(db);
+  await store1.ready();
+  const token = await store1.createStaffSession('staff-admin');
+  await store1.flush();
+
+  const store2 = new JanitouStore(db);
+  await store2.ready();
+  assert.equal(store2.getStaffSessionUserId(token), 'staff-admin');
+
+  await store2.deleteStaffSession(token);
+  const store3 = new JanitouStore(db);
+  await store3.ready();
+  assert.equal(store3.getStaffSessionUserId(token), undefined);
+
+  if (existsSync(storage)) unlinkSync(storage);
+});
+
+test('19. Ten-day inactivity requires an administrative review', async () => {
+  const store = new JanitouStore(undefined, { ephemeral: true });
+  const customer = store.createCustomer({
+    contactName: 'Client Inactif',
+    phone: '0666 55 44 33',
+    deliveryAddress: '5 Rue de l’Inactivité, Alger',
+  });
+  customer.registeredAt = new Date(Date.now() - 11 * 24 * 60 * 60 * 1000).toISOString();
+  assert.equal(store.isClientReviewRequired(customer), true);
+
+  store.markClientReviewed(customer.id);
+  assert.equal(store.isClientReviewRequired(customer), false);
 });

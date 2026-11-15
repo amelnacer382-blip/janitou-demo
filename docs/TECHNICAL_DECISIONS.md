@@ -205,3 +205,116 @@ For each significant technical decision, record:
   - Enables one-command production deployment (`docker compose up -d`).
 - **Approval Status:**
   - Implemented, verified, and committed to `main`.
+
+---
+
+## ADR-009: PostgreSQL Durable State, Persistent Sessions & Operator Authentication
+
+- **Date:** 2026-11-15
+- **Decision:**
+  - **PostgreSQL as the durable backing store:** when `DATABASE_URL` targets PostgreSQL (and `JANITOU_STORAGE` is not `file`), the Phase 1 domain state is written atomically to `app_state` (one JSONB document) through Prisma. The JSON file remains available for database-less local runs and tests.
+  - **Progressive relational migration:** `schema.prisma` and `prisma/migrations/` become the authoritative schema baseline. The relational tables are adopted incrementally; the current snapshot avoids a risky big-bang rewrite of the domain store.
+  - **Persistent sessions:** staff and customer sessions are stored as SHA-256 token hashes with expiry inside the durable state, replacing the previous in-memory maps. Login and logout commit before replying.
+  - **Operator authentication:** `/api/v1/simple/*` and all legacy `/api/v1/*` ERP routes require a staff bearer session. Swagger/OpenAPI discovery stays public. The dashboard injects the staff token and redirects to `/app` when unauthenticated.
+  - **Scheduled backups:** JSON snapshots are written to `data/backups/` at boot and every `BACKUP_INTERVAL_HOURS`, pruned to `BACKUP_RETENTION`.
+  - **Production container:** Debian Bun image with Prisma migrations applied by the entrypoint; HTTPS termination, PostgreSQL and certbot orchestrated under `deploy/`.
+- **Reason:**
+  - The JSON file store was single-process, non-transactional, and vulnerable to partial writes.
+  - Sessions lost on restart forced re-authentication and made the audit trail unreliable.
+  - The documented security model requires authenticated operators and controlled access.
+- **Trade-offs / Follow-up:**
+  - The snapshot document is not the final relational design; reporting and high-concurrency access still require migrating the domain aggregates to their Prisma models.
+  - Fine-grained legacy role checks read `x-user-role` at the time of ADR-009; replaced by session-derived roles in ADR-010.
+  - Customer authentication remains the provisional PIN mechanism until the Project Owner decides the customer identity model.
+  - MFA, session administration and audit retention were delivered in ADR-010; trusted devices and the customer identity model remain open.
+- **Approval Status:**
+  - Implemented and verified (PostgreSQL 16, migration, restart persistence, container startup, 22 tests).
+
+---
+
+## ADR-010: Session-Derived Roles, Staff MFA & Auditable Administration
+
+- **Date:** 2026-11-15
+- **Decision:**
+  - **Roles come from the authenticated session.** Legacy routes no longer trust `x-user-role`; the router resolves the staff user from the bearer token and injects the trusted role before dispatching. A forged header cannot elevate a chef or driver.
+  - **Administrative user management:** `ADMIN` can list/create staff accounts, change roles, activate/deactivate, reset passwords and revoke all sessions of a user. The last active administrator cannot be demoted or disabled, and an operator cannot disable their own account.
+  - **Session administration:** active staff and client sessions are listed by token hash, user and expiry; an administrator can revoke a single session or every session of a user. Password, role or activation changes revoke that user's staff sessions.
+  - **Optional TOTP MFA:** staff can enroll an authenticator (SHA-1, 6 digits, 30 s, ±1 window) with eight one-time recovery codes. Login returns a five-minute challenge after a valid password and requires a TOTP or unused recovery code. Recovery codes are stored as SHA-256 hashes and consumed atomically. The secret is stored server-side and never logged.
+  - **Audit trail:** user administration, menu/dish/settings changes, order generation, client lifecycle, credit and reviews record actor, action, entity and before/after snapshots where applicable. Audit entries are pruned after two years on write, read and startup.
+- **Reason:**
+  - The role header was a privilege-escalation path; role authority must be tied to the session.
+  - The business corpus requires traceability and the Project Owner decided a two-year audit retention.
+  - MFA is required for administrator accounts processing orders, balances and personal data.
+- **Trade-offs / Follow-up:**
+  - The session challenge map is in-process; a restart invalidates pending MFA challenges (users simply log in again).
+  - TOTP cannot be delivered over SMS/WhatsApp; recovery codes are the fallback until an external identity provider is selected.
+  - Staff accounts, staff/client sessions and audit logs now live in dedicated Prisma tables (`staff_accounts`, `staff_sessions`, `client_sessions`, `audit_logs`). The JSONB snapshot remains the bootstrap/fallback and still carries the other domain aggregates.
+  - `JANITOU_MFA_REQUIRED_ADMINS=1` enforces MFA for administrator logins; enable MFA on the admin account before turning it on.
+  - Trusted-device management remains open.
+- **Approval Status:**
+  - Implemented and verified (role-forgery regression, user lifecycle, session revocation, MFA login/recovery, audit endpoint, 23 tests, TypeScript clean).
+
+
+---
+
+## ADR-011: Relational Staff Identity, Sessions & Audit
+
+- **Date:** 2026-11-15
+- **Decision:**
+  - Add Prisma models `StaffAccount`, `StaffSession`, `ClientSession` and `AuditLog`, with a forward migration `20261115193000_identity_relational`.
+  - `PrismaStateBackend` mirrors every identity/session/audit write into these tables inside the same transaction as `app_state`.
+  - On startup, relational rows are read back and override the corresponding snapshot collections; the snapshot remains the bootstrap source when the tables are empty.
+  - Audit rows are inserted incrementally (`skipDuplicates`) rather than rewriting the full log on every action.
+- **Reason:**
+  - Identity and audit are the highest-risk collections for reporting, session revocation and compliance; they must be queryable relationally and must not depend on rewriting a large JSON document.
+  - The incremental migration avoids a risky big-bang rewrite of the whole domain store.
+- **Trade-offs / Follow-up:**
+  - The remaining aggregates (orders, menus, production, purchasing, delivery, billing) still use the JSONB snapshot.
+  - Audit `entityId` was nullable in code but `NOT NULL` in an older table; the migration reconciles this with `ALTER COLUMN … DROP NOT NULL`.
+  - Backups remain JSON snapshots until the relational domain migration is complete.
+- **Approval Status:**
+  - Implemented and verified on PostgreSQL 16: migration deploy, mirror population, restart hydration, session revocation and MFA login.
+
+
+---
+
+## ADR-012: Public Client Catalogue & Guest Order Requests
+
+- **Date:** 2026-11-15
+- **Decision:**
+  - The customer app is public: no registration, no login and no PIN. Visiting `/client` opens the catalogue immediately.
+  - The catalogue shows every active dish with photos, categories, prices and quantity selection.
+  - At checkout the customer provides only name, phone and delivery address. A new phone creates a `PENDING` customer; an existing active customer orders directly.
+  - Guest orders are stored in `pendingOrders` as `DRAFT` and are **not** invoiced, produced, packed or dispatched. A `PENDING_APPROVAL` status is exposed to the client.
+  - When an administrator sets the customer to `ACTIVE`, all pending orders for that customer move to `orders`, become `CONFIRMED`, receive an invoice and trigger client/staff notifications.
+  - Managers can still create client accounts for B2B/prepaid/reporting.
+- **Reason:**
+  - Keep the zero-friction public catalogue requested by the client while respecting DOC-10 §12 (no account active before admin approval) and DOC-11 §13 (no order from an unapproved account).
+  - Prevent unapproved orders from entering production, purchasing or delivery.
+- **Trade-offs / Follow-up:**
+  - A pending order can be cancelled by admin before approval; client-side edit is not exposed for guest catalogue orders.
+  - Guest history is looked up by phone + optional order number and returns no delivery address.
+  - WhatsApp/SMS confirmation is sent after approval, not at request time.
+- **Approval Status:**
+  - Implemented and verified (pending account/order, history `PENDING_APPROVAL`, approval to confirmed, invoice after approval).
+
+---
+
+## ADR-013: Guest Tracking, History & Real Outbound Messaging
+
+- **Date:** 2026-11-15
+- **Decision:**
+  - Add public `GET /api/v1/client/guest-orders?phone=…&orderNumber=…` returning guest order summaries only (number, date, service, status, items, total). Delivery address is not returned.
+  - The client app adds a “طلباتي” tab, remembers the guest phone locally and allows filtering by order number.
+  - Add a durable outbound outbox (`outboundMessages`) populated when an order is approved/created/updated/cancelled and on account events.
+  - A dispatcher sends via WhatsApp Cloud API (text or approved template) or Twilio SMS, with 5 attempts, exponential-free 15 s retry loop, and status `QUEUED/SENT/FAILED`.
+  - Provider credentials come from environment variables; without credentials messages stay queued and the admin can inspect them at `GET /api/v1/simple/messages`.
+- **Reason:**
+  - Guests need order visibility without creating an account.
+  - Order confirmations must leave the browser and reach the customer on the channel they use.
+- **Trade-offs / Follow-up:**
+  - Phone is the sole lookup secret for guest history; rate limiting is global, so a per-phone anti-enumeration policy remains advisable before high-volume launch.
+  - WhatsApp business-initiated messages outside the 24-hour window require an approved template; configure `WHATSAPP_TEMPLATE_NAME`.
+  - SMS/WhatsApp delivery receipts (webhooks) are not yet persisted.
+- **Approval Status:**
+  - Implemented and verified (guest history, order lookup, outbox enqueue, 23 tests).

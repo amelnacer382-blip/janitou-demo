@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { handleRequest } from '../src/router.js';
+import { generateTotp } from '../src/services/totp.js';
 
 test('HTTP Router End-to-End Suite', async (t) => {
   const server = http.createServer((req, res) => {
@@ -20,6 +21,31 @@ test('HTTP Router End-to-End Suite', async (t) => {
     server.close();
   });
 
+  const loginResponse = await fetch(`${baseUrl}/api/v1/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'admin@janitou.dz', password: 'Admin@2026' }),
+  });
+  assert.equal(loginResponse.status, 200);
+  const loginBody: unknown = await loginResponse.json();
+  assert.ok(
+    loginBody &&
+      typeof loginBody === 'object' &&
+      'token' in loginBody &&
+      typeof loginBody.token === 'string'
+  );
+  const staffToken = loginBody.token;
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (input, init) => {
+    const headers = new Headers(init?.headers);
+    if (!headers.has('Authorization')) headers.set('Authorization', `Bearer ${staffToken}`);
+    return originalFetch(input, { ...init, headers });
+  };
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
   await t.test('GET /health returns healthy status with database integration', async () => {
     const res = await fetch(`${baseUrl}/health`);
     assert.equal(res.status, 200);
@@ -27,7 +53,7 @@ test('HTTP Router End-to-End Suite', async (t) => {
     assert.equal(data.status, 'healthy');
     assert.equal(data.service, 'JANITOU FOOD API');
     assert.ok(data.database);
-    assert.equal(data.database.status, 'healthy');
+    assert.ok(['healthy', 'connected'].includes(data.database.status));
     assert.ok(data.database.totalRecords > 0);
   });
 
@@ -225,17 +251,239 @@ test('HTTP Router End-to-End Suite', async (t) => {
   });
 
   await t.test('Role Access Control — restricts sensitive financials to authorized roles', async () => {
-    // Unauthorized role
+    const chefLogin = await fetch(`${baseUrl}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'chef@janitou.dz', password: 'Chef@2026' }),
+    });
+    assert.equal(chefLogin.status, 200);
+    const chefBody = (await chefLogin.json()) as { token: string };
+
+    // Chef session cannot forge an admin role through headers.
     const forbiddenRes = await fetch(`${baseUrl}/api/v1/analytics/financials`, {
-      headers: { 'x-user-role': 'DELIVERY_DRIVER' },
+      headers: {
+        Authorization: `Bearer ${chefBody.token}`,
+        'x-user-role': 'ADMIN',
+      },
     });
     assert.equal(forbiddenRes.status, 403);
 
-    // Authorized role
-    const allowedRes = await fetch(`${baseUrl}/api/v1/analytics/financials`, {
-      headers: { 'x-user-role': 'ADMIN' },
-    });
+    // Admin session is authorized.
+    const allowedRes = await fetch(`${baseUrl}/api/v1/analytics/financials`);
     assert.equal(allowedRes.status, 200);
+  });
+
+  await t.test('User Administration — CRUD, scoped sessions and audit trail', async () => {
+    const email = `agent-${Date.now()}@janitou.dz`;
+    const createRes = await fetch(`${baseUrl}/api/v1/simple/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        fullName: 'Agent Test',
+        role: 'CHEF_KITCHEN',
+        password: 'Agent@2026',
+      }),
+    });
+    assert.equal(createRes.status, 201);
+    const created = (await createRes.json()) as { user: { id: string; role: string } };
+    assert.equal(created.user.role, 'CHEF_KITCHEN');
+
+    const login = await fetch(`${baseUrl}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: 'Agent@2026' }),
+    });
+    assert.equal(login.status, 200);
+    const agentToken = ((await login.json()) as { token: string }).token;
+
+    const denied = await fetch(`${baseUrl}/api/v1/analytics/financials`, {
+      headers: { Authorization: `Bearer ${agentToken}` },
+    });
+    assert.equal(denied.status, 403);
+
+    const promote = await fetch(`${baseUrl}/api/v1/simple/users/${created.user.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'OPERATIONS_MANAGER' }),
+    });
+    assert.equal(promote.status, 200);
+
+    const staleSession = await fetch(`${baseUrl}/api/v1/analytics/financials`, {
+      headers: { Authorization: `Bearer ${agentToken}` },
+    });
+    assert.equal(staleSession.status, 401);
+
+    const relogin = await fetch(`${baseUrl}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: 'Agent@2026' }),
+    });
+    const newToken = ((await relogin.json()) as { token: string }).token;
+    const allowed = await fetch(`${baseUrl}/api/v1/analytics/financials`, {
+      headers: { Authorization: `Bearer ${newToken}` },
+    });
+    assert.equal(allowed.status, 200);
+
+    const sessionsRes = await fetch(`${baseUrl}/api/v1/simple/sessions`);
+    const sessions = (await sessionsRes.json()) as {
+      staffSessions: { tokenHash: string; email: string }[];
+    };
+    const agentSession = sessions.staffSessions.find((session) => session.email === email);
+    assert.ok(agentSession);
+    const revoke = await fetch(`${baseUrl}/api/v1/simple/sessions/staff/${agentSession.tokenHash}`, {
+      method: 'DELETE',
+    });
+    assert.equal(revoke.status, 200);
+    const revokedLogin = await fetch(`${baseUrl}/api/v1/analytics/financials`, {
+      headers: { Authorization: `Bearer ${newToken}` },
+    });
+    assert.equal(revokedLogin.status, 401);
+
+    const demoteSelf = await fetch(`${baseUrl}/api/v1/simple/users/staff-admin`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'OPERATIONS_MANAGER' }),
+    });
+    assert.equal(demoteSelf.status, 409);
+
+    const auditRes = await fetch(`${baseUrl}/api/v1/simple/audit?limit=20`);
+    const audit = (await auditRes.json()) as { logs: { action: string; entityType: string }[] };
+    assert.ok(audit.logs.some((log) => log.action === 'CREATE_USER' && log.entityType === 'STAFF_USER'));
+    assert.ok(audit.logs.some((log) => log.action === 'UPDATE_USER'));
+  });
+
+  await t.test('MFA — setup, challenge, TOTP and recovery code', async () => {
+    const email = `mfa-${Date.now()}@janitou.dz`;
+    const password = 'MfaAgent@2026';
+    const createdRes = await fetch(`${baseUrl}/api/v1/simple/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, fullName: 'MFA Agent', role: 'CHEF_KITCHEN', password }),
+    });
+    assert.equal(createdRes.status, 201);
+
+    const firstLogin = await fetch(`${baseUrl}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const firstToken = ((await firstLogin.json()) as { token: string }).token;
+
+    const setupRes = await fetch(`${baseUrl}/api/v1/auth/mfa/setup`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${firstToken}` },
+    });
+    assert.equal(setupRes.status, 200);
+    const setup = (await setupRes.json()) as { secret: string; otpauthUri: string };
+    assert.ok(setup.otpauthUri.startsWith('otpauth://totp/'));
+
+    const enableRes = await fetch(`${baseUrl}/api/v1/auth/mfa/enable`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${firstToken}`,
+      },
+      body: JSON.stringify({ code: generateTotp(setup.secret) }),
+    });
+    assert.equal(enableRes.status, 200);
+    const enabled = (await enableRes.json()) as { recoveryCodes: string[] };
+    assert.equal(enabled.recoveryCodes.length, 8);
+
+    await fetch(`${baseUrl}/api/v1/auth/logout`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${firstToken}` },
+    });
+
+    const challengeRes = await fetch(`${baseUrl}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    assert.equal(challengeRes.status, 200);
+    const challenge = (await challengeRes.json()) as { mfaRequired: boolean; challenge: string };
+    assert.equal(challenge.mfaRequired, true);
+
+    const wrongRes = await fetch(`${baseUrl}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, challenge: challenge.challenge, mfaCode: '000000' }),
+    });
+    assert.equal(wrongRes.status, 401);
+
+    const secondChallengeRes = await fetch(`${baseUrl}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const secondChallenge = (await secondChallengeRes.json()) as { challenge: string };
+    const verifyRes = await fetch(`${baseUrl}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        password,
+        challenge: secondChallenge.challenge,
+        mfaCode: generateTotp(setup.secret),
+      }),
+    });
+    assert.equal(verifyRes.status, 200);
+    const verified = (await verifyRes.json()) as { token: string; user: { mfaEnabled: boolean } };
+    assert.equal(verified.user.mfaEnabled, true);
+
+    const recoveryChallengeRes = await fetch(`${baseUrl}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const recoveryChallenge = (await recoveryChallengeRes.json()) as { challenge: string };
+    const recoveryLogin = await fetch(`${baseUrl}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        password,
+        challenge: recoveryChallenge.challenge,
+        mfaCode: enabled.recoveryCodes[0],
+      }),
+    });
+    assert.equal(recoveryLogin.status, 200);
+
+    const freshLogin = await fetch(`${baseUrl}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const freshChallenge = (await freshLogin.json()) as { challenge: string };
+    const codeForDisable = generateTotp(setup.secret);
+    const disableRes = await fetch(`${baseUrl}/api/v1/auth/mfa/disable`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${verified.token}`,
+      },
+      body: JSON.stringify({
+        password,
+        code: codeForDisable,
+      }),
+    });
+    assert.equal(disableRes.status, 200);
+  });
+
+  await t.test('MFA policy — blocks ADMIN login when enforcement is enabled without enrollment', async () => {
+    process.env.JANITOU_MFA_REQUIRED_ADMINS = '1';
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'admin@janitou.dz', password: 'Admin@2026' }),
+      });
+      assert.equal(res.status, 403);
+      const body = (await res.json()) as { error: string };
+      assert.equal(body.error, 'MFA_ENROLLMENT_REQUIRED');
+    } finally {
+      delete process.env.JANITOU_MFA_REQUIRED_ADMINS;
+    }
   });
 
   await t.test('Security & OpenAPI — verifies security headers and interactive documentation', async () => {

@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS "app_state" (
+  "id" TEXT NOT NULL,
+  "version" INTEGER NOT NULL DEFAULT 1,
+  "payload" JSONB NOT NULL,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "app_state_pkey" PRIMARY KEY ("id")
+);

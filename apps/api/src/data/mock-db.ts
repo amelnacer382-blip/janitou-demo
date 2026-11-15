@@ -41,6 +41,18 @@ export interface DbRecipe {
   preparationTimeMinutes: number;
   allergens: string[];
   ingredients: DbRecipeIngredient[];
+  /** Arabic display name used by the simple mobile app. */
+  nameAr?: string;
+  /** Photo shown in the simple mobile app (served from /app/dishes or /uploads). */
+  photoUrl?: string;
+  /** Reference selling price in DZD, used by the customer app and alternatives. */
+  price?: number;
+  /** Inactive dishes stay archived but cannot be ordered. */
+  isActive?: boolean;
+  /** Operational family used by extras rules and menu alerts. */
+  family?: string;
+  flags?: ('FRIES' | 'MINCED' | 'PASTA')[];
+  mainIngredient?: string;
 }
 
 export interface DbCustomer {
@@ -57,10 +69,53 @@ export interface DbCustomer {
   parentCompanyId?: string;
   isSubsidiary?: boolean;
   status: 'ACTIVE' | 'SUSPENDED' | 'CANCELLED';
+  /** Registration workflow: PENDING until the administration approves the account. */
+  accountStatus?: 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'FROZEN' | 'CANCELLED';
+  pinSalt?: string;
+  pinHash?: string;
+  registeredAt?: string;
+  /** BR-002: one distribution method per customer. */
+  distribution?: {
+    type: 'STANDARD_DELIVERY' | 'EXPRESS' | 'PICKUP';
+    label?: string;
+    driverName?: string;
+  };
+  /** BR-003: set when the administration reviewed an inactive account. */
+  reviewClearedAt?: string;
+  /** Recurring weekly order program, one entry per weekday (0 = Sunday). */
+  weeklyProgram?: {
+    weekday: number;
+    lunchPortions: number;
+    dinnerPortions: number;
+    lunchPackaging?: 'INDIVIDUAL' | 'COLLECTIVE';
+    dinnerPackaging?: 'INDIVIDUAL' | 'COLLECTIVE';
+  }[];
   accountBalance: number; // in DZD (solde prépayé/crédit)
   whatsAppLink: string;
   subscriptionType: 'INDIVIDUAL' | 'CORPORATE' | 'SUBSIDIARY';
   preferredDistributionType: 'STANDARD_DELIVERY' | 'EXPRESS' | 'PICKUP';
+}
+
+export type StaffRole =
+  | 'ADMIN'
+  | 'OPERATIONS_MANAGER'
+  | 'CHEF_KITCHEN'
+  | 'PURCHASING_MANAGER'
+  | 'PACKING_LOGISTICS'
+  | 'DELIVERY_DRIVER';
+
+export interface DbStaffUser {
+  id: string;
+  email: string;
+  fullName: string;
+  role: StaffRole;
+  passwordSalt: string;
+  passwordHash: string;
+  isActive: boolean;
+  createdAt: string;
+  mfaSecret?: string;
+  mfaEnabled?: boolean;
+  recoveryCodeHashes?: string[];
 }
 
 export interface DbMealPlan {
@@ -72,6 +127,8 @@ export interface DbMealPlan {
   sideDishRecipeId?: string;
   dessertRecipeId?: string;
   notes?: string;
+  /** Archived menus stay readable in the simple app's archive tab. */
+  isArchived?: boolean;
 }
 
 export interface DbOrderItem {
@@ -79,6 +136,7 @@ export interface DbOrderItem {
   recipeId: string;
   portions: number;
   specialNotes?: string;
+  unitPrice?: number;
 }
 
 export interface DbOrder {
@@ -89,9 +147,18 @@ export interface DbOrder {
   serviceTime: MealServiceTime;
   status: OrderStatus;
   totalPortions: number;
+  lunchPortions?: number;
+  dinnerPortions?: number;
   deliveryAddress: string;
   notes?: string;
   items: DbOrderItem[];
+  packaging?: {
+    lunch?: 'INDIVIDUAL' | 'COLLECTIVE';
+    dinner?: 'INDIVIDUAL' | 'COLLECTIVE';
+  };
+  extras?: { name: string; quantity: number; unitPrice: number }[];
+  source?: 'CLIENT' | 'ADMIN' | 'AUTOMATIC';
+  orderMode?: 'MENU' | 'CATALOGUE';
   createdAt: string;
   orderType: 'AUTOMATIC' | 'WEEKLY' | 'EXCEPTIONAL' | 'SUBSIDIARY' | 'CORPORATE' | 'INDIVIDUAL';
   supplementsCost: number; // in DZD
@@ -111,7 +178,30 @@ export interface DbInvoice {
   dueDate: string;
   totalAmount: number;
   paidAmount: number;
-  status: 'DRAFT' | 'ISSUED' | 'PAID' | 'PARTIALLY_PAID' | 'OVERDUE';
+  status: 'DRAFT' | 'ISSUED' | 'PAID' | 'PARTIALLY_PAID' | 'OVERDUE' | 'CANCELLED';
+}
+
+export interface DbOutboundMessage {
+  id: string;
+  channel: 'WHATSAPP' | 'SMS';
+  to: string;
+  body: string;
+  status: 'QUEUED' | 'SENT' | 'FAILED' | 'DISABLED';
+  attempts: number;
+  lastError?: string;
+  createdAt: string;
+  sentAt?: string;
+  orderNumber?: string;
+}
+
+export interface DbNotification {
+  id: string;
+  audience: 'CLIENT' | 'STAFF';
+  customerId?: string;
+  type: string;
+  data: Record<string, string | number>;
+  createdAt: string;
+  readAt?: string;
 }
 
 export interface DbPayment {

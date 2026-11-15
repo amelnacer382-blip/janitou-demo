@@ -94,6 +94,22 @@ export function readJsonBody<T>(req: IncomingMessage, maxBytes = 2 * 1024 * 1024
   return promise;
 }
 
+/** Reads a binary request body (image uploads); throws when it exceeds `maxBytes`. */
+export async function readRawBody(
+  req: IncomingMessage,
+  maxBytes = 5 * 1024 * 1024
+): Promise<Buffer> {
+  const chunks: Buffer[] = [];
+  let size = 0;
+  for await (const chunk of req) {
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    size += buffer.length;
+    if (size > maxBytes) throw new Error('Payload too large');
+    chunks.push(buffer);
+  }
+  return Buffer.concat(chunks);
+}
+
 export function sendJson(res: ServerResponse, statusCode: number, data: unknown): void {
   res.writeHead(statusCode, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(data));
@@ -114,8 +130,11 @@ export function sendError(
   });
 }
 
+export interface RoleAwareRequest extends IncomingMessage {
+  staffRole?: string;
+}
+
 export function checkRoleAccess(req: IncomingMessage, allowedRoles: string[]): boolean {
-  const roleHeader = req.headers['x-user-role'] as string | undefined;
-  if (!roleHeader) return true;
-  return allowedRoles.includes(roleHeader.toUpperCase());
+  const role = (req as RoleAwareRequest).staffRole;
+  return Boolean(role && allowedRoles.includes(role));
 }

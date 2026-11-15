@@ -1,0 +1,1987 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#8c6420" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="/app/manifest.webmanifest" />
+  <link rel="icon" type="image/png" href="/logo.png" />
+  <link rel="apple-touch-icon" href="/app/icon-192.png" />
+  <title>جانيتو فود — الإدارة</title>
+  <script>
+    if (localStorage.getItem('janitou_lang') === 'fr') {
+      document.documentElement.lang = 'fr';
+      document.documentElement.dir = 'ltr';
+    }
+  </script>
+  <style>
+    :root {
+      --gold: #c99a2e;
+      --gold-light: #f0d27a;
+      --gold-dark: #8c6420;
+      --ink: #241a10;
+      --teal: #8c6420;
+      --teal-dark: #2a1f14;
+      --teal-soft: #f6edda;
+      --bg: #faf6ee;
+      --card: #fffdf8;
+      --text: #241a10;
+      --muted: #7d6a54;
+      --line: #ecdfca;
+      --danger: #b3261e;
+      --warning: #a16207;
+      --shadow: 0 10px 30px rgba(58, 42, 24, 0.10);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      font-family: "Segoe UI", "Noto Naskh Arabic", Tahoma, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      direction: rtl;
+      overscroll-behavior-y: none;
+    }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; border: 0; background: none; }
+    img { display: block; }
+    .shell {
+      max-width: 560px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: var(--bg);
+      position: relative;
+      padding-bottom: calc(84px + env(safe-area-inset-bottom));
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+      background: rgba(250, 246, 238, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(236, 223, 202, 0.8);
+    }
+    .topbar h1 { font-size: 1.05rem; margin: 0; font-weight: 700; letter-spacing: -0.2px; white-space: nowrap; }
+    [dir="ltr"] .topbar h1 { font-size: 0.98rem; }
+    .icon-btn {
+      width: 44px; height: 44px; border-radius: 14px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--text); background: var(--card); box-shadow: var(--shadow);
+    }
+    .icon-btn svg { width: 22px; height: 22px; }
+    .icon-btn.plain { background: transparent; box-shadow: none; color: var(--muted); }
+    .brand-chip { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: var(--muted); font-weight: 600; }
+    .brand-logo { width: 30px; height: 30px; border-radius: 9px; object-fit: contain; background: #fffdf8; padding: 2px; border: 1px solid var(--line); }
+    @media (max-width: 470px) {
+      .brand-text { display: none; }
+      .topbar-actions { gap: 4px; }
+      .brand-chip { gap: 0; }
+      .topbar h1 { font-size: 0.98rem; }
+    }
+    .lang-btn { min-width: 38px; height: 34px; padding: 0 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--teal-dark); font-size: 0.72rem; font-weight: 800; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; }
+    .bell-btn { position: relative; }
+    .notif-badge { position: absolute; top: 4px; left: 4px; min-width: 16px; height: 16px; border-radius: 999px; background: var(--danger); color: #fff; font-size: 0.6rem; font-weight: 800; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+    .notif-item { display: flex; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .notif-item:last-child { border-bottom: 0; }
+    .notif-item strong { display: block; font-size: 0.82rem; }
+    .notif-item p { margin: 2px 0 0; font-size: 0.72rem; color: var(--muted); line-height: 1.5; }
+    .brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); }
+    main { padding: 14px 16px 24px; }
+    .screen { display: none; animation: fade 0.18s ease; }
+    .screen.active { display: block; }
+    @keyframes fade { from { opacity: 0.4; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+    .date-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--card); border: 1px solid var(--line);
+      padding: 8px 14px; border-radius: 999px; font-size: 0.82rem; color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .date-pill strong { color: var(--text); font-size: 0.85rem; }
+
+    .hero {
+      background: linear-gradient(145deg, #3a2a18, #241a10 70%);
+      color: var(--gold-light); border: 1px solid rgba(201,154,46,0.4);
+      border-radius: 24px; padding: 18px;
+      box-shadow: 0 16px 34px rgba(36, 26, 16, 0.28);
+      position: relative; overflow: hidden;
+    }
+    .hero::after {
+      content: ""; position: absolute; width: 180px; height: 180px; border-radius: 50%;
+      background: rgba(201, 154, 46, 0.18); top: -70px; left: -50px;
+    }
+    .hero-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .hero-head span { font-size: 0.78rem; opacity: 0.8; }
+    .hero-head strong { font-size: 0.95rem; }
+    .stats {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+      position: relative; z-index: 1;
+    }
+    .stat { background: rgba(240,210,122,0.14); border: 1px solid rgba(201,154,46,0.22); border-radius: 14px; padding: 10px 8px; text-align: center; }
+    .stat b { display: block; font-size: 1.35rem; font-weight: 800; line-height: 1.1; }
+    .stat span { font-size: 0.68rem; opacity: 0.85; }
+
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin: 22px 2px 10px; }
+    .section-head h2 { font-size: 0.98rem; margin: 0; font-weight: 800; }
+    .section-head .link { color: var(--teal); font-size: 0.82rem; font-weight: 700; }
+    .badge {
+      display: inline-flex; min-width: 22px; height: 22px; padding: 0 7px;
+      align-items: center; justify-content: center; border-radius: 999px;
+      background: var(--teal-soft); color: var(--teal-dark); font-size: 0.72rem; font-weight: 800;
+    }
+
+    .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid rgba(236,223,202,0.85); }
+    .today-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .service-card {
+      background: var(--card); border-radius: var(--radius); overflow: hidden;
+      border: 1px solid var(--line); box-shadow: var(--shadow);
+      text-align: right; width: 100%; position: relative;
+    }
+    .service-card .thumb { width: 100%; height: 104px; object-fit: cover; background: var(--teal-soft); }
+    .service-card .thumb.placeholder {
+      display: flex; align-items: center; justify-content: center;
+      color: var(--teal); font-size: 1.6rem; font-weight: 800;
+    }
+    .service-card .body { padding: 10px 12px 12px; }
+    .service-card .label { font-size: 0.7rem; color: var(--teal-dark); font-weight: 800; background: var(--teal-soft); border-radius: 999px; padding: 3px 9px; display: inline-block; }
+    .service-card .label.dinner { background: #fdf1e3; color: #9a5b09; }
+    .service-card h3 { font-size: 0.88rem; margin: 8px 0 2px; line-height: 1.35; }
+    .service-card .hint { font-size: 0.7rem; color: var(--muted); }
+    .service-card:active { transform: scale(0.985); }
+
+    .banner { border-radius: 14px; padding: 12px 14px; font-size: 0.8rem; line-height: 1.6; }
+    .banner.ok { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
+    .banner.warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+    .empty {
+      text-align: center; color: var(--muted); padding: 24px 16px;
+      border: 1px dashed var(--line); border-radius: var(--radius); background: rgba(255,255,255,0.6);
+    }
+    .empty svg { width: 34px; height: 34px; margin-bottom: 8px; opacity: 0.5; }
+    .empty p { margin: 0; font-size: 0.85rem; }
+
+    .list { display: flex; flex-direction: column; gap: 10px; }
+    .order-card { display: flex; align-items: center; gap: 12px; padding: 13px 14px; }
+    .order-avatar {
+      width: 42px; height: 42px; border-radius: 14px; background: var(--teal-soft);
+      color: var(--teal-dark); display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.95rem; flex: 0 0 auto;
+    }
+    .order-main { flex: 1; min-width: 0; }
+    .order-main strong { display: block; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .order-main span { font-size: 0.74rem; color: var(--muted); }
+    .status {
+      font-size: 0.68rem; font-weight: 800; padding: 5px 9px; border-radius: 999px;
+      background: #f3ecdf; color: #5b4a36; white-space: nowrap;
+    }
+    .status.done { background: #dcfce7; color: #15803d; }
+    .status.progress { background: #fef3c7; color: #b45309; }
+    .status.cancel { background: #fee2e2; color: #b91c1c; }
+
+    .segmented {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #e9efed;
+      padding: 5px; border-radius: 16px; margin-bottom: 14px;
+    }
+    .segmented button {
+      padding: 11px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; color: var(--muted);
+    }
+    .segmented button.active { background: var(--teal); color: #fff; box-shadow: 0 6px 14px rgba(140,100,32,0.25); }
+
+    .day-card { padding: 12px 14px 14px; margin-bottom: 12px; }
+    .day-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .day-head .day-date { display: flex; align-items: baseline; gap: 8px; }
+    .day-head strong { font-size: 0.9rem; }
+    .day-head small { color: var(--muted); font-size: 0.75rem; }
+    .day-actions { display: flex; gap: 4px; }
+    .day-actions button {
+      width: 34px; height: 34px; border-radius: 10px; color: var(--muted);
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .day-actions button svg { width: 18px; height: 18px; }
+    .day-actions button:active { background: #f3ecdf; }
+    .day-services { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .mini-dish {
+      border: 1px solid var(--line); border-radius: 14px; overflow: hidden; text-align: right;
+      background: #fffdf8; min-height: 128px; display: flex; flex-direction: column; width: 100%;
+    }
+    .mini-dish img { width: 100%; height: 72px; object-fit: cover; }
+    .mini-dish .fallback {
+      height: 72px; display: flex; align-items: center; justify-content: center;
+      background: var(--teal-soft); color: var(--teal); font-weight: 800;
+    }
+    .mini-dish .meta { padding: 7px 9px 9px; }
+    .mini-dish .meta small { color: var(--muted); font-size: 0.66rem; }
+    .mini-dish .meta b { display: block; font-size: 0.76rem; margin-top: 2px; line-height: 1.35; font-weight: 700; }
+    .mini-dish.empty-dish { border-style: dashed; align-items: center; justify-content: center; color: var(--muted); font-size: 0.75rem; gap: 4px; }
+    .mini-dish.empty-dish svg { width: 22px; height: 22px; }
+
+    .fab {
+      position: fixed; bottom: calc(96px + env(safe-area-inset-bottom)); left: max(18px, calc(50% - 280px + 18px));
+      width: 58px; height: 58px; border-radius: 20px; background: var(--teal); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 14px 28px rgba(140,100,32,0.35); z-index: 15;
+    }
+    .fab svg { width: 26px; height: 26px; }
+    .fab:active { transform: scale(0.95); }
+
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 560px; z-index: 25;
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      background: rgba(255,255,255,0.96); backdrop-filter: blur(14px);
+      border-top: 1px solid var(--line);
+      padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    }
+    .nav-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 8px 4px; color: var(--muted); font-size: 0.68rem; font-weight: 700; border-radius: 12px;
+    }
+    .nav-btn svg { width: 23px; height: 23px; }
+    .nav-btn.active { color: var(--teal); }
+    .nav-btn.active svg { stroke-width: 2.3; }
+
+    .drawer-backdrop {
+      position: fixed; inset: 0; background: rgba(36, 26, 16, 0.45);
+      z-index: 40; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+    .drawer {
+      position: fixed; top: 0; right: 0; bottom: 0; width: min(310px, 86vw);
+      background: var(--card); z-index: 41; transform: translateX(100%);
+      transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: calc(18px + env(safe-area-inset-top)) 16px 20px;
+      display: flex; flex-direction: column;
+    }
+    .drawer.open { transform: none; }
+    .drawer-brand { display: flex; align-items: center; gap: 12px; padding: 4px 4px 20px; border-bottom: 1px solid var(--line); }
+    .drawer-brand img { width: 46px; height: 46px; border-radius: 14px; object-fit: contain; background: var(--teal-soft); padding: 6px; }
+    .drawer-brand strong { display: block; font-size: 0.95rem; }
+    .drawer-brand span { color: var(--muted); font-size: 0.72rem; }
+    .drawer nav { padding-top: 14px; display: flex; flex-direction: column; gap: 2px; }
+    .drawer nav button {
+      display: flex; align-items: center; gap: 12px; padding: 13px 12px; border-radius: 12px;
+      color: var(--text); font-size: 0.88rem; font-weight: 600; text-align: right; width: 100%;
+    }
+    .drawer nav button svg { width: 20px; height: 20px; color: var(--muted); }
+    .drawer nav button:active, .drawer nav button.active { background: var(--teal-soft); color: var(--teal-dark); }
+    .drawer nav button.active svg { color: var(--teal-dark); }
+    .drawer-footer { margin-top: auto; color: var(--muted); font-size: 0.7rem; text-align: center; padding-top: 16px; }
+
+    .sheet-backdrop {
+      position: fixed; inset: 0; background: rgba(36, 26, 16, 0.5); z-index: 50;
+      display: flex; align-items: flex-end; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.18s;
+    }
+    .sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+    .sheet {
+      width: 100%; max-width: 560px; background: var(--card);
+      border-radius: 24px 24px 0 0; padding: 10px 18px calc(20px + env(safe-area-inset-bottom));
+      transform: translateY(12px); transition: transform 0.2s;
+      max-height: 88vh; overflow-y: auto;
+    }
+    .sheet-backdrop.open .sheet { transform: none; }
+    .sheet-grip { width: 42px; height: 4px; border-radius: 999px; background: #d8e1df; margin: 6px auto 12px; }
+    .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; position: sticky; top: 0; z-index: 2; background: var(--card); padding: 4px 0 8px; }
+    .sheet-head h2 { font-size: 1rem; margin: 0; }
+    .sheet-head button { width: 36px; height: 36px; border-radius: 12px; background: #f3ecdf; display: flex; align-items: center; justify-content: center; }
+    .sheet-head button svg { width: 18px; height: 18px; }
+
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 0.78rem; font-weight: 700; margin-bottom: 6px; color: #4a3826; }
+    .field input, .field select, .field textarea {
+      width: 100%; border: 1px solid var(--line); background: #fffdf8;
+      border-radius: 12px; padding: 13px 12px; font-size: 0.9rem; outline: none;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--teal); background: #fff; }
+    .field .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn {
+      width: 100%; padding: 14px; border-radius: 14px; background: var(--teal); color: #fff;
+      font-weight: 800; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn:disabled { opacity: 0.55; }
+    .btn.secondary { background: #f3ecdf; color: var(--teal-dark); border: 1px solid var(--line); }
+    .btn.danger { background: #fff1f1; color: var(--danger); }
+    .btn svg { width: 18px; height: 18px; }
+
+    .dish-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 14px; }
+    .pick {
+      display: flex; gap: 8px; align-items: center; border: 1px solid var(--line);
+      background: #fffdf8; border-radius: 13px; padding: 7px; text-align: right;
+    }
+    .pick img, .pick .fallback { width: 46px; height: 46px; border-radius: 10px; object-fit: cover; flex: 0 0 auto; background: var(--teal-soft); }
+    .pick .fallback { display: flex; align-items: center; justify-content: center; color: var(--teal); font-weight: 800; }
+    .pick span { font-size: 0.72rem; font-weight: 700; line-height: 1.3; }
+    .pick.selected { border-color: var(--teal); background: var(--teal-soft); box-shadow: 0 0 0 1px var(--teal) inset; }
+
+    .dish-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .dish-tile { border-radius: 16px; overflow: hidden; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); }
+    .dish-tile img, .dish-tile .fallback { width: 100%; height: 96px; object-fit: cover; }
+    .dish-tile .fallback { display: flex; align-items: center; justify-content: center; background: var(--teal-soft); color: var(--teal); font-weight: 800; font-size: 1.4rem; }
+    .dish-tile .meta { padding: 8px 10px 10px; }
+    .dish-tile b { font-size: 0.78rem; display: block; line-height: 1.35; }
+    .dish-tile small { color: var(--muted); font-size: 0.66rem; }
+
+    .photo-picker {
+      border: 1px dashed #e3d4bb; background: #fffdf8; border-radius: 14px;
+      min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 6px; color: var(--muted); font-size: 0.78rem; overflow: hidden; position: relative; width: 100%;
+    }
+    .photo-picker img { width: 100%; height: 150px; object-fit: cover; }
+    .photo-picker svg { width: 26px; height: 26px; }
+    .photo-picker input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+    .settings-block { padding: 14px; margin-bottom: 12px; }
+    .settings-block h3 { margin: 0 0 12px; font-size: 0.88rem; display: flex; align-items: center; gap: 8px; }
+    .settings-block h3 svg { width: 18px; height: 18px; color: var(--teal); }
+    .extra-row { display: grid; grid-template-columns: minmax(0, 1fr) 82px 62px 36px; gap: 6px; margin-bottom: 8px; }
+    .extra-row input { padding: 10px; min-width: 0; width: 100%; }
+    .extra-row button { border-radius: 10px; background: #fff1f1; color: var(--danger); display: flex; align-items: center; justify-content: center; }
+    .extra-row button svg { width: 16px; height: 16px; }
+    .muted { color: var(--muted); font-size: 0.76rem; line-height: 1.6; }
+    .auth-screen { position: fixed; inset: 0; z-index: 100; background: var(--bg); display: none; align-items: center; justify-content: center; padding: 24px; }
+    .auth-screen.active { display: flex; }
+    .auth-card { width: 100%; max-width: 380px; background: var(--card); border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow); padding: 24px 20px; }
+    .auth-card img { width: 74px; height: 74px; border-radius: 20px; object-fit: contain; background: var(--teal-soft); padding: 8px; display: block; margin: 0 auto 12px; }
+    .auth-card h1 { text-align: center; font-size: 1.2rem; margin: 0 0 4px; }
+    .auth-card p { text-align: center; color: var(--muted); font-size: 0.78rem; margin: 0 0 18px; }
+    .toast-wrap { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(92px + env(safe-area-inset-bottom)); z-index: 80; display: flex; flex-direction: column; gap: 6px; width: min(90%, 420px); }
+    .toast {
+      background: #241a10; color: #fff; padding: 12px 14px; border-radius: 12px;
+      font-size: 0.8rem; box-shadow: 0 12px 28px rgba(0,0,0,0.2); animation: toastIn 0.2s ease;
+    }
+    .toast.error { background: #7f1d1d; }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    .skeleton { height: 120px; border-radius: var(--radius); background: linear-gradient(90deg, #f3ecdf, #f8faf9, #f3ecdf); background-size: 200% 100%; animation: shimmer 1.2s infinite; margin-bottom: 12px; }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    [dir="ltr"] body { direction: ltr; text-align: left; }
+    [dir="ltr"] .drawer { right: auto; left: 0; transform: translateX(-100%); }
+    [dir="ltr"] .drawer.open { transform: none; }
+    [dir="ltr"] .fab { left: auto; right: max(18px, calc(50% - 280px + 18px)); }
+    [dir="ltr"] .drawer nav button { text-align: left; }
+    [dir="ltr"] .day-actions svg { transform: scaleX(-1); }
+    @media (min-width: 700px) {
+      body { background: radial-gradient(circle at 20% 10%, #f2e7d5, #f3ecdf 45%, #efe4d2); }
+      .shell { box-shadow: 0 0 50px rgba(140, 100, 32, 0.08); }
+      main { padding: 20px 22px 30px; }
+      .day-card { transition: box-shadow 0.18s ease; }
+      .day-card:hover { box-shadow: 0 16px 36px rgba(140,100,32,0.12); }
+      .dish-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-screen" id="authScreen">
+    <form class="auth-card" id="loginForm">
+      <img src="/logo.png" alt="JANITOU FOOD" />
+      <h1>جانيتو فود</h1>
+      <p>دخول الإدارة</p>
+      <div class="field"><label>البريد الإلكتروني</label><input type="email" name="email" autocomplete="username" required /></div>
+      <div class="field"><label>كلمة المرور</label><input type="password" name="password" autocomplete="current-password" required /></div>
+      <div class="field" id="mfaField" style="display:none;"><label>رمز التحقق (6 أرقام أو رمز استرجاع)</label><input name="mfaCode" inputmode="numeric" autocomplete="one-time-code" /></div>
+      <button class="btn" type="submit">دخول</button>
+      <p class="muted" style="text-align:center;margin-top:12px;">تجريبي: admin@janitou.dz / Admin@2026</p>
+    </form>
+  </div>
+  <div class="shell" id="appShell" style="display:none;">
+    <header class="topbar">
+      <button class="icon-btn" id="burgerBtn" aria-label="القائمة">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <h1 id="pageTitle">الرئيسية</h1>
+      <div class="topbar-actions">
+        <button class="icon-btn plain bell-btn" id="staffBellBtn" aria-label="الإشعارات">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+          <span class="notif-badge" id="staffNotifBadge" style="display:none;">0</span>
+        </button>
+        <button class="lang-btn" id="langBtn">FR</button>
+        <span class="brand-chip"><img class="brand-logo" src="/logo.png" alt="JANITOU FOOD" /><span class="brand-text">جانيتو فود</span></span>
+      </div>
+    </header>
+
+    <main>
+      <section id="screen-home" class="screen active">
+        <div class="date-pill" id="homeDate"></div>
+        <div id="homeContent"><div class="skeleton"></div><div class="skeleton"></div></div>
+      </section>
+
+      <section id="screen-menu" class="screen">
+        <div class="segmented">
+          <button id="scopeCurrent" class="active" data-scope="current">الجارية</button>
+          <button id="scopeArchived" data-scope="archived">الأرشيف</button>
+        </div>
+        <button class="btn secondary" id="generateProgramBtn" style="margin-bottom:12px;">توليد طلبات البرنامج الأسبوعي (7 أيام)</button>
+        <div id="menuRules"></div>
+        <div id="menuContent"><div class="skeleton"></div></div>
+      </section>
+
+      <section id="screen-orders" class="screen">
+        <div id="ordersContent"><div class="skeleton"></div></div>
+      </section>
+
+      <section id="screen-dishes" class="screen">
+        <div class="section-head" style="margin-top:4px;">
+          <span class="muted">كل الأطباق المتاحة</span>
+          <button class="link" id="addDishBtn">+ طبق جديد</button>
+        </div>
+        <div id="dishesContent"><div class="skeleton"></div></div>
+      </section>
+
+      <section id="screen-clients" class="screen">
+        <div class="section-head" style="margin-top:4px;">
+          <span class="muted">حسابات العملاء</span>
+          <button class="link" id="addClientBtn">+ عميل</button>
+        </div>
+        <div id="clientsContent"><div class="skeleton"></div></div>
+      </section>
+
+      <section id="screen-users" class="screen">
+        <div class="section-head" style="margin-top:4px;">
+          <span class="muted">حسابات الفريق والصلاحيات</span>
+          <div style="display:flex; gap:6px;">
+            <button class="link" id="openSessionsBtn">الجلسات</button>
+            <button class="link" id="addUserBtn">+ مستخدم</button>
+          </div>
+        </div>
+        <div id="usersContent"><div class="skeleton"></div></div>
+      </section>
+
+      <section id="screen-audit" class="screen">
+        <div class="section-head" style="margin-top:4px;">
+          <span class="muted">آخر 100 عملية — محفوظة سنتين</span>
+        </div>
+        <div id="auditContent"><div class="skeleton"></div></div>
+      </section>
+
+      <section id="screen-settings" class="screen">
+        <form id="settingsForm">
+          <div class="card settings-block" id="settings-prices">
+            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5h4.5a1.8 1.8 0 010 3.6H9"/></svg>التسعيرة</h3>
+            <div class="field"><label>سعر وجبة الغداء (دج)</label><input type="number" name="lunchPrice" min="0" step="10" required></div>
+            <div class="field"><label>سعر وجبة العشاء (دج)</label><input type="number" name="dinnerPrice" min="0" step="10" required></div>
+          </div>
+          <div class="card settings-block" id="settings-packaging">
+            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>التغليف والتوصيل</h3>
+            <div class="field"><label>سعر التغليف للوجبة (دج)</label><input type="number" name="packagingPrice" min="0" step="5" required></div>
+            <div class="field"><label>سعر التوصيل (دج)</label><input type="number" name="deliveryPrice" min="0" step="10" required></div>
+          </div>
+          <div class="card settings-block" id="settings-extras">
+            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>الإضافات</h3>
+            <div style="display:grid; grid-template-columns:minmax(0,1fr) 82px 62px 36px; gap:6px; font-size:0.64rem; color:var(--muted); margin-bottom:4px;">
+              <span>الإضافة</span><span>السعر</span><span>لكل وجبات</span><span></span>
+            </div>
+            <div id="extrasList"></div>
+            <button type="button" class="btn secondary" id="addExtraBtn" style="margin-top:6px;">+ إضافة</button>
+            <p class="muted" style="margin-top:10px;">تُحتسب الإضافات حسب عدد الوجبات وتظهر للعميل عند الطلب.</p>
+          </div>
+          <div class="card settings-block" id="settings-hours">
+            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>التوقيت</h3>
+            <div class="field"><label>وقت الغداء</label><input type="text" name="lunchHours" placeholder="11:30 - 13:30" required></div>
+            <div class="field"><label>وقت العشاء</label><input type="text" name="dinnerHours" placeholder="18:00 - 20:00" required></div>
+            <div class="field"><label>آخر موعد لتلقي الطلبات</label><input type="time" name="cutoffTime" required></div>
+            <div class="field"><label>الإغلاق قبل تاريخ التسليم (أيام)</label><input type="number" name="cutoffDaysBefore" min="0" max="7" required></div>
+            <div class="field"><label>أيام التوقف (YYYY-MM-DD مفصولة بفاصلة)</label><input type="text" name="closedDates" placeholder="2026-11-20, 2026-12-01" /></div>
+          </div>
+          <button class="btn" type="submit">حفظ الإعدادات</button>
+        </form>
+      </section>
+    </main>
+
+    <button class="fab" id="fabAddMenu" aria-label="إضافة قائمة جديدة" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-screen="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V21H3z"/><path d="M9 21v-7h6v7"/></svg>
+        الرئيسية
+      </button>
+      <button class="nav-btn" data-screen="menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M4 9h16M8 13h3M8 16h6"/></svg>
+        قائمة الطعام
+      </button>
+      <button class="nav-btn" data-screen="orders">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+        الطلبات
+      </button>
+    </nav>
+  </div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-brand">
+      <img src="/logo.png" alt="JANITOU FOOD" />
+      <div><strong>جانيتو فود</strong><span>لوحة الإدارة</span></div>
+    </div>
+    <nav>
+      <button data-go="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V21H3z"/><path d="M9 21v-7h6v7"/></svg>الرئيسية</button>
+      <button data-go="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M4 9h16M8 13h3M8 16h6"/></svg>قائمة طعام</button>
+      <button data-go="dishes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M6 12a6 6 0 0112 0M4 16h16"/></svg>الوجبات</button>
+      <button data-go="orders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>طلبات اليوم</button>
+      <button data-go="clients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3.2 3.2 0 010 6.2M18 14c2.2.7 3 2.9 3 6"/></svg>العملاء</button>
+      <button data-go="users" class="admin-only"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 21c0-3.9 3.1-7 7-7s7 3.1 7 7"/><path d="M19 4v6M16 7h6"/></svg>المستخدمون</button>
+      <button data-go="audit" class="admin-only"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>سجل التدقيق</button>
+      <button data-settings="prices"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5h4.5a1.8 1.8 0 010 3.6H9"/></svg>التسعيرة</button>
+      <button data-settings="packaging"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>التغليف</button>
+      <button data-settings="extras"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>الإضافات</button>
+      <button data-settings="hours"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>التوقيت</button>
+    </nav>
+    <div class="drawer-footer">
+      <div id="userRoleLabel" style="margin-bottom:8px;color:var(--text);font-weight:700;"></div>
+      <button id="securityBtn" style="color:var(--teal-dark);font-weight:700;margin-bottom:10px;">الأمان والمصادقة الثنائية</button>
+      <button id="logoutBtn" style="color:var(--danger);font-weight:700;margin-bottom:10px;">تسجيل الخروج</button>
+      <a href="/client" style="color:var(--teal-dark);font-weight:700;">تطبيق العملاء ↗</a><br />JANITOU FOOD — وضع بسيط
+    </div>
+  </aside>
+
+  <div class="sheet-backdrop" id="sheetBackdrop">
+    <div class="sheet" id="sheet">
+      <div class="sheet-grip"></div>
+      <div class="sheet-head"><h2 id="sheetTitle"></h2><button id="sheetClose" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div id="sheetBody"></div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script src="/app/i18n.js"></script>
+  <script>
+    const API = '/api/v1/simple';
+    const LANG = localStorage.getItem('janitou_lang') === 'fr' ? 'fr' : 'ar';
+    const AR_LOCALE = 'ar-DZ-u-nu-latn';
+    const LOCALE = LANG === 'fr' ? 'fr-DZ' : AR_LOCALE;
+    const CATEGORY_LABELS = { STARTER: 'مقبلات', MAIN_COURSE: 'طبق رئيسي', SIDE_DISH: 'طبق جانبي', DESSERT: 'تحلية', BEVERAGE: 'مشروب', BREAD: 'خبز' };
+    const STATUS = {
+      DRAFT: { ar: 'مسودة', cls: '' },
+      CONFIRMED: { ar: 'مؤكدة', cls: 'progress' },
+      PLANNED: { ar: 'مبرمجة', cls: 'progress' },
+      IN_PRODUCTION: { ar: 'قيد التحضير', cls: 'progress' },
+      PORTIONED_PACKAGED: { ar: 'معبأة', cls: 'progress' },
+      DISPATCHED: { ar: 'في التوصيل', cls: 'progress' },
+      DELIVERED: { ar: 'تم التسليم', cls: 'done' },
+      CANCELLED: { ar: 'ملغاة', cls: 'cancel' },
+    };
+    const NEXT_STATUS = { CONFIRMED: 'IN_PRODUCTION', IN_PRODUCTION: 'PORTIONED_PACKAGED', PORTIONED_PACKAGED: 'DISPATCHED', DISPATCHED: 'DELIVERED' };
+    const state = { screen: 'home', scope: 'current', home: null, menu: [], dishes: [], settings: null, clients: [], notifications: [] };
+    const CLIENT_STATUS = { PENDING: 'بانتظار الاعتماد', ACTIVE: 'نشط', SUSPENDED: 'موقوف', FROZEN: 'مجمد', CANCELLED: 'ملغى' };
+    const STAFF_TOKEN_KEY = 'janitou_staff_token';
+    let currentUser = null;
+
+    function staffToken() {
+      return localStorage.getItem(STAFF_TOKEN_KEY);
+    }
+    function authHeader() {
+      return staffToken() ? { Authorization: `Bearer ${staffToken()}` } : {};
+    }
+    function showLogin() {
+      closeDrawer();
+      $('#appShell').style.display = 'none';
+      $('#authScreen').classList.add('active');
+    }
+    function showApp() {
+      $('#authScreen').classList.remove('active');
+      $('#appShell').style.display = 'block';
+    }
+
+    const $ = (selector) => document.querySelector(selector);
+
+    function money(value) {
+      return `${Number(value || 0).toLocaleString('en-US')}${LANG === 'fr' ? ' DA' : ' دج'}`;
+    }
+    function distributionLabel(type) {
+      const labels = {
+        STANDARD_DELIVERY: { ar: 'توصيل عادي', fr: 'Livraison standard' },
+        EXPRESS: { ar: 'توصيل سريع', fr: 'Livraison express' },
+        PICKUP: { ar: 'استلام من الفرع', fr: 'Retrait sur place' },
+      };
+      return (labels[type] || labels.STANDARD_DELIVERY)[LANG];
+    }
+    function esc(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+    }
+    function isoToday() {
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    }
+    function isoAdd(iso, days) {
+      const [year, month, day] = iso.split('-').map(Number);
+      const date = new Date(year, month - 1, day + days);
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    }
+    function formatDay(iso) {
+      return new Intl.DateTimeFormat(LOCALE, { weekday: 'long' }).format(new Date(`${iso}T12:00:00`));
+    }
+    function formatDate(iso) {
+      return new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'long' }).format(new Date(`${iso}T12:00:00`));
+    }
+    function thumb(dish, className) {
+      if (dish && dish.photoUrl) return `<img class="${className}" src="${esc(dish.photoUrl)}" alt="${esc(dish.displayName)}" loading="lazy" />`;
+      const initial = dish && dish.displayName ? esc(dish.displayName.trim().charAt(0)) : '؟';
+      return `<div class="${className} fallback">${initial}</div>`;
+    }
+    function toast(message, isError) {
+      const el = document.createElement('div');
+      el.className = 'toast' + (isError ? ' error' : '');
+      el.textContent = message;
+      $('#toastWrap').appendChild(el);
+      setTimeout(() => el.remove(), 3200);
+    }
+    async function api(path, options = {}) {
+      const headers = {
+        ...(options.body instanceof Blob ? {} : { 'Content-Type': 'application/json' }),
+        ...authHeader(),
+        ...(options.headers || {}),
+      };
+      const res = await fetch(API + path, { ...options, headers });
+      const text = await res.text();
+      let data = {};
+      try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
+      if (res.status === 401) {
+        localStorage.removeItem(STAFF_TOKEN_KEY);
+        currentUser = null;
+        showLogin();
+        throw new Error(data.message || 'انتهت الجلسة، أعد الدخول.');
+      }
+      if (!res.ok) throw new Error(data.message || 'تعذر تنفيذ العملية');
+      return data;
+    }
+
+    async function authApi(path, options = {}) {
+      const res = await fetch('/api/v1/auth' + path, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeader(),
+          ...(options.headers || {}),
+        },
+      });
+      const text = await res.text();
+      let data = {};
+      try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
+      if (!res.ok) throw new Error(data.message || 'تعذر تنفيذ العملية');
+      return data;
+    }
+
+    // ------------------------------------------------------------------
+    // Navigation
+    // ------------------------------------------------------------------
+    const TITLES = { home: 'الرئيسية', menu: 'قائمة الطعام', orders: 'طلبات اليوم', dishes: 'الأطباق', clients: 'العملاء', users: 'المستخدمون', audit: 'سجل التدقيق', settings: 'الإعدادات' };
+
+    function go(screen) {
+      state.screen = screen;
+      document.querySelectorAll('.screen').forEach((section) => section.classList.toggle('active', section.id === 'screen-' + screen));
+      document.querySelectorAll('.nav-btn').forEach((btn) => btn.classList.toggle('active', btn.dataset.screen === screen));
+      document.querySelectorAll('.drawer nav button').forEach((btn) => btn.classList.toggle('active', btn.dataset.go === screen));
+      $('#pageTitle').textContent = TITLES[screen] || 'جانيتو فود';
+      $('#fabAddMenu').style.display = screen === 'menu' ? 'flex' : 'none';
+      closeDrawer();
+      if (screen === 'home') loadHome();
+      if (screen === 'menu') loadMenu();
+      if (screen === 'orders') loadOrders();
+      if (screen === 'dishes') loadDishes();
+      if (screen === 'clients') loadClients();
+      if (screen === 'users') loadUsers();
+      if (screen === 'audit') loadAudit();
+      if (screen === 'settings') fillSettingsForm();
+    }
+
+    function openDrawer() {
+      $('#drawer').classList.add('open');
+      $('#drawerBackdrop').classList.add('open');
+    }
+    function closeDrawer() {
+      $('#drawer').classList.remove('open');
+      $('#drawerBackdrop').classList.remove('open');
+    }
+
+    // ------------------------------------------------------------------
+    // Home
+    // ------------------------------------------------------------------
+    async function loadHome() {
+      try {
+        state.home = await api(`/home?date=${isoToday()}`);
+        renderHome();
+      } catch (error) {
+        $('#homeContent').innerHTML = `<div class="empty"><p>${esc(error.message)}</p></div>`;
+      }
+    }
+
+    function renderHome() {
+      const home = state.home;
+      const date = home.date;
+      $('#homeDate').innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><strong>${esc(formatDay(date))} ${esc(formatDate(date))}</strong>`;
+
+      const menu = home.menu;
+      const menuHtml = `
+        <div class="today-menu">
+          ${homeServiceCard('الغداء', menu.lunch, 'lunch')}
+          ${homeServiceCard('العشاء', menu.dinner, 'dinner')}
+        </div>`;
+
+      const ordersHtml = home.orders.length
+        ? `<div class="list">${home.orders.map(orderRow).join('')}</div>`
+        : `<div class="empty">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+             <p>لا توجد طلبات اليوم</p>
+           </div>`;
+
+      $('#homeContent').innerHTML = `
+        <div class="hero">
+          <div class="hero-head"><span>إحصائيات اليوم</span><strong>${esc(formatDay(date))}</strong></div>
+          <div class="stats">
+            <div class="stat"><b>${home.stats.dishesCount}</b><span>أصناف</span></div>
+            <div class="stat"><b>${home.stats.ordersCount}</b><span>طلبات</span></div>
+            <div class="stat"><b>${home.stats.lunchPortions}</b><span>غداء</span></div>
+            <div class="stat"><b>${home.stats.dinnerPortions}</b><span>عشاء</span></div>
+          </div>
+        </div>
+
+        <div class="section-head"><h2>قائمة اليوم</h2><button class="link" onclick="go('menu')">عرض الكل</button></div>
+        ${menuHtml}
+
+        <div class="section-head"><h2>طلبات اليوم</h2><span class="badge">${home.orders.length}</span></div>
+        ${ordersHtml}
+      `;
+    }
+
+    function homeServiceCard(label, dish, service) {
+      if (!dish) {
+        return `<button class="service-card" onclick="openChangeDish('${isoToday()}','${service}')">
+          <div class="thumb placeholder">+</div>
+          <div class="body"><span class="label ${service}">${label}</span><h3>أضف طبقاً</h3><span class="hint">لم يتم تحديد طبق</span></div>
+        </button>`;
+      }
+      return `<button class="service-card" onclick="openChangeDish('${isoToday()}','${service}')">
+        ${thumb(dish, 'thumb')}
+        <div class="body">
+          <span class="label ${service}">${label}</span>
+          <h3>${esc(dish.displayName)}</h3>
+          <span class="hint">تغيير الطبق</span>
+        </div>
+      </button>`;
+    }
+
+    function orderRow(order) {
+      const status = STATUS[order.status] || { ar: order.status, cls: '' };
+      const service = order.serviceTime === 'LUNCH' ? 'غداء' : 'عشاء';
+      return `<button class="card order-card" onclick="openOrderSheet('${esc(order.id)}')">
+        <div class="order-avatar">${esc(order.customerName.charAt(0))}</div>
+        <div class="order-main"><strong>${esc(order.customerName)}</strong><span>${service} · ${order.totalPortions} وجبة</span></div>
+        <span class="status ${status.cls}">${esc(status.ar)}</span>
+      </button>`;
+    }
+
+    // ------------------------------------------------------------------
+    // Orders
+    // ------------------------------------------------------------------
+    async function loadOrders() {
+      try {
+        const home = await api(`/home?date=${isoToday()}`);
+        state.home = home;
+        renderOrders();
+        if (state.screen === 'home') renderHome();
+      } catch (error) {
+        $('#ordersContent').innerHTML = `<div class="empty"><p>${esc(error.message)}</p></div>`;
+      }
+    }
+
+    function renderOrders() {
+      const orders = state.home ? state.home.orders : [];
+      if (!orders.length) {
+        $('#ordersContent').innerHTML = `<div class="empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+          <p>لا توجد طلبات لليوم</p></div>`;
+        return;
+      }
+      $('#ordersContent').innerHTML = `<div class="section-head" style="margin-top:4px;"><h2>طلبات ${esc(formatDay(isoToday()))} ${esc(formatDate(isoToday()))}</h2><span class="badge">${orders.length}</span></div>
+        <div class="list">${orders.map(orderRow).join('')}</div>`;
+    }
+
+    function openOrderSheet(orderId) {
+      const order = state.home?.orders.find((entry) => entry.id === orderId);
+      if (!order) return;
+      const status = STATUS[order.status] || { ar: order.status, cls: '' };
+      const next = NEXT_STATUS[order.status];
+      const body = `
+        <div class="card" style="padding:14px; box-shadow:none; margin-bottom:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="font-size:0.92rem;">${esc(order.customerName)}</strong>
+            <span class="status ${status.cls}">${esc(status.ar)}</span>
+          </div>
+          <p class="muted" style="margin:0 0 4px;">${order.serviceTime === 'LUNCH' ? 'غداء' : 'عشاء'} · ${order.totalPortions} وجبة · ${esc(order.orderNumber)}</p>
+          <p class="muted" style="margin:0;">${esc(order.deliveryAddress)}</p>
+          ${order.notes ? `<p class="muted" style="margin-top:8px; color:#9a5b09;">ملاحظة: ${esc(order.notes)}</p>` : ''}
+        </div>
+        ${next ? `<button class="btn" onclick="advanceOrder('${esc(order.id)}','${next}')">تحديث إلى «${esc(STATUS[next].ar)}»</button>` : ''}
+        ${order.status !== 'CANCELLED' && order.status !== 'DELIVERED' ? `<button class="btn danger" style="margin-top:8px;" onclick="advanceOrder('${esc(order.id)}','CANCELLED')">إلغاء الطلب</button>` : ''}
+      `;
+      openSheet('تفاصيل الطلب', body);
+    }
+
+    async function advanceOrder(orderId, status) {
+      try {
+        const res = await fetch(`/api/v1/orders/${orderId}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...authHeader() },
+          body: JSON.stringify({ status }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.message || 'تعذر تحديث الطلب');
+        }
+        closeSheet();
+        toast('تم تحديث حالة الطلب');
+        loadOrders();
+      } catch (error) {
+        toast(error.message, true);
+      }
+    }
+
+    // ------------------------------------------------------------------
+    // Menu
+    // ------------------------------------------------------------------
+    const RULE_LABELS = {
+      INTERDICTION_FRITES_MIDI_SOIR: 'البطاطا المقلية في الغداء والعشاء',
+      INTERDICTION_VIANDE_HACHEE_MIDI_SOIR: 'اللحم المفروم في الغداء والعشاء',
+      MAX_PATES_DEJEUNER_HEBDO: 'المعجنات أكثر من مرة في الغداء أسبوعياً',
+      SAMEDI_REPAS_FACILE: 'وجبة السبت تتجاوز 45 دقيقة تحضير',
+      MEME_COMPOSANT_PRINCIPAL: 'نفس المكوّن الرئيسي في الغداء والعشاء',
+    };
+
+    async function loadMenu() {
+      try {
+        const from = state.scope === 'archived' ? isoAdd(isoToday(), -60) : isoToday();
+        const to = state.scope === 'archived' ? isoToday() : isoAdd(isoToday(), 6);
+        const [data, rules] = await Promise.all([
+          api(`/menu?scope=${state.scope}&from=${from}&to=${to}`),
+          api(`/menu/rules?from=${isoToday()}&to=${isoAdd(isoToday(), 6)}`).catch(() => null),
+        ]);
+        state.menu = data.days;
+        renderMenu();
+        renderMenuRules(rules);
+      } catch (error) {
+        $('#menuContent').innerHTML = `<div class="empty"><p>${esc(error.message)}</p></div>`;
+      }
+    }
+
+    function renderMenuRules(rules) {
+      if (!rules) {
+        $('#menuRules').innerHTML = '';
+        return;
+      }
+      if (!rules.violations.length) {
+        $('#menuRules').innerHTML = `<div class="banner ok" style="margin-bottom:12px;">كل قواعد الرزنامة محترمة لهذا الأسبوع.</div>`;
+        return;
+      }
+      $('#menuRules').innerHTML = `<div class="banner warn" style="margin-bottom:12px;">
+        <strong>تنبيهات الرزنامة (${rules.violations.length})</strong>
+        <ul style="margin:6px 0 0; padding-inline-start:18px;">
+          ${rules.violations.map((violation) => `<li>${esc(violation.date)} — ${esc(RULE_LABELS[violation.ruleName] || violation.ruleName)}</li>`).join('')}
+        </ul>
+      </div>`;
+    }
+
+    function renderMenu() {
+      if (!state.menu.length) {
+        $('#menuContent').innerHTML = `<div class="empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h16v14H4z"/><path d="M4 9h16M8 13h3"/></svg>
+          <p>${state.scope === 'archived' ? 'لا توجد قوائم مؤرشفة' : 'لا توجد قوائم'}</p>
+          ${state.scope === 'current' ? '<button class="link" style="margin-top:10px;" onclick="openAddMenu()">إضافة قائمة جديدة</button>' : ''}
+        </div>`;
+        return;
+      }
+      $('#menuContent').innerHTML = state.menu.map(dayCard).join('');
+    }
+
+    function dayCard(day) {
+      const isArchived = state.scope === 'archived';
+      return `<article class="card day-card">
+        <div class="day-head">
+          <div class="day-date"><strong>${esc(formatDay(day.date))}</strong> <small>${esc(formatDate(day.date))}</small></div>
+          <div class="day-actions">
+            <button onclick="openDeadline('${day.date}')" title="تمديد موعد الطلب">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            </button>
+            <button onclick="toggleArchive('${day.date}', ${isArchived ? 'false' : 'true'})" title="${isArchived ? 'استعادة' : 'أرشفة'}">
+              ${isArchived
+                ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 12a9 9 0 109-9"/><path d="M3 4v5h5"/></svg>'
+                : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16v13H4z"/><path d="M2 4h20v3H2zM10 11h4"/></svg>'}
+            </button>
+          </div>
+        </div>
+        <div class="day-services">
+          ${miniDish(day.date, 'lunch', 'الغداء', day.lunch)}
+          ${miniDish(day.date, 'dinner', 'العشاء', day.dinner)}
+        </div>
+      </article>`;
+    }
+
+    function miniDish(date, service, label, dish) {
+      if (!dish) {
+        return `<button class="mini-dish empty-dish" onclick="openChangeDish('${date}','${service}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          <span>${label}</span>
+        </button>`;
+      }
+      return `<button class="mini-dish" onclick="openChangeDish('${date}','${service}')">
+        ${thumb(dish, '')}
+        <span class="meta"><small>${label}</small><b>${esc(dish.displayName)}</b></span>
+      </button>`;
+    }
+
+    async function toggleArchive(date, archived) {
+      if (!confirm(archived ? 'أرشفة قائمة هذا اليوم؟' : 'استعادة قائمة هذا اليوم؟')) return;
+      try {
+        await api(`/menu/${date}/archive`, { method: 'PATCH', body: JSON.stringify({ archived }) });
+        toast(archived ? 'تمت الأرشفة' : 'تمت الاستعادة');
+        loadMenu();
+        loadHome();
+      } catch (error) {
+        toast(error.message, true);
+      }
+    }
+
+    function localDateTimeValue(iso) {
+      if (!iso) return '';
+      const date = new Date(iso);
+      if (Number.isNaN(date.getTime())) return '';
+      const pad = (value) => String(value).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    function openDeadline(date) {
+      const current = state.settings?.deadlineOverrides?.[date] || '';
+      const body = `
+        <p class="muted" style="margin-top:-4px;">${esc(formatDay(date))} ${esc(formatDate(date))}</p>
+        <form id="deadlineForm">
+          <div class="field"><label>آخر موعد جديد للطلب</label><input type="datetime-local" name="until" value="${localDateTimeValue(current)}" required /></div>
+          <button class="btn" type="submit">تمديد الموعد</button>
+          ${current ? '<button class="btn secondary" type="button" id="clearDeadline" style="margin-top:8px;">إزالة التمديد</button>' : ''}
+        </form>`;
+      openSheet('تمديد موعد الطلب', body);
+      const save = async (value) => {
+        try {
+          const data = await api(`/menu/${date}/deadline`, {
+            method: 'PATCH',
+            body: JSON.stringify({ until: value }),
+          });
+          if (state.settings) state.settings.deadlineOverrides = data.deadlineOverrides;
+          closeSheet();
+          toast(value ? 'تم تمديد الموعد' : 'تمت إزالة التمديد');
+          loadMenu();
+        } catch (error) {
+          toast(error.message, true);
+        }
+      };
+      $('#deadlineForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const value = new Date(event.target.elements.until.value);
+        if (Number.isNaN(value.getTime())) {
+          toast('تاريخ غير صحيح', true);
+          return;
+        }
+        save(value.toISOString());
+      });
+      const clear = $('#clearDeadline');
+      if (clear) clear.addEventListener('click', () => save(null));
+    }
+
+    // ------------------------------------------------------------------
+    // Dishes
+    // ------------------------------------------------------------------
+    async function loadDishes() {
+      try {
+        const data = await api('/dishes');
+        state.dishes = data.dishes;
+        renderDishes();
+      } catch (error) {
+        $('#dishesContent').innerHTML = `<div class="empty"><p>${esc(error.message)}</p></div>`;
+      }
+    }
+
+    function renderDishes() {
+      if (!state.dishes.length) {
+        $('#dishesContent').innerHTML = `<div class="empty"><p>لا توجد أطباق بعد</p><button class="link" style="margin-top:10px;" onclick="openAddDish()">إضافة طبق</button></div>`;
+        return;
+      }
+      $('#dishesContent').innerHTML = `<div class="dish-grid">${state.dishes.map((dish) => `
+        <article class="dish-tile">
+          ${dish.photoUrl ? `<img src="${esc(dish.photoUrl)}" alt="${esc(dish.displayName)}" loading="lazy" />` : `<div class="fallback">${esc(dish.displayName.charAt(0))}</div>`}
+          <div class="meta"><b>${esc(dish.displayName)}</b><small>${esc(CATEGORY_LABELS[dish.category] || dish.category)}</small></div>
+        </article>`).join('')}</div>`;
+    }
+
+    // ------------------------------------------------------------------
+    // Sheets
+    // ------------------------------------------------------------------
+    function openSheet(title, bodyHtml) {
+      $('#sheetTitle').textContent = title;
+      $('#sheetBody').innerHTML = bodyHtml;
+      $('#sheetBackdrop').classList.add('open');
+    }
+    function closeSheet() {
+      $('#sheetBackdrop').classList.remove('open');
+      $('#sheetBody').innerHTML = '';
+    }
+
+    function openChangeDish(date, service) {
+      if (!state.dishes.length) {
+        loadDishes().then(() => openChangeDish(date, service));
+        return;
+      }
+      const key = service === 'lunch' ? 'lunch' : 'dinner';
+      const day = state.menu.find((entry) => entry.date === date);
+      const current = day ? day[key] : null;
+      const body = `
+        <p class="muted" style="margin-top:-4px;">${esc(formatDay(date))} ${esc(formatDate(date))} · ${service === 'lunch' ? 'الغداء' : 'العشاء'}</p>
+        <div class="dish-picker" id="dishPicker">
+          ${state.dishes.map((dish) => `
+            <button class="pick ${current && current.id === dish.id ? 'selected' : ''}" data-dish="${esc(dish.id)}">
+              ${dish.photoUrl ? `<img src="${esc(dish.photoUrl)}" alt="" />` : `<span class="fallback">${esc(dish.displayName.charAt(0))}</span>`}
+              <span>${esc(dish.displayName)}</span>
+            </button>`).join('')}
+        </div>
+        <button class="btn" id="confirmDish" ${current ? '' : 'disabled'}>تأكيد التغيير</button>
+      `;
+      openSheet('تغيير الطبق', body);
+      let selectedId = current ? current.id : '';
+      $('#dishPicker').addEventListener('click', (event) => {
+        const button = event.target.closest('[data-dish]');
+        if (!button) return;
+        selectedId = button.dataset.dish;
+        document.querySelectorAll('#dishPicker .pick').forEach((pick) => pick.classList.toggle('selected', pick === button));
+        $('#confirmDish').disabled = false;
+      });
+      $('#confirmDish').addEventListener('click', async () => {
+        if (!selectedId) return;
+        try {
+          await api(`/menu/${date}/dish`, {
+            method: 'PATCH',
+            body: JSON.stringify({ serviceTime: service === 'lunch' ? 'LUNCH' : 'DINNER', dishId: selectedId }),
+          });
+          closeSheet();
+          toast('تم تغيير الطبق');
+          loadMenu();
+          loadHome();
+        } catch (error) {
+          toast(error.message, true);
+        }
+      });
+    }
+
+    function openAddMenu() {
+      if (!state.dishes.length) {
+        loadDishes().then(openAddMenu);
+        return;
+      }
+      const defaultDate = isoAdd(isoToday(), 1);
+      const options = state.dishes.map((dish) => `<option value="${esc(dish.id)}">${esc(dish.displayName)}</option>`).join('');
+      openSheet('إضافة قائمة جديدة', `
+        <form id="addMenuForm">
+          <div class="field"><label>التاريخ</label><input type="date" name="date" value="${defaultDate}" required></div>
+          <div class="field"><label>طبق الغداء</label><select name="lunchDishId" required><option value="">اختر طبقاً</option>${options}</select></div>
+          <div class="field"><label>طبق العشاء</label><select name="dinnerDishId" required><option value="">اختر طبقاً</option>${options}</select></div>
+          <button class="btn" type="submit">إضافة القائمة</button>
+        </form>
+      `);
+      $('#addMenuForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = new FormData(event.target);
+        try {
+          await api('/menu', {
+            method: 'POST',
+            body: JSON.stringify({
+              date: form.get('date'),
+              lunchDishId: form.get('lunchDishId'),
+              dinnerDishId: form.get('dinnerDishId'),
+            }),
+          });
+          closeSheet();
+          toast('تمت إضافة القائمة');
+          loadMenu();
+          loadHome();
+        } catch (error) {
+          toast(error.message, true);
+        }
+      });
+    }
+
+    function openAddDish() {
+      openSheet('إضافة طبق جديد', `
+        <form id="addDishForm">
+          <div class="field">
+            <label>صورة الطبق</label>
+            <label class="photo-picker" id="photoPicker">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 15l-5-5L5 19"/></svg>
+              <span>اختر صورة</span>
+              <input type="file" accept="image/*" id="dishPhotoInput" />
+            </label>
+          </div>
+          <div class="field"><label>اسم الطبق</label><input type="text" name="name" maxlength="80" required placeholder="مثال: كسكس بالدجاج" /></div>
+          <div class="field"><label>التصنيف</label><select name="category">
+            <option value="MAIN_COURSE">طبق رئيسي</option>
+            <option value="STARTER">مقبلات</option>
+            <option value="DESSERT">تحلية</option>
+          </select></div>
+          <div class="field"><label>العائلة التشغيلية</label><select name="family">
+            <option value="COUSCOUS">كسكس</option>
+            <option value="GRILL">مشوي</option>
+            <option value="TAGINE">طاجين</option>
+            <option value="SOUP">شوربة</option>
+            <option value="PASTA">معجنات</option>
+            <option value="CHAKHCHOUKHA">شخشوخة</option>
+            <option value="SALAD">سلطة</option>
+            <option value="DESSERT">تحلية</option>
+          </select></div>
+          <div class="field"><label>المكوّن الرئيسي</label><input type="text" name="mainIngredient" maxlength="30" placeholder="POULET / AGNEAU / LEGUMES" /></div>
+          <div class="field"><label>خصائص تشغيلية</label>
+            <div style="display:flex; gap:14px; font-size:0.8rem; padding:4px 2px;">
+              <label><input type="checkbox" name="flag" value="FRIES" /> بطاطا مقلية</label>
+              <label><input type="checkbox" name="flag" value="MINCED" /> لحم مفروم</label>
+              <label><input type="checkbox" name="flag" value="PASTA" /> معجنات</label>
+            </div>
+          </div>
+          <button class="btn" type="submit">إضافة الطبق</button>
+        </form>
+      `);
+      let photoFile = null;
+      $('#dishPhotoInput').addEventListener('change', (event) => {
+        photoFile = event.target.files[0] || null;
+        if (!photoFile) return;
+        const picker = $('#photoPicker');
+        const url = URL.createObjectURL(photoFile);
+        picker.innerHTML = `<img src="${url}" alt="" /><input type="file" accept="image/*" id="dishPhotoInput" />`;
+        const input = $('#dishPhotoInput');
+        input.addEventListener('change', (innerEvent) => {
+          photoFile = innerEvent.target.files[0] || null;
+        });
+      });
+      $('#addDishForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = new FormData(event.target);
+        const submit = event.target.querySelector('button[type=submit]');
+        submit.disabled = true;
+        try {
+          let photoUrl = '';
+          if (photoFile) {
+            const upload = await fetch(`${API}/uploads`, {
+              method: 'POST',
+              headers: { 'Content-Type': photoFile.type, ...authHeader() },
+              body: photoFile,
+            });
+            const payload = await upload.json();
+            if (!upload.ok) throw new Error(payload.message || 'تعذر رفع الصورة');
+            photoUrl = payload.url;
+          }
+          await api('/dishes', {
+            method: 'POST',
+            body: JSON.stringify({
+              name: String(form.get('name')).trim(),
+              nameAr: String(form.get('name')).trim(),
+              photoUrl: photoUrl || undefined,
+              category: form.get('category'),
+              family: form.get('family'),
+              mainIngredient: form.get('mainIngredient') || undefined,
+              flags: form.getAll('flag'),
+            }),
+          });
+          closeSheet();
+          toast('تمت إضافة الطبق');
+          loadDishes();
+        } catch (error) {
+          toast(error.message, true);
+          submit.disabled = false;
+        }
+      });
+    }
+
+    // ------------------------------------------------------------------
+    // Clients (registration approval)
+    // ------------------------------------------------------------------
+    function staffNotificationText(notification) {
+      const data = notification.data || {};
+      const fr = LANG === 'fr';
+      if (notification.type === 'NEW_CLIENT') {
+        return {
+          title: fr ? 'Nouveau client' : 'عميل جديد',
+          body: fr ? `${data.name} — ${data.phone}` : `${data.name} — ${data.phone}`,
+        };
+      }
+      if (notification.type === 'ORDER_CREATED') {
+        return {
+          title: fr ? 'Nouvelle commande' : 'طلب جديد',
+          body: fr
+            ? `${data.orderNumber} — ${data.customer} — ${money(data.total)}`
+            : `${data.orderNumber} — ${data.customer} — ${money(data.total)}`,
+        };
+      }
+      return { title: notification.type, body: '' };
+    }
+
+    async function loadStaffNotifications() {
+      try {
+        const data = await api('/notifications');
+        state.notifications = data.notifications;
+        const unread = state.notifications.filter((notification) => !notification.readAt).length;
+        const badge = $('#staffNotifBadge');
+        if (badge) {
+          badge.textContent = String(unread);
+          badge.style.display = unread > 0 ? 'flex' : 'none';
+        }
+      } catch {
+        // Non-blocking.
+      }
+    }
+
+    async function openStaffNotifications() {
+      await loadStaffNotifications();
+      const items = state.notifications.slice(0, 40).map((notification) => {
+        const text = staffNotificationText(notification);
+        const when = new Date(notification.createdAt).toLocaleString(
+          LANG === 'fr' ? 'fr-DZ' : 'ar-DZ'
+        );
+        return `<div class="notif-item ${notification.readAt ? '' : ''}">
+          <div><strong>${esc(text.title)}</strong><p>${esc(text.body)}</p><p>${esc(when)}</p></div>
+        </div>`;
+      }).join('');
+      openSheet(
+        LANG === 'fr' ? 'Notifications' : 'الإشعارات',
+        items || `<div class="empty"><p>${LANG === 'fr' ? 'Aucune notification' : 'لا توجد إشعارات'}</p></div>`
+      );
+      if (state.notifications.some((notification) => !notification.readAt)) {
+        try {
+          await api('/notifications/read', { method: 'PATCH', body: '{}' });
+          state.notifications = state.notifications.map((notification) => ({
+            ...notification,
+            readAt: notification.readAt || new Date().toISOString(),
+          }));
+          const badge = $('#staffNotifBadge');
+          if (badge) badge.style.display = 'none';
+        } catch {
+          // Ignore read failures.
+        }
+      }
+    }
+
+    async function loadClients() {
+      try {
+        const data = await api('/clients');
+        state.clients = data.clients;
+        renderClients();
+      } catch (error) {
+        $('#clientsContent').innerHTML = `<div class="empty"><p>${esc(error.message)}</p></div>`;
+      }
+    }
+
+    function renderClients() {
+      if (!state.clients.length) {
+        $('#clientsContent').innerHTML = `<div class="empty"><p>لا يوجد عملاء بعد</p></div>`;
+        return;
+      }
+      $('#clientsContent').innerHTML = `<div class="section-head" style="margin-top:4px;"><h2>حسابات العملاء</h2><span class="badge">${state.clients.length}</span></div>
+        <div class="list">${state.clients.map((client) => {
+          const status = CLIENT_STATUS[client.accountStatus] || client.accountStatus;
+          const cls = client.reviewRequired
+            ? 'cancel'
+            : client.accountStatus === 'ACTIVE'
+              ? 'done'
+              : client.accountStatus === 'PENDING'
+                ? 'progress'
+                : client.accountStatus === 'CANCELLED'
+                  ? 'cancel'
+                  : '';
+          const badge = client.reviewRequired
+            ? (LANG === 'fr' ? 'Revue requise' : 'مراجعة مطلوبة')
+            : status;
+          return `<button class="card order-card" onclick="openClientSheet('${esc(client.id)}')">
+            <div class="order-avatar">${esc((client.companyName || client.contactName).charAt(0))}</div>
+            <div class="order-main">
+              <strong>${esc(client.companyName || client.contactName)}</strong>
+              <span><bdi>${esc(client.phone)}</bdi> · ${client.ordersCount} ${LANG === 'fr' ? (client.ordersCount === 1 ? 'commande' : 'commandes') : 'طلبات'}${client.pendingOrders ? ` · ${client.pendingOrders} ${LANG === 'fr' ? 'en attente' : 'بانتظار الاعتماد'}` : ''} · ${money(client.balance)}</span>
+            </div>
+            <span class="status ${cls}">${esc(badge)}</span>
+          </button>`;
+        }).join('')}</div>`;
+    }
+
+    function openClientSheet(clientId) {
+      const client = state.clients.find((entry) => entry.id === clientId);
+      if (!client) return;
+      const status = client.accountStatus;
+      const localizedStatus = LANG === 'fr'
+        ? { PENDING: 'En attente', ACTIVE: 'Actif', SUSPENDED: 'Suspendu', FROZEN: 'Gelé', CANCELLED: 'Annulé' }[status] || status
+        : CLIENT_STATUS[status] || status;
+      const body = `
+        <div class="card" style="padding:14px; box-shadow:none; margin-bottom:14px;">
+          <strong style="display:block; margin-bottom:6px;">${esc(client.companyName || client.contactName)}</strong>
+          <p class="muted" style="margin:0 0 3px;">${esc(client.contactName)} · <bdi>${esc(client.phone)}</bdi></p>
+          <p class="muted" style="margin:0 0 3px;"><bdi>${esc(client.deliveryAddress)}</bdi></p>
+          <p class="muted" style="margin:0 0 3px;">${LANG === 'fr' ? 'Solde' : 'الرصيد'} : <strong>${money(client.balance)}</strong></p>
+          <p class="muted" style="margin:0 0 3px;">${LANG === 'fr' ? 'Distribution' : 'التوزيع'} : ${esc(client.distribution ? (client.distribution.label || distributionLabel(client.distribution.type)) : '—')}</p>
+          <p class="muted" style="margin:0;">${client.ordersCount} ${LANG === 'fr' ? (client.ordersCount === 1 ? 'commande' : 'commandes') : 'طلبات'}${client.pendingOrders ? ` · ${client.pendingOrders} ${LANG === 'fr' ? 'en attente d’approbation' : 'بانتظار الاعتماد'}` : ''} · ${esc(localizedStatus)}${client.lastOrderDate ? ` · ${LANG === 'fr' ? 'dernière' : 'آخر طلب'} ${esc(client.lastOrderDate)}` : ''}</p>
+        </div>
+        ${client.reviewRequired ? `<button class="btn" onclick="reviewClient('${client.id}')">${LANG === 'fr' ? 'Marquer comme revu' : 'تمت المراجعة'}</button>` : ''}
+        <button class="btn secondary" style="margin-top:8px;" onclick="openClientEdit('${client.id}')">${LANG === 'fr' ? 'Modifier la fiche' : 'تعديل البيانات'}</button>
+        <button class="btn secondary" style="margin-top:8px;" onclick="openClientCredit('${client.id}')">${LANG === 'fr' ? 'Créditer le solde' : 'تعبئة الرصيد'}</button>
+        ${status !== 'ACTIVE' ? `<button class="btn" style="margin-top:8px;" onclick="setClientStatus('${client.id}','ACTIVE')">${LANG === 'fr' ? 'Approuver le compte' : 'اعتماد الحساب'}</button>` : ''}
+        ${status === 'ACTIVE' ? `<button class="btn secondary" style="margin-top:8px;" onclick="setClientStatus('${client.id}','SUSPENDED')">${LANG === 'fr' ? 'Suspendre' : 'إيقاف مؤقت'}</button>` : ''}
+        ${status !== 'CANCELLED' ? `<button class="btn danger" style="margin-top:8px;" onclick="setClientStatus('${client.id}','CANCELLED')">${LANG === 'fr' ? 'Annuler le compte' : 'إلغاء الحساب'}</button>` : ''}
+      `;
+      openSheet(LANG === 'fr' ? 'Fiche client' : 'ملف العميل', body);
+    }
+
+    function openClientCreate() {
+      const body = `
+        <form id="clientCreateForm">
+          <div class="field"><label>اسم المسؤول</label><input name="contactName" maxlength="80" required /></div>
+          <div class="field"><label>الشركة (اختياري)</label><input name="companyName" maxlength="80" /></div>
+          <div class="field"><label>الهاتف</label><input name="phone" type="tel" maxlength="20" required /></div>
+          <div class="field"><label>البريد الإلكتروني (اختياري)</label><input name="email" type="email" maxlength="120" /></div>
+          <div class="field"><label>رمز الدخول (4 أرقام)</label><input name="pin" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" required /></div>
+          <div class="field"><label>عنوان التوصيل</label><input name="deliveryAddress" maxlength="200" required /></div>
+          <div class="field"><div class="row">
+            <input name="wilaya" maxlength="60" placeholder="الولاية" />
+            <input name="commune" maxlength="60" placeholder="البلدية" />
+          </div></div>
+          <div class="field"><label>نوع الحساب</label>
+            <select name="subscriptionType">
+              <option value="INDIVIDUAL">فردي</option>
+              <option value="CORPORATE">شركة</option>
+              <option value="SUBSIDIARY">فرع</option>
+            </select>
+          </div>
+          <button class="btn" type="submit">إنشاء الحساب</button>
+          <p class="muted" style="margin-top:10px;">سيتم إنشاء الحساب نشطاً مباشرة، ويستطيع العميل الدخول بالهاتف ورمز الدخول.</p>
+        </form>`;
+      openSheet('عميل جديد', body);
+      $('#clientCreateForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = new FormData(event.target);
+        try {
+          await api('/clients', {
+            method: 'POST',
+            body: JSON.stringify({
+              contactName: form.get('contactName'),
+              companyName: form.get('companyName'),
+              phone: form.get('phone'),
+              email: form.get('email'),
+              pin: form.get('pin'),
+              deliveryAddress: form.get('deliveryAddress'),
+              wilaya: form.get('wilaya'),
+              commune: form.get('commune'),
+              subscriptionType: form.get('subscriptionType'),
+            }),
+          });
+          toast('تم إنشاء حساب العميل');
+          closeSheet();
+          await loadClients();
+        } catch (error) {
+          toast(error.message, true);
+        }
+      });
+    }
+
+    function openClientEdit(clientId) {
+      const client = state.clients.find((entry) => entry.id === clientId);
+      if (!client) return;
+      const distribution = client.distribution || {};
+      const body = `
+        <form id="clientEditForm">
+          <div class="field"><label>${LANG === 'fr' ? 'Nom du contact' : 'اسم المسؤول'}</label><input type="text" name="contactName" value="${esc(client.contactName)}" maxlength="80" required /></div>
+          <div class="field"><label>${LANG === 'fr' ? 'Téléphone' : 'الهاتف'}</label><input type="tel" name="phone" value="${esc(client.phone)}" maxlength="20" required /></div>
+          <div class="field"><label>${LANG === 'fr' ? 'Adresse' : 'العنوان'}</label><input type="text" name="deliveryAddress" value="${esc(client.deliveryAddress)}" maxlength="200" required /></div>
+          <div class="field"><label>${LANG === 'fr' ? 'Mode de distribution' : 'طريقة التوزيع'}</label>
+            <select name="distributionType">
+              <option value="STANDARD_DELIVERY" ${distribution.type === 'STANDARD_DELIVERY' ? 'selected' : ''}>${LANG === 'fr' ? 'Livraison standard' : 'توصيل عادي'}</option>
+              <option value="EXPRESS" ${distribution.type === 'EXPRESS' ? 'selected' : ''}>${LANG === 'fr' ? 'Livraison express' : 'توصيل سريع'}</option>
+              <option value="PICKUP" ${distribution.type === 'PICKUP' ? 'selected' : ''}>${LANG === 'fr' ? 'Retrait sur place' : 'استلام من الفرع'}</option>
+            </select>
+          </div>
+          <div class="field"><label>${LANG === 'fr' ? 'Tournée / livreur' : 'الدورة / السائق'}</label><input type="text" name="driverName" value="${esc(distribution.driverName || '')}" maxlength="60" /></div>
+          <button class="btn" type="submit">${LANG === 'fr' ? 'Enregistrer' : 'حفظ'}</button>
+        </form>`;
+      openSheet(LANG === 'fr' ? 'Modifier la fiche client' : 'تعديل بيانات العميل', body);
+      $('#clientEditForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = new FormData(event.target);
+        try {
+          await api(`/clients/${clientId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+              contactName: form.get('contactName'),
+              phone: form.get('phone'),
+              deliveryAddress: form.get('deliveryAddress'),
+              distribution: {
+                type: form.get('distributionType'),
+                driverName: form.get('driverName') || undefined,
+              },
+            }),
+          });
+          closeSheet();
+          toast(LANG === 'fr' ? 'Fiche client mise à jour' : 'تم تحديث بيانات العميل');
+          loadClients();
+        } catch (error) {
+          toast(error.message, true);
+        }
+      });
+    }
+
+    function openClientCredit(clientId) {
+      const client = state.clients.find((entry) => entry.id === clientId);
+      if (!client) return;
+      const body = `
+        <form id="clientCreditForm">
+          <p class="muted" style="margin-top:-4px;">${LANG === 'fr' ? 'Solde actuel' : 'الرصيد الحالي'} : <strong>${money(client.balance)}</strong></p>
+          <div class="field"><label>${LANG === 'fr' ? 'Montant à créditer' : 'المبلغ المراد إضافته'}</label><input type="number" name="amount" min="1" step="1" required /></div>
+          <button class="btn" type="submit">${LANG === 'fr' ? 'Créditer' : 'تعبئة الرصيد'}</button>
+        </form>`;
+      openSheet(LANG === 'fr' ? 'Créditer le solde' : 'تعبئة الرصيد', body);
+      $('#clientCreditForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const amount = Number(new FormData(event.target).get('amount'));
+        try {
+          await api(`/clients/${clientId}/credit`, {
+            method: 'POST',
+            body: JSON.stringify({ amount }),
+          });
+          closeSheet();
+          toast(LANG === 'fr' ? 'Solde crédité' : 'تمت تعبئة الرصيد');
+          loadClients();
+        } catch (error) {
+          toast(error.message, true);
+        }
+      });
+    }
+
+    async function reviewClient(clientId) {
+      try {
+        await api(`/clients/${clientId}/review`, { method: 'POST', body: '{}' });
+        closeSheet();
+        toast(LANG === 'fr' ? 'Compte marqué comme revu' : 'تمت مراجعة الحساب');
+        loadClients();
+      } catch (error) {
+        toast(error.message, true);
+      }
+    }
+
+    async function setClientStatus(clientId, accountStatus) {
+      const client = (state.clients || []).find((entry) => entry.id === clientId);
+      try {
+        await api(`/clients/${clientId}/status`, {
+          method: 'PATCH',
+          body: JSON.stringify({ accountStatus }),
+        });
+        closeSheet();
+        toast(
+          accountStatus === 'ACTIVE' && client && client.pendingOrders
+            ? `تم اعتماد الحساب وتأكيد ${client.pendingOrders} طلب`
+            : 'تم تحديث حالة الحساب'
+        );
+        loadClients();
+      } catch (error) {
+        toast(error.message, true);
+      }
+    }
+
+    // ------------------------------------------------------------------
+    // Settings
+    // ------------------------------------------------------------------
+    async function loadSettings() {
+      try {
+        const data = await api('/settings');
+        state.settings = data.settings;
+        fillSettingsForm();
+      } catch (error) {
+        toast(error.message, true);
+      }
+    }
+
+    function fillSettingsForm() {
+      if (!state.settings || !$('#settingsForm')) return;
+      const form = $('#settingsForm');
+      for (const key of ['lunchPrice', 'dinnerPrice', 'packagingPrice', 'deliveryPrice', 'lunchHours', 'dinnerHours', 'cutoffTime', 'cutoffDaysBefore']) {
+        if (form.elements[key]) form.elements[key].value = state.settings[key];
+      }
+      if (form.elements.closedDates) {
+        form.elements.closedDates.value = (state.settings.closedDates || []).join(', ');
+      }
+      renderExtras();
+    }
+
+    function renderExtras() {
+      const extras = state.settings ? state.settings.extras : [];
+      $('#extrasList').innerHTML = extras.map((extra, index) => `
+        <div class="extra-row">
+          <input type="text" value="${esc(extra.name)}" data-extra-name="${index}" placeholder="اسم الإضافة" maxlength="40" />
+          <input type="number" value="${extra.price}" data-extra-price="${index}" min="0" step="10" title="السعر" />
+          <input type="number" value="${extra.perMeals || 1}" data-extra-permeals="${index}" min="1" max="30" title="وحدة لكل عدد وجبات" />
+          <button type="button" data-remove-extra="${index}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>`).join('');
+    }
+
+    function collectSettings() {
+      const form = $('#settingsForm');
+      const extras = [...document.querySelectorAll('[data-extra-name]')].map((input) => ({
+        name: input.value.trim(),
+        price: Number(document.querySelector(`[data-extra-price="${input.dataset.extraName}"]`).value),
+        perMeals: Number(document.querySelector(`[data-extra-permeals="${input.dataset.extraName}"]`).value) || 1,
+      })).filter((extra) => extra.name.length > 0);
+      return {
+        lunchPrice: Number(form.elements.lunchPrice.value),
+        dinnerPrice: Number(form.elements.dinnerPrice.value),
+        packagingPrice: Number(form.elements.packagingPrice.value),
+        deliveryPrice: Number(form.elements.deliveryPrice.value),
+        lunchHours: form.elements.lunchHours.value.trim(),
+        dinnerHours: form.elements.dinnerHours.value.trim(),
+        cutoffTime: form.elements.cutoffTime.value,
+        cutoffDaysBefore: Number(form.elements.cutoffDaysBefore.value),
+        closedDates: String(form.elements.closedDates.value || '')
+          .split(',')
+          .map((date) => date.trim())
+          .filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date)),
+        extras,
+      };
+    }
+
+    // ------------------------------------------------------------------
+    // Bootstrap
+    // ------------------------------------------------------------------
+    document.addEventListener('click', (event) => {
+      const nav = event.target.closest('[data-screen]');
+      if (nav) go(nav.dataset.screen);
+      const goBtn = event.target.closest('[data-go]');
+      if (goBtn) go(goBtn.dataset.go);
+      const settingsBtn = event.target.closest('[data-settings]');
+      if (settingsBtn) {
+        go('settings');
+        const target = $('#settings-' + settingsBtn.dataset.settings);
+        if (target) setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+      }
+      if (event.target.closest('#burgerBtn')) openDrawer();
+      if (event.target.closest('#drawerBackdrop')) closeDrawer();
+      if (event.target.closest('#sheetClose') || event.target === $('#sheetBackdrop')) closeSheet();
+      if (event.target.closest('#fabAddMenu')) openAddMenu();
+      if (event.target.closest('#generateProgramBtn')) {
+        const button = event.target.closest('#generateProgramBtn');
+        button.disabled = true;
+        fetch('/api/v1/simple/weekly/generate', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeader() }, body: '{}' })
+          .then(async (res) => {
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'تعذر التوليد');
+            toast(`تم توليد ${data.created} طلب`);
+            loadHome();
+          })
+          .catch((error) => toast(error.message, true))
+          .finally(() => { button.disabled = false; });
+      }
+      if (event.target.closest('#addDishBtn')) openAddDish();
+    });
+
+    $('#addUserBtn').addEventListener('click', () => openUserSheet());
+    $('#addClientBtn').addEventListener('click', () => openClientCreate());
+    $('#openSessionsBtn').addEventListener('click', () => void openSessionsSheet());
+    $('#securityBtn').addEventListener('click', () => {
+      closeDrawer();
+      void openSecuritySheet();
+    });
+
+    document.querySelectorAll('#scopeCurrent, #scopeArchived').forEach((button) => {
+      button.addEventListener('click', () => {
+        state.scope = button.dataset.scope;
+        document.querySelectorAll('#scopeCurrent, #scopeArchived').forEach((entry) => entry.classList.toggle('active', entry === button));
+        loadMenu();
+      });
+    });
+
+    $('#addExtraBtn').addEventListener('click', () => {
+      if (!state.settings) return;
+      state.settings.extras.push({ name: '', price: 0 });
+      renderExtras();
+    });
+
+    $('#extrasList').addEventListener('click', (event) => {
+      const button = event.target.closest('[data-remove-extra]');
+      if (!button) return;
+      state.settings.extras.splice(Number(button.dataset.removeExtra), 1);
+      renderExtras();
+    });
+
+    $('#settingsForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      try {
+        const data = await api('/settings', { method: 'PUT', body: JSON.stringify(collectSettings()) });
+        state.settings = data.settings;
+        fillSettingsForm();
+        toast('تم حفظ الإعدادات');
+      } catch (error) {
+        toast(error.message, true);
+      }
+    });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/app/sw.js', { scope: '/app/' }).catch(() => {});
+    }
+
+    async function openSecuritySheet() {
+      try {
+        const status = await authApi('/mfa');
+        if (!status.enabled) {
+          openSheet('المصادقة الثنائية', `
+            <p class="muted">غيّر كلمة المرور الافتراضية أولاً، ثم فعّل تطبيق مصادقة (Google Authenticator / Authy).</p>
+            <button class="btn" id="startMfaBtn">تفعيل المصادقة الثنائية</button>
+          `);
+          $('#startMfaBtn').addEventListener('click', async () => {
+            try {
+              const setup = await authApi('/mfa/setup', { method: 'POST' });
+              openSheet('تفعيل المصادقة الثنائية', `
+                <p class="muted">أضف هذا المفتاح في تطبيق المصادقة:</p>
+                <div class="card" style="padding:12px; margin-bottom:10px; word-break:break-all; font-family:monospace;">${esc(setup.secret)}</div>
+                <p class="muted" style="word-break:break-all;">${esc(setup.otpauthUri)}</p>
+                <form id="mfaEnableForm">
+                  <div class="field"><label>الرمز الحالي (6 أرقام)</label><input name="code" inputmode="numeric" required maxlength="6" /></div>
+                  <button class="btn" type="submit">تأكيد التفعيل</button>
+                </form>
+              `);
+              $('#mfaEnableForm').addEventListener('submit', async (event) => {
+                event.preventDefault();
+                try {
+                  const result = await authApi('/mfa/enable', {
+                    method: 'POST',
+                    body: JSON.stringify({ code: new FormData(event.target).get('code') }),
+                  });
+                  openSheet('رموز الاسترجاع', `
+                    <p class="muted">احفظ هذه الرموز الآن — لن تُعرض مرة أخرى. كل رمز يُستخدم مرة واحدة.</p>
+                    <div class="card" style="padding:12px; font-family:monospace; line-height:2;">${result.recoveryCodes.map(esc).join('<br />')}</div>
+                    <button class="btn" id="recoveryDoneBtn" style="margin-top:10px;">تم الحفظ</button>
+                  `);
+                  $('#recoveryDoneBtn').addEventListener('click', closeSheet);
+                  toast('تم تفعيل المصادقة الثنائية');
+                } catch (error) {
+                  toast(error.message, true);
+                }
+              });
+            } catch (error) {
+              toast(error.message, true);
+            }
+          });
+          return;
+        }
+        openSheet('المصادقة الثنائية', `
+          <p class="muted">المصادقة الثنائية مفعّلة. لتعطيلها أدخل كلمة المرور ورمزاً حالياً.</p>
+          <form id="mfaDisableForm">
+            <div class="field"><label>كلمة المرور</label><input type="password" name="password" required /></div>
+            <div class="field"><label>الرمز الحالي أو رمز استرجاع</label><input name="code" required /></div>
+            <button class="btn danger" type="submit">تعطيل المصادقة</button>
+          </form>
+        `);
+        $('#mfaDisableForm').addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const data = new FormData(event.target);
+          try {
+            await authApi('/mfa/disable', {
+              method: 'POST',
+              body: JSON.stringify({ password: data.get('password'), code: data.get('code') }),
+            });
+            toast('تم تعطيل المصادقة الثنائية');
+            closeSheet();
+          } catch (error) {
+            toast(error.message, true);
+          }
+        });
+      } catch (error) {
+        toast(error.message, true);
+      }
+    }
+
+    const USER_ROLE_LABELS = {
+      ADMIN: 'مدير عام',
+      OPERATIONS_MANAGER: 'مسؤول العمليات',
+      CHEF_KITCHEN: 'رئيس الورشة',
+      PURCHASING_MANAGER: 'مسؤول المشتريات',
+      PACKING_LOGISTICS: 'تغليف وتوزيع',
+      DELIVERY_DRIVER: 'سائق توصيل',
+    };
+
+    async function loadUsers() {
+      try {
+        const data = await api('/users');
+        state.users = data.users || [];
+        renderUsers();
+      } catch (error) {
+        $('#usersContent').innerHTML = `<div class="empty"><p>${esc(error.message)}</p></div>`;
+      }
+    }
+
+    function renderUsers() {
+      const users = state.users || [];
+      $('#usersContent').innerHTML = users.map((user) => `
+        <div class="card" style="padding:14px; margin-bottom:10px; cursor:pointer;" onclick="openUserSheet('${esc(user.id)}')">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <div style="min-width:0;">
+              <strong style="display:block; font-size:0.9rem;">${esc(user.fullName)}</strong>
+              <span class="muted" style="display:block; overflow:hidden; text-overflow:ellipsis;">${esc(user.email)}</span>
+            </div>
+            <span class="status ${user.isActive ? 'done' : 'cancelled'}">${user.isActive ? 'نشط' : 'موقوف'}</span>
+          </div>
+          <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
+            <span class="badge">${esc(USER_ROLE_LABELS[user.role] || user.role)}</span>
+            <span class="muted" style="font-size:0.68rem;">${esc(formatDate(user.createdAt.slice(0, 10)))}</span>
+          </div>
+        </div>`).join('') || '<div class="empty"><p>لا يوجد مستخدمون</p></div>';
+    }
+
+    function openUserSheet(userId) {
+      const user = (state.users || []).find((entry) => entry.id === userId);
+      const isEdit = Boolean(user);
+      const options = Object.entries(USER_ROLE_LABELS)
+        .map(([value, label]) => `<option value="${value}" ${user && user.role === value ? 'selected' : ''}>${esc(label)}</option>`)
+        .join('');
+      const body = `
+        <form id="userForm">
+          <div class="field"><label>الاسم الكامل</label><input id="userFullName" required minlength="2" maxlength="80" value="${user ? esc(user.fullName) : ''}" /></div>
+          <div class="field"><label>البريد الإلكتروني</label><input id="userEmail" type="email" required ${isEdit ? 'disabled' : ''} value="${user ? esc(user.email) : ''}" /></div>
+          <div class="field"><label>الدور</label><select id="userRole" required>${options}</select></div>
+          <div class="field"><label>${isEdit ? 'كلمة مرور جديدة (اختياري)' : 'كلمة المرور'}</label><input id="userPassword" type="password" minlength="8" ${isEdit ? '' : 'required'} placeholder="8 أحرف على الأقل" /></div>
+          ${isEdit ? `<label style="display:flex; align-items:center; gap:10px; margin:12px 0; font-size:0.82rem;"><input id="userActive" type="checkbox" style="width:auto;" ${user.isActive ? 'checked' : ''} /> الحساب نشط</label>` : ''}
+          <button class="btn" type="submit">${isEdit ? 'حفظ التعديلات' : 'إنشاء المستخدم'}</button>
+        </form>
+        ${isEdit ? `<button class="btn secondary" id="revokeUserSessions" style="margin-top:8px;">قطع كل جلسات هذا المستخدم</button>` : ''}
+        <p class="muted" style="margin-top:10px;">أي تغيير للدور أو كلمة المرور يلغي جلسات المستخدم فوراً.</p>
+      `;
+      openSheet(isEdit ? 'تعديل مستخدم' : 'مستخدم جديد', body);
+      const form = $('#userForm');
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const payload = {
+          fullName: $('#userFullName').value.trim(),
+          role: $('#userRole').value,
+          password: $('#userPassword').value,
+        };
+        if (!payload.password) delete payload.password;
+        if (isEdit) payload.isActive = $('#userActive').checked;
+        try {
+          await api(isEdit ? `/users/${user.id}` : '/users', {
+            method: isEdit ? 'PATCH' : 'POST',
+            body: JSON.stringify(isEdit ? payload : { ...payload, email: $('#userEmail').value.trim() }),
+          });
+          toast(isEdit ? 'تم تحديث المستخدم' : 'تم إنشاء المستخدم');
+          closeSheet();
+          await loadUsers();
+        } catch (error) {
+          toast(error.message, true);
+        }
+      });
+      const revoke = $('#revokeUserSessions');
+      if (revoke) {
+        revoke.addEventListener('click', async () => {
+          if (!confirm('قطع كل جلسات هذا المستخدم؟')) return;
+          try {
+            const result = await api(`/users/${user.id}/logout`, { method: 'POST' });
+            toast(`تم قطع ${result.revoked} جلسة`);
+          } catch (error) {
+            toast(error.message, true);
+          }
+        });
+      }
+    }
+
+    async function openSessionsSheet() {
+      try {
+        const data = await api('/sessions');
+        const staffRows = (data.staffSessions || []).map((session) => `
+          <div class="card" style="padding:12px; margin-bottom:8px;">
+            <strong style="font-size:0.84rem;">${esc(session.fullName)}</strong>
+            <p class="muted" style="margin:2px 0;">${esc(session.email)} · ${esc(session.role)}</p>
+            <p class="muted" style="margin:2px 0;">تنتهي: ${esc(new Date(session.expiresAt).toLocaleString(LOCALE))}</p>
+            <button class="link" data-revoke="staff" data-hash="${session.tokenHash}">قطع الجلسة</button>
+          </div>`).join('');
+        const clientRows = (data.clientSessions || []).map((session) => `
+          <div class="card" style="padding:12px; margin-bottom:8px;">
+            <strong style="font-size:0.84rem;">${esc(session.contactName)}</strong>
+            <p class="muted" style="margin:2px 0;">${esc(session.phone)} · عميل</p>
+            <p class="muted" style="margin:2px 0;">تنتهي: ${esc(new Date(session.expiresAt).toLocaleString(LOCALE))}</p>
+            <button class="link" data-revoke="client" data-hash="${session.tokenHash}">قطع الجلسة</button>
+          </div>`).join('');
+        openSheet('الجلسات النشطة', `
+          <h3 style="font-size:0.82rem; margin:4px 0 8px;">الفريق (${data.staffSessions.length})</h3>
+          ${staffRows || '<p class="muted">لا توجد جلسات فريق.</p>'}
+          <h3 style="font-size:0.82rem; margin:16px 0 8px;">العملاء (${data.clientSessions.length})</h3>
+          ${clientRows || '<p class="muted">لا توجد جلسات عملاء.</p>'}
+        `);
+        document.querySelectorAll('#sheetBody [data-revoke]').forEach((button) => {
+          button.addEventListener('click', async () => {
+            try {
+              await api(`/sessions/${button.dataset.revoke}/${button.dataset.hash}`, { method: 'DELETE' });
+              toast('تم قطع الجلسة');
+              await openSessionsSheet();
+            } catch (error) {
+              toast(error.message, true);
+            }
+          });
+        });
+      } catch (error) {
+        toast(error.message, true);
+      }
+    }
+
+    async function loadAudit() {
+      try {
+        const data = await api('/audit?limit=100');
+        const logs = data.logs || [];
+        $('#auditContent').innerHTML = logs.map((log) => `
+          <details class="card" style="padding:12px; margin-bottom:8px;">
+            <summary style="cursor:pointer; font-size:0.8rem;">
+              <strong>${esc(log.action)}</strong> · ${esc(log.entityType)}
+              <span class="muted" style="display:block; font-size:0.68rem;">${esc(log.userName)} · ${esc(new Date(log.timestamp).toLocaleString(LOCALE))}</span>
+            </summary>
+            ${log.entityId ? `<p class="muted" style="margin:8px 0 4px;">ID: ${esc(log.entityId)}</p>` : ''}
+            ${log.beforeSnapshot ? `<p class="muted" style="margin:4px 0;">قبل:</p><pre style="white-space:pre-wrap; word-break:break-word; font-size:0.66rem; margin:0 0 8px;">${esc(JSON.stringify(log.beforeSnapshot, null, 2))}</pre>` : ''}
+            ${log.afterSnapshot ? `<p class="muted" style="margin:4px 0;">بعد:</p><pre style="white-space:pre-wrap; word-break:break-word; font-size:0.66rem; margin:0;">${esc(JSON.stringify(log.afterSnapshot, null, 2))}</pre>` : ''}
+          </details>`).join('') || '<div class="empty"><p>لا توجد عمليات مسجلة</p></div>';
+      } catch (error) {
+        $('#auditContent').innerHTML = `<div class="empty"><p>${esc(error.message)}</p></div>`;
+      }
+    }
+
+    const ROLE_LABELS = {
+      ADMIN: 'المدير العام',
+      OPERATIONS_MANAGER: 'مسؤول العمليات',
+      CHEF_KITCHEN: 'رئيس الورشة',
+      PURCHASING_MANAGER: 'مسؤول المشتريات',
+      PACKING_LOGISTICS: 'مسؤول التغليف والتوزيع',
+      DELIVERY_DRIVER: 'سائق توصيل',
+    };
+
+    function applyRole() {
+      const manager = currentUser && ['ADMIN', 'OPERATIONS_MANAGER'].includes(currentUser.role);
+      const admin = currentUser && currentUser.role === 'ADMIN';
+      document.querySelectorAll('[data-go="clients"], [data-settings]').forEach((element) => {
+        element.style.display = manager ? '' : 'none';
+      });
+      document.querySelectorAll('.admin-only').forEach((element) => {
+        element.style.display = admin ? '' : 'none';
+      });
+      const generate = $('#generateProgramBtn');
+      if (generate) generate.style.display = manager ? '' : 'none';
+      const roleLabel = currentUser ? ROLE_LABELS[currentUser.role] || currentUser.role : '';
+      $('#userRoleLabel').textContent = currentUser
+        ? currentUser.fullName === roleLabel
+          ? currentUser.fullName
+          : `${currentUser.fullName} — ${roleLabel}`
+        : '';
+    }
+
+    function startApp() {
+      const next = new URLSearchParams(location.search).get('next');
+      if (next && next.startsWith('/') && !next.startsWith('//')) {
+        location.href = next;
+        return;
+      }
+      showApp();
+      applyRole();
+      if (currentUser && ['ADMIN', 'OPERATIONS_MANAGER'].includes(currentUser.role)) {
+        loadSettings();
+      }
+      loadDishes();
+      void loadStaffNotifications();
+      go('home');
+      const initialScreen = new URLSearchParams(location.search).get('screen');
+      if (initialScreen && TITLES[initialScreen] && initialScreen !== 'home') {
+        const manager = currentUser && ['ADMIN', 'OPERATIONS_MANAGER'].includes(currentUser.role);
+        if (initialScreen === 'settings' || initialScreen === 'clients') {
+          if (manager) go(initialScreen);
+        } else {
+          go(initialScreen);
+        }
+      }
+    }
+
+    async function bootAuth() {
+      if (!staffToken()) {
+        showLogin();
+        return;
+      }
+      try {
+        const res = await fetch('/api/v1/auth/me', { headers: authHeader() });
+        if (!res.ok) throw new Error('session');
+        const data = await res.json();
+        currentUser = data.user;
+        startApp();
+      } catch {
+        localStorage.removeItem(STAFF_TOKEN_KEY);
+        currentUser = null;
+        showLogin();
+      }
+    }
+
+    let mfaChallenge = null;
+    $('#loginForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = new FormData(event.target);
+      const submit = event.target.querySelector('button[type=submit]');
+      submit.disabled = true;
+      try {
+        const payload = {
+          email: form.get('email'),
+          password: form.get('password'),
+        };
+        if (mfaChallenge) {
+          payload.challenge = mfaChallenge;
+          payload.mfaCode = form.get('mfaCode');
+        }
+        const res = await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'تعذر الدخول');
+        if (data.mfaRequired) {
+          mfaChallenge = data.challenge;
+          $('#mfaField').style.display = '';
+          event.target.querySelector('[name="mfaCode"]').focus();
+          toast('أدخل رمز التحقق من تطبيق المصادقة');
+          return;
+        }
+        mfaChallenge = null;
+        localStorage.setItem(STAFF_TOKEN_KEY, data.token);
+        currentUser = data.user;
+        startApp();
+        toast('مرحباً ' + data.user.fullName);
+      } catch (error) {
+        toast(error.message, true);
+      } finally {
+        submit.disabled = false;
+      }
+    });
+
+    $('#logoutBtn').addEventListener('click', async () => {
+      try {
+        await fetch('/api/v1/auth/logout', { method: 'POST', headers: authHeader() });
+      } catch {
+        // Session cleanup is best effort.
+      }
+      localStorage.removeItem(STAFF_TOKEN_KEY);
+      currentUser = null;
+      showLogin();
+    });
+
+    $('#staffBellBtn').addEventListener('click', openStaffNotifications);
+    $('#langBtn').textContent = LANG === 'fr' ? 'ع' : 'FR';
+    $('#langBtn').addEventListener('click', () => {
+      localStorage.setItem('janitou_lang', LANG === 'fr' ? 'ar' : 'fr');
+      location.reload();
+    });
+
+    bootAuth();
+  </script>
+</body>
+</html>

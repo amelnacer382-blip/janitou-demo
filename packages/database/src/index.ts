@@ -5,6 +5,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { PrismaStateBackend } from './prisma-backend.js';
 
 export interface DatabaseConfig {
   databaseUrl: string;
@@ -20,6 +21,7 @@ export interface DatabaseState {
   customers: unknown[];
   mealPlans: unknown[];
   orders: unknown[];
+  pendingOrders?: unknown[];
   productionBatches: unknown[];
   purchaseOrders: unknown[];
   deliveryRuns: unknown[];
@@ -28,11 +30,24 @@ export interface DatabaseState {
   invoices: unknown[];
   payments: unknown[];
   auditLogs: unknown[];
+  staffUsers?: unknown[];
+  staffSessions?: unknown[];
+  clientSessions?: unknown[];
+  notifications?: unknown[];
+  outboundMessages?: unknown[];
+  settings?: unknown;
   metadata?: {
     lastPersistedAt: string;
     version: string;
     totalRecords: number;
   };
+}
+
+export interface StateBackend {
+  loadState(): DatabaseState | null | Promise<DatabaseState | null>;
+  persistState(state: Omit<DatabaseState, 'metadata'>): void | Promise<void>;
+  getHealth(state?: Omit<DatabaseState, 'metadata'>): DatabaseHealth;
+  getConfig(): DatabaseConfig;
 }
 
 export interface DatabaseHealth {
@@ -163,3 +178,15 @@ export class JanitouDatabase {
 }
 
 export const defaultDatabase = new JanitouDatabase();
+
+/**
+ * PostgreSQL is used whenever DATABASE_URL points at it. Setting
+ * JANITOU_STORAGE=file keeps the JSON backend for local, database-less runs.
+ */
+export function createStateBackend(): StateBackend {
+  const databaseUrl = process.env.DATABASE_URL || '';
+  if (databaseUrl.startsWith('postgres') && process.env.JANITOU_STORAGE !== 'file') {
+    return new PrismaStateBackend(databaseUrl);
+  }
+  return new JanitouDatabase();
+}

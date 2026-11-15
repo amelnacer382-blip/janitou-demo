@@ -1,9 +1,35 @@
+databases:
+  - name: janitou-food-db
+    databaseName: janitou_food_db
+    user: janitou_user
+    plan: free
+    region: frankfurt
+
 services:
   - type: web
     name: janitou-food-management
     runtime: docker
     plan: free
     region: frankfurt
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
+      - key: JANITOU_STORAGE
+        value: postgres
+      - key: JANITOU_MFA_REQUIRED_ADMINS
+        value: "0"
+      - key: MESSAGING_ENABLED
+        value: "1"
+      - key: MESSAGING_CHANNEL
+        value: WHATSAPP
+      - key: MESSAGING_DEFAULT_COUNTRY_CODE
+        value: "213"
+      - key: BACKUP_ENABLED
+        value: "0"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: janitou-food-db
+          property: connectionString

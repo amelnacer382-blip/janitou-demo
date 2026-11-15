@@ -1,48 +1,51 @@
 # ==========================================
 # JANITOU FOOD — Production Dockerfile
-# Multi-stage lightweight Bun container
+# Multi-stage Bun container with Prisma
 # ==========================================
 
 # 1. Build Stage
-FROM oven/bun:1-alpine AS builder
+FROM oven/bun:1 AS builder
 WORKDIR /app
 
-# Copy dependency manifests
 COPY package.json tsconfig.json bun.lock ./
 COPY packages/common/package.json ./packages/common/
 COPY packages/database/package.json ./packages/database/
 COPY apps/api/package.json ./apps/api/
 COPY apps/web/package.json ./apps/web/
 
-# Install dependencies
+# Prisma schema is required by the database workspace postinstall hook.
+COPY packages/database/prisma ./packages/database/prisma
+
 RUN bun install --frozen-lockfile
 
-# Copy source files
 COPY packages/ ./packages/
 COPY apps/ ./apps/
 
-# Build internal packages
 RUN bun run build:bun
 
 # 2. Production Runtime Stage
-FROM oven/bun:1-alpine AS runner
+FROM oven/bun:1 AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=4000
 
-# Copy application artifacts from builder
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /app ./
+COPY deploy/entrypoint.sh /usr/local/bin/entrypoint.sh
 
-# Create data directory for JSON persistence and set permissions
-RUN mkdir -p /app/data && chown -R bun:bun /app
+RUN chmod +x /usr/local/bin/entrypoint.sh \
+  && mkdir -p /app/data /app/data/backups \
+  && chown -R bun:bun /app
 
-# Run as non-root user for security
 USER bun
 
 EXPOSE 4000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:4000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD bun -e "fetch('http://127.0.0.1:4000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
 
-CMD ["bun", "apps/api/src/server.ts"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
