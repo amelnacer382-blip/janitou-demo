@@ -1,3 +1,9 @@
+DO $$ BEGIN
+  CREATE TYPE "Role" AS ENUM ('ADMIN', 'OPERATIONS_MANAGER', 'CHEF_KITCHEN', 'PURCHASING_MANAGER', 'PACKING_LOGISTICS', 'DELIVERY_DRIVER', 'CLIENT');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
 -- Staff accounts, sessions and audit logs move out of the JSONB snapshot.
 CREATE TABLE IF NOT EXISTS "staff_accounts" (
     "id" TEXT NOT NULL,
