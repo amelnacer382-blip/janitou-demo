@@ -4,7 +4,7 @@
 .gitignore
 .editorconfig
 *.log
-data/
-docs/
+/data/
+/docs/
 .env
 .env.production
