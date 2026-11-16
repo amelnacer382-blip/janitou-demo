@@ -183,6 +183,31 @@
     .toast.error { background: #7f1d1d; }
     .skeleton { height: 110px; border-radius: var(--radius); background: linear-gradient(90deg, #f3ecdf, #f8faf9, #f3ecdf); background-size: 200% 100%; animation: shimmer 1.2s infinite; margin-bottom: 12px; }
     @keyframes shimmer { to { background-position: -200% 0; } }
+    .view-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #eee5d4; padding: 5px; border-radius: 16px; margin-bottom: 16px; }
+    .view-btn { padding: 11px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 800; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease; border: 1px solid transparent; }
+    .view-btn.active { background: var(--card); color: var(--teal-dark); box-shadow: 0 4px 12px rgba(36,26,16,0.08); border-color: rgba(201,154,46,0.35); }
+    .routine-day { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 15px; margin-bottom: 14px; box-shadow: 0 6px 18px rgba(58,42,24,0.05); position: relative; overflow: hidden; }
+    .routine-day.is-today { border: 2px solid var(--gold); background: linear-gradient(180deg, #fffdf8 0%, #faf3e3 100%); }
+    .routine-day.is-today::before { content: ""; position: absolute; top: 0; right: 0; left: 0; height: 4px; background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-light)); }
+    .routine-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 9px; border-bottom: 1px dashed var(--line); }
+    .routine-head .day-info { display: flex; align-items: center; gap: 8px; }
+    .routine-head h3 { margin: 0; font-size: 0.98rem; color: var(--ink); }
+    .today-tag { background: var(--gold); color: #241a10; font-size: 0.68rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; }
+    .routine-services { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    @media (max-width: 440px) { .routine-services { grid-template-columns: 1fr; } }
+    .service-card { border: 1px solid var(--line); border-radius: 14px; background: #fff; overflow: hidden; display: flex; flex-direction: column; }
+    .service-badge { font-size: 0.68rem; font-weight: 800; padding: 5px 10px; background: var(--soft); color: var(--teal-dark); display: inline-flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--line); }
+    .service-card .dish-img { height: 106px; background: var(--soft); position: relative; }
+    .service-card .dish-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .service-card .dish-img .fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; color: var(--teal); }
+    .service-card .body { padding: 9px 10px 10px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .service-card .dish-title { font-size: 0.82rem; font-weight: 700; line-height: 1.35; color: var(--ink); flex: 1; }
+    .service-card .price-row { display: flex; align-items: center; justify-content: space-between; margin-top: 2px; }
+    .service-card .price { font-weight: 800; font-size: 0.86rem; color: var(--teal-dark); }
+    .service-card .order-action { background: var(--teal); color: #fff; border-radius: 10px; padding: 9px 12px; font-size: 0.78rem; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 6px; width: 100%; }
+    .service-card .order-action:disabled { opacity: 0.5; background: var(--line); color: var(--muted); cursor: not-allowed; }
+    .routine-alts { background: var(--soft); border-radius: 12px; padding: 8px 12px; font-size: 0.74rem; color: var(--muted); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .routine-alts span { font-weight: 700; color: var(--teal-dark); flex: 0 0 auto; }
     @media (min-width: 700px) { body { background: #efe4d2; } .shell { box-shadow: 0 0 40px rgba(0,0,0,0.06); } }
     [dir="ltr"] body { direction: ltr; text-align: left; }
     [dir="ltr"] .order-btn svg, [dir="ltr"] .day-actions svg { transform: scaleX(-1); }
@@ -229,14 +254,18 @@
         <div id="accountContent"><div class="skeleton"></div></div>
       </section>
     </main>
-    <nav class="bottom-nav" style="grid-template-columns: repeat(2, 1fr);">
+    <nav class="bottom-nav" style="grid-template-columns: repeat(3, 1fr);">
       <button class="nav-btn active" data-screen="menu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M4 9h16M8 13h3M8 16h6"/></svg>
-        القائمة
+        <span id="navMenuLabel">القائمة والروتين</span>
+      </button>
+      <button class="nav-btn" data-screen="program">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        <span id="navProgLabel">البرنامج الثابت</span>
       </button>
       <button class="nav-btn" data-screen="orders">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
-        طلباتي
+        <span id="navOrdersLabel">طلباتي</span>
       </button>
     </nav>
   </div>
@@ -291,7 +320,7 @@
       FROZEN: { ar: 'الحساب مجمد. تواصل مع الإدارة.', cls: 'danger' },
       CANCELLED: { ar: 'الحساب ملغى.', cls: 'danger' },
     };
-    const state = { screen: 'menu', account: null, days: [], dishes: [], catalogueSettings: null, catalogueCategory: 'ALL', config: null, orders: [], program: null, notifications: [] };
+    const state = { screen: 'menu', menuView: 'routine', account: null, days: [], dishes: [], catalogueSettings: null, catalogueCategory: 'ALL', config: null, orders: [], program: null, notifications: [] };
 
     const $ = (selector) => document.querySelector(selector);
 
@@ -364,7 +393,10 @@
     }
 
     function titleFor(screen) {
-      return { menu: 'القائمة', orders: 'طلباتي' }[screen] || 'جانيتو فود';
+      if (LANG === 'fr') {
+        return { menu: 'Menu & Routine', program: 'Programme Hebdo', orders: 'Mes Commandes' }[screen] || 'JANITOU FOOD';
+      }
+      return { menu: 'القائمة والروتين', program: 'البرنامج الثابت', orders: 'طلباتي' }[screen] || 'جانيتو فود';
     }
     function go(screen) {
       state.screen = screen;
@@ -372,10 +404,17 @@
       document.querySelectorAll('.nav-btn[data-screen]').forEach((btn) => btn.classList.toggle('active', btn.dataset.screen === screen));
       $('#pageTitle').textContent = titleFor(screen);
       if (screen === 'menu') loadMenu();
+      if (screen === 'program') loadProgram();
       if (screen === 'orders') loadGuestOrders();
     }
 
     async function boot() {
+      if (LANG === 'fr') {
+        const menuL = $('#navMenuLabel'); if (menuL) menuL.textContent = 'Menu & Routine';
+        const progL = $('#navProgLabel'); if (progL) progL.textContent = 'Programme';
+        const ordL = $('#navOrdersLabel'); if (ordL) ordL.textContent = 'Commandes';
+        $('#pageTitle').textContent = 'Menu & Routine';
+      }
       try {
         state.config = (await api('/config')).settings;
         showApp();
@@ -438,7 +477,129 @@
       </div>`;
     }
 
+    function setMenuView(view) {
+      state.menuView = view;
+      renderMenu();
+    }
+
+    function renderRoutine() {
+      const days = state.days || [];
+      const fr = LANG === 'fr';
+      if (!days.length) {
+        return `<div class="empty">${fr ? 'Aucun menu publié pour le moment' : 'لا توجد قائمة منشورة حالياً'}</div>`;
+      }
+      const todayIso = isoToday();
+      const heroHtml = `
+        <section class="catalog-hero" style="margin-bottom:14px;">
+          <small>JANITOU FOOD</small>
+          <h2>${fr ? 'La Routine Quotidienne<br />Des Plats Frais Chaque Jour' : 'الروتين اليومي للوجبات<br />أطباق طازجة ومتنوعة كل يوم'}</h2>
+          <p>${fr ? 'Découvrez les plats du chef pour le midi et le soir. Commandez pour aujourd’hui ou planifiez votre semaine.' : 'اكتشف أطباق الشيف المحضرة يومياً للغداء والعشاء. اطلب وجبة اليوم أو برمج وجبات أسبوعك بسهولة.'}</p>
+        </section>
+      `;
+
+      const daysHtml = days.map((day) => {
+        const isToday = day.date === todayIso;
+        const dayLabel = formatDay(day.date);
+        const dateLabel = formatDate(day.date);
+        const isClosed = Boolean(day.closed);
+
+        const lunchHtml = day.lunch ? `
+          <div class="service-card">
+            <div class="service-badge">☀️ ${fr ? 'Déjeuner' : 'الغداء'}</div>
+            <div class="dish-img">
+              ${day.lunch.photoUrl ? `<img src="${esc(day.lunch.photoUrl)}" alt="${esc(day.lunch.displayName)}" loading="lazy" />` : `<div class="fallback">${esc(day.lunch.displayName.charAt(0))}</div>`}
+            </div>
+            <div class="body">
+              <div class="dish-title">${esc(day.lunch.displayName)}</div>
+              <div class="price-row">
+                <span class="price">${money(day.lunch.price)}</span>
+              </div>
+              <button class="order-action" onclick="openCatalogueOrder('${esc(day.lunch.id)}', '${day.date}', 'LUNCH')" ${isClosed ? 'disabled' : ''}>
+                ${isClosed ? (fr ? 'Délai clos' : 'مغلق') : (fr ? 'Commander Déjeuner' : 'اطلب الغداء')}
+              </button>
+            </div>
+          </div>
+        ` : `
+          <div class="service-card" style="padding:14px; text-align:center; color:var(--muted); justify-content:center; min-height:120px;">
+            <span style="font-size:0.78rem;">${fr ? 'Pas de déjeuner prévu' : 'لا يوجد غداء مبرمج'}</span>
+          </div>
+        `;
+
+        const dinnerHtml = day.dinner ? `
+          <div class="service-card">
+            <div class="service-badge">🌙 ${fr ? 'Dîner' : 'العشاء'}</div>
+            <div class="dish-img">
+              ${day.dinner.photoUrl ? `<img src="${esc(day.dinner.photoUrl)}" alt="${esc(day.dinner.displayName)}" loading="lazy" />` : `<div class="fallback">${esc(day.dinner.displayName.charAt(0))}</div>`}
+            </div>
+            <div class="body">
+              <div class="dish-title">${esc(day.dinner.displayName)}</div>
+              <div class="price-row">
+                <span class="price">${money(day.dinner.price)}</span>
+              </div>
+              <button class="order-action" onclick="openCatalogueOrder('${esc(day.dinner.id)}', '${day.date}', 'DINNER')" ${isClosed ? 'disabled' : ''}>
+                ${isClosed ? (fr ? 'Délai clos' : 'مغلق') : (fr ? 'Commander Dîner' : 'اطلب العشاء')}
+              </button>
+            </div>
+          </div>
+        ` : `
+          <div class="service-card" style="padding:14px; text-align:center; color:var(--muted); justify-content:center; min-height:120px;">
+            <span style="font-size:0.78rem;">${fr ? 'Pas de dîner prévu' : 'لا يوجد عشاء مبرمج'}</span>
+          </div>
+        `;
+
+        const altsCount = day.alternatives ? day.alternatives.length : 0;
+        const altsSummary = day.alternatives && day.alternatives.length
+          ? day.alternatives.slice(0, 3).map((a) => a.displayName).join(' · ')
+          : '';
+
+        return `
+          <article class="routine-day ${isToday ? 'is-today' : ''}">
+            <div class="routine-head">
+              <div class="day-info">
+                <h3>${esc(dayLabel)} <small style="color:var(--muted); font-size:0.8rem; font-weight:normal;">${esc(dateLabel)}</small></h3>
+                ${isToday ? `<span class="today-tag">${fr ? 'Aujourd’hui' : 'اليوم'}</span>` : ''}
+              </div>
+              <span class="status ${isClosed ? 'cancel' : 'done'}">
+                ${isClosed ? (fr ? 'Délai clos' : 'انتهى وقت الطلب') : (fr ? 'Ouvert' : 'مفتوح للطلب')}
+              </span>
+            </div>
+            <div class="routine-services">
+              ${lunchHtml}
+              ${dinnerHtml}
+            </div>
+            ${altsCount > 0 ? `
+              <div class="routine-alts">
+                <span>🥗 ${fr ? `+ ${altsCount} alternatives` : `+ ${altsCount} بدائل متاحة`}</span>
+                <small style="color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;">${esc(altsSummary)}</small>
+              </div>
+            ` : ''}
+          </article>
+        `;
+      }).join('');
+
+      return heroHtml + daysHtml;
+    }
+
     function renderMenu() {
+      const fr = LANG === 'fr';
+      const switchHtml = `
+        <div class="view-switch">
+          <button class="view-btn ${state.menuView !== 'catalogue' ? 'active' : ''}" onclick="setMenuView('routine')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            ${fr ? 'Routine Quotidienne (Semaine)' : 'الروتين اليومي (قائمة الأسبوع)'}
+          </button>
+          <button class="view-btn ${state.menuView === 'catalogue' ? 'active' : ''}" onclick="setMenuView('catalogue')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"></path></svg>
+            ${fr ? 'À la carte (Tous les plats)' : 'كل الأطباق (الكتالوج)'}
+          </button>
+        </div>
+      `;
+
+      if (state.menuView !== 'catalogue') {
+        $('#menuContent').innerHTML = switchHtml + renderRoutine();
+        return;
+      }
+
       const dishes = state.dishes || [];
       const categories = ['ALL', ...new Set(dishes.map((dish) => dish.category).filter(Boolean))];
       const filtered = state.catalogueCategory === 'ALL'
@@ -446,17 +607,17 @@
         : dishes.filter((dish) => dish.category === state.catalogueCategory);
       const catalogueHtml = dishes.length
         ? `<div class="catalog-grid">${filtered.map(catalogueCard).join('')}</div>`
-        : '<div class="empty">لا توجد أطباق منشورة حالياً</div>';
+        : `<div class="empty">${fr ? 'Aucun plat publié actuellement' : 'لا توجد أطباق منشورة حالياً'}</div>`;
 
-      $('#menuContent').innerHTML = `
+      $('#menuContent').innerHTML = switchHtml + `
         <section class="catalog-hero">
           <small>JANITOU FOOD</small>
-          <h2>كل أطباق جانيتو<br />في مكان واحد</h2>
-          <p>اختر ما يعجبك، حدّد الكمية ووقت التسليم، وأدخل معلومات التوصيل عند تأكيد الطلب.</p>
-          <button class="btn" onclick="openCatalogueOrder()">اطلب الآن</button>
+          <h2>${fr ? 'Tous les plats de Janitou<br />À la carte' : 'كل أطباق جانيتو<br />في مكان واحد'}</h2>
+          <p>${fr ? 'Choisissez ce qui vous plaît, précisez la date et les quantités.' : 'اختر ما يعجبك، حدّد الكمية ووقت التسليم، وأدخل معلومات التوصيل عند تأكيد الطلب.'}</p>
+          <button class="btn" onclick="openCatalogueOrder()">${fr ? 'Commander maintenant' : 'اطلب الآن'}</button>
         </section>
         <div class="chips">
-          ${categories.map((category) => `<button class="chip ${state.catalogueCategory === category ? 'active' : ''}" onclick="setCatalogueCategory('${category}')">${category === 'ALL' ? 'كل الأطباق' : esc(categoryLabel(category))}</button>`).join('')}
+          ${categories.map((category) => `<button class="chip ${state.catalogueCategory === category ? 'active' : ''}" onclick="setCatalogueCategory('${category}')">${category === 'ALL' ? (fr ? 'Tous les plats' : 'كل الأطباق') : esc(categoryLabel(category))}</button>`).join('')}
         </div>
         ${catalogueHtml}`;
     }
@@ -470,53 +631,59 @@
       try { return JSON.parse(localStorage.getItem('janitou_guest_contact') || '{}'); } catch { return {}; }
     }
 
-    function openCatalogueOrder(preselectedId) {
+    function openCatalogueOrder(preselectedId, preselectedDate, preselectedService) {
       const settings = state.catalogueSettings || {};
       const dishes = state.dishes || [];
-      if (!dishes.length) { toast('لا توجد أطباق متاحة', true); return; }
+      const fr = LANG === 'fr';
+      if (!dishes.length) { toast(fr ? 'Aucun plat disponible' : 'لا توجد أطباق متاحة', true); return; }
+      const targetDate = preselectedDate || isoToday();
+      const targetService = preselectedService || 'LUNCH';
       const draft = Object.fromEntries(dishes.map((dish) => [dish.id, dish.id === preselectedId ? 1 : 0]));
       const extras = {};
       const availableExtras = (settings.extras || []).filter((extra) => !extra.families?.length);
       for (const extra of availableExtras) extras[extra.name] = 0;
       const selectedDish = dishes.find((dish) => dish.id === preselectedId);
       const contact = savedGuestContact();
+      const sheetTitle = selectedDish
+        ? (fr ? `Commander : ${selectedDish.displayName}` : `طلب : ${selectedDish.displayName}`)
+        : (fr ? 'Commander un repas' : 'اطلب وجبة');
       const html = `
         <form id="catalogueForm">
-          <div class="mini-head">معلومات التوصيل</div>
-          <div class="field"><label>الاسم</label><input name="contactName" maxlength="80" value="${esc(contact.contactName || '')}" required /></div>
-          <div class="field"><label>رقم الهاتف</label><input name="phone" type="tel" maxlength="20" value="${esc(contact.phone || '')}" required /></div>
-          <div class="field"><label>عنوان التوصيل</label><input name="deliveryAddress" maxlength="200" value="${esc(contact.deliveryAddress || '')}" required /></div>
-          <div class="mini-head">تاريخ التسليم</div>
-          <div class="field"><input type="date" name="date" min="${isoToday()}" max="${isoAdd(isoToday(), 30)}" value="${isoToday()}" required /></div>
-          <div class="mini-head">وقت الوجبة</div>
+          <div class="mini-head">${fr ? 'Informations de livraison' : 'معلومات التوصيل'}</div>
+          <div class="field"><label>${fr ? 'Nom complet' : 'الاسم'}</label><input name="contactName" maxlength="80" value="${esc(contact.contactName || '')}" required /></div>
+          <div class="field"><label>${fr ? 'Numéro de téléphone' : 'رقم الهاتف'}</label><input name="phone" type="tel" maxlength="20" value="${esc(contact.phone || '')}" required /></div>
+          <div class="field"><label>${fr ? 'Adresse de livraison' : 'عنوان التوصيل'}</label><input name="deliveryAddress" maxlength="200" value="${esc(contact.deliveryAddress || '')}" required /></div>
+          <div class="mini-head">${fr ? 'Date de livraison' : 'تاريخ التسليم'}</div>
+          <div class="field"><input type="date" name="date" min="${isoToday()}" max="${isoAdd(isoToday(), 30)}" value="${targetDate}" required /></div>
+          <div class="mini-head">${fr ? 'Moment du repas' : 'وقت الوجبة'}</div>
           <div class="pack">
-            <label><input type="radio" name="serviceTime" value="LUNCH" checked /> غداء</label>
-            <label><input type="radio" name="serviceTime" value="DINNER" /> عشاء</label>
+            <label><input type="radio" name="serviceTime" value="LUNCH" ${targetService === 'LUNCH' ? 'checked' : ''} /> ${fr ? 'Déjeuner' : 'غداء'}</label>
+            <label><input type="radio" name="serviceTime" value="DINNER" ${targetService === 'DINNER' ? 'checked' : ''} /> ${fr ? 'Dîner' : 'عشاء'}</label>
           </div>
-          <div class="mini-head">اختر الأطباق</div>
+          <div class="mini-head">${fr ? 'Choisissez les plats' : 'اختر الأطباق'}</div>
           ${dishes.map((dish) => `
             <div class="catalog-row">
               ${dish.photoUrl ? `<img src="${esc(dish.photoUrl)}" alt="" />` : `<span class="fallback">${esc(dish.displayName.charAt(0))}</span>`}
               <div class="grow"><b>${esc(dish.displayName)}</b><small>${money(dish.price)} · ${esc(categoryLabel(dish.category))}</small></div>
               <div class="stepper" data-cat-dish="${esc(dish.id)}"><button type="button" data-step="-1">−</button><span>${draft[dish.id]}</span><button type="button" data-step="1">+</button></div>
             </div>`).join('')}
-          ${selectedDish ? `<p class="hint" style="text-align:right;">تم اختيار «${esc(selectedDish.displayName)}»</p>` : ''}
-          <div class="mini-head">التغليف</div>
+          ${selectedDish ? `<p class="hint" style="text-align:right;">${fr ? `Plat sélectionné : « ${esc(selectedDish.displayName)} »` : `تم اختيار «${esc(selectedDish.displayName)}»`}</p>` : ''}
+          <div class="mini-head">${fr ? 'Type de conditionnement' : 'التغليف'}</div>
           <div class="pack">
-            <label><input type="radio" name="packaging" value="INDIVIDUAL" checked /> فردي</label>
-            <label><input type="radio" name="packaging" value="COLLECTIVE" /> جماعي</label>
+            <label><input type="radio" name="packaging" value="INDIVIDUAL" checked /> ${fr ? 'Individuel' : 'فردي'}</label>
+            <label><input type="radio" name="packaging" value="COLLECTIVE" /> ${fr ? 'Collectif (bacs)' : 'جماعي'}</label>
           </div>
-          ${availableExtras.length ? `<div class="mini-head">الإضافات</div>
+          ${availableExtras.length ? `<div class="mini-head">${fr ? 'Suppléments' : 'الإضافات'}</div>
             ${availableExtras.map((extra) => `
               <div class="qty-row">
                 <div><b>${esc(extra.name)}</b><small>${money(extra.price)}</small></div>
                 <div class="stepper" data-cat-extra="${esc(extra.name)}"><button type="button" data-step="-1">−</button><span>0</span><button type="button" data-step="1">+</button></div>
               </div>`).join('')}` : ''}
-          <div class="field" style="margin-top:14px;"><label>ملاحظات</label><textarea name="notes" rows="2" maxlength="300" placeholder="بدون بصل، حار قليل..."></textarea></div>
-          <div class="total-box"><span>المجموع</span><span id="catalogueTotal">0 دج</span></div>
-          <button class="btn" type="submit" id="submitCatalogue">تأكيد الطلب</button>
+          <div class="field" style="margin-top:14px;"><label>${fr ? 'Remarques (sans oignon, allergie...)' : 'ملاحظات'}</label><textarea name="notes" rows="2" maxlength="300" placeholder="${fr ? 'Sans sel, sauce à part...' : 'بدون بصل، حار قليل...'}"></textarea></div>
+          <div class="total-box"><span>${fr ? 'Total' : 'المجموع'}</span><span id="catalogueTotal">0 دج</span></div>
+          <button class="btn" type="submit" id="submitCatalogue">${fr ? 'Confirmer la commande' : 'تأكيد الطلب'}</button>
         </form>`;
-      openSheet('اطلب من كل الأطباق', html);
+      openSheet(sheetTitle, html);
       const updateTotal = () => {
         let portions = 0;
         let total = 0;
@@ -769,13 +936,44 @@
       ? ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
       : ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 
+    function renderGuestProgramInfo() {
+      const fr = LANG === 'fr';
+      $('#programContent').innerHTML = `
+        <section class="catalog-hero" style="margin-bottom:14px;">
+          <small>JANITOU FOOD</small>
+          <h2>${fr ? 'Programme Hebdo & Routine Entreprise' : 'البرنامج الأسبوعي وروتين الشركات'}</h2>
+          <p>${fr ? 'Définissez une routine de repas récurrente pour votre entreprise ou équipe. Vos plats sont cuisinés et livrés chaque jour sans avoir à re-commander.' : 'حدّد روتين وجبات ثابت أسبوعياً لشركتك أو موظفيك. يتم تحضير وتوصيل الوجبات تلقائياً يومياً دون الحاجة لإعادة الطلب كل صباح.'}</p>
+        </section>
+        <div class="card" style="padding:18px; margin-bottom:14px;">
+          <h3 style="margin:0 0 10px; font-size:0.96rem; color:var(--ink);">${fr ? 'Avantages de la Routine Fixe Janitou :' : 'مميزات الروتين الأسبوعي الثابت :'}</h3>
+          <ul style="margin:0; padding-inline-start:20px; font-size:0.82rem; color:var(--muted); line-height:1.75;">
+            <li>${fr ? 'Quantités fixes du Dimanche au Jeudi (midi et/ou soir).' : 'كميات محددة مسبقاً من الأحد إلى الخميس (غداء أو عشاء).'}</li>
+            <li>${fr ? 'Variation automatique des plats selon la planification culinaire équilibrée du chef.' : 'تنويع أوتوماتيكي للأطباق حسب جدول التغذية وقواعد الشيف.'}</li>
+            <li>${fr ? 'Conditionnement adapté en barquettes individuelles ou bacs thermo-scellés.' : 'تغليف فردي أو جماعي حسب رغبة المؤسسة.'}</li>
+            <li>${fr ? 'Facturation mensuelle claire et reçus de paiement numérotés.' : 'فوترة واضحة، كشف حساب دوري وتوصيل في الموعد المحدد.'}</li>
+          </ul>
+        </div>
+        <div class="card" style="padding:16px; text-align:center;">
+          <p style="margin:0 0 12px; font-size:0.84rem; font-weight:700;">${fr ? 'Déjà client abonné ? Connectez-vous avec votre code' : 'مشترك مسبقاً؟ سجّل الدخول لتعديل روتينك الأسبوعي'}</p>
+          <button class="btn" onclick="showAuth()">${fr ? 'Connexion Espace Client' : 'تسجيل دخول المشتركين'}</button>
+          <a href="https://wa.me/213562818026?text=${encodeURIComponent(fr ? 'Bonjour Janitou Food, je souhaite activer une routine quotidienne de repas pour mon entreprise' : 'مرحباً جانيتو فود، أود الاشتراك في برنامج الوجبات اليومية للشركات')}" target="_blank" class="btn secondary" style="margin-top:10px; text-decoration:none;">
+            💬 ${fr ? 'Contacter JANITOU pour activer la routine' : 'تواصل مع جانيتو فود لتفعيل الاشتراك'}
+          </a>
+        </div>
+      `;
+    }
+
     async function loadProgram() {
+      if (!token()) {
+        renderGuestProgramInfo();
+        return;
+      }
       try {
         const data = await api('/program');
         state.program = data.entries;
         renderProgram();
       } catch (error) {
-        $('#programContent').innerHTML = `<div class="empty">${esc(error.message)}</div>`;
+        renderGuestProgramInfo();
       }
     }
 
